@@ -2,13 +2,13 @@
 ;; Created: Wed Jul  9 19:13:54 2008 (CEST)
 ;; Last-Updated: 2011-08-11
 ;;           By: Juan Miguel Cejuela
-;;     Update #: 14
+;;     Update #: 15
 
 (in-package :cl-hmm)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;fastest search in a prob-float array, (see ashrentum-utils)
+;;;fastest search in a prob-float array, (see jmc.cl.utils)
 (def-lin-search array-search prob-float (simple-array prob-float) >=)
 
 ;;; DEPRECATED, see +very-negative-prob-float+

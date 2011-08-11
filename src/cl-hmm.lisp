@@ -2,7 +2,7 @@
 ;; Created: Wed Jul  9 18:09:49 2008 (CEST)
 ;; Last-Updated: 2011-08-11
 ;;           By: Juan Miguel Cejuela
-;;     Update #: 36
+;;     Update #: 39
 
 (in-package :cl-hmm)
 
@@ -60,14 +60,14 @@
 ;;; Define all sub HMMs through this macro: defines its multiple slot accessor, and add the name type to the global list
 ;;; of HMMs, *hmm-types*.
 ;;;
-;;; multiple-accessor explanation: see with-typed-slot-values (ashrentum-utils). Compulsory for efficiency reasons
+;;; multiple-accessor explanation: see with-typed-slot-values (jmc.cl.utils). Compulsory for efficiency reasons
 ;;;
 (defmacro def-hmm-type (name direct-superclasses slot-types-name multi-accessor-name direct-slots &rest options)
   "Define a HMM class type:
 	name: name of the HMM class
 	direct-superclasses: ordinary
-	slot-types-name: name for the proper list that will store the types for the HMM class, see with-typed-slot-values (ashrentum-utils)
-	multi-accessor-name: name for the multi accessor macro, see with-typed-slot-values (ashrentum-utils)
+	slot-types-name: name for the proper list that will store the types for the HMM class, see with-typed-slot-values (jmc.cl.utils)
+	multi-accessor-name: name for the multi accessor macro, see with-typed-slot-values (jmc.cl.utils)
 	direct-slots: same definition as an ordinary DEFCLASS
 	options: ordinary options"
   `(eval-when (:compile-toplevel :load-toplevel :execute)
