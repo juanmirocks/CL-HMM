@@ -14,8 +14,8 @@
 ;; steps of viterbi/forward/backward. The model characteristics are well commented
 ;; in the main class definition.
 ;;
-;; It's kept for every state a bit vector with its properties, namely:
-;; begin-state (if its init prob is non zero) | end | silent | invalid (no transitions) |
+;; Every state keeps a bit-properties vector, namely:
+;; begin-state (true if its init prob is non zero) | end | silent | invalid (no transitions) |
 ;; tied emissions | fixed (the probs don't change, though not implemented by now)
 ;;
 ;; Every state can be named either by an atom or a list of an atom and an index. When the latter
@@ -820,5 +820,3 @@
   (declare (inline hmm-complexity))
   (hmm-simple-slots (M) hmm
     (* M (hmm-no-transitions hmm))))
-
-
