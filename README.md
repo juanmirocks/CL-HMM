@@ -4,11 +4,10 @@ Copyright (C) Juan Miguel Cejuela <juanmi@jmcejuela.com>
 CL-HMM: Simple HMM Library for Common Lisp
 --------------------------------------------------------------------------------
 
-Compatibility: ANSI Common Lisp. All OS with a Lisp implementation.
-               Tested on SBCL 1.1.11 and Allegro 8.0 Free Express Edition
-Dependencies: jmc.cl.utils system
-Originally Created:    Wed Jul  9 18:18:18 2008 (CEST)
-Last Effective Update: Mon Sep 22 13:03:46 2008 (CEST)
+* Compatibility: ANSI Common Lisp. All OS with a Lisp implementation. Tested on SBCL 1.1.11 and Allegro 8.0 Free Express Edition
+* Dependencies: jmc.cl.utils system
+* Originally Created:    Wed Jul  9 18:18:18 2008 (CEST)
+* Last Effective Update: Mon Sep 22 13:03:46 2008 (CEST)
 
 
 
@@ -48,4 +47,4 @@ Files Definition:
 Comments:
 --------------------------------------------------------------------------------
 
-- Followed in code Rabiner's notation. Otherwise properly indicated.
+- Followed Rabiner's notation in code. Otherwise properly indicated.
