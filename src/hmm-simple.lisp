@@ -10,25 +10,31 @@
 ;;; Description:
 ;;
 ;; This file defines the basic HMM type, the hmm-simple class. This is divided
-;; in the infinite and finite classes, which are almost the same but differ in last
-;; steps of viterbi/forward/backward. The model characteristics are well commented
-;; in the main class definition.
+;; into the infinite and finite classes. They are almost the same and only
+;; differ in the last steps of viterbi/forward/backward. The model
+;; characteristics are well docummented in the main class definition.
 ;;
 ;; Every state keeps a bit-properties vector, namely:
-;; begin-state (true if its init prob is non zero) | end | silent | invalid (no transitions) |
-;; tied emissions | fixed (the probs don't change, though not implemented by now)
+;; * begin-state (true if its init prob is non zero)
+;; * end
+;; * silent
+;; * invalid (no transitions)
+;; * tied emissions
+;; * fixed (the probabilities don't change, though not implemented by now)
 ;;
-;; Every state can be named either by an atom or a list of an atom and an index. When the latter
-;; the atom represents the name of the group that the state belongs to. Thus, the emissions are tied
-;; automatically by their name or group-name. At the same time a state can has a label identifier
-;; that represents its meaning of the context. Here is the structure of a state:
+;; Every state can be identified by either an atom or a list containing an atom
+;; and an index. In the latter, the atom represents the name of the group that
+;; the state belongs to. Probability emissions are tied automatically by their
+;; name or group-name. At the same time a state can has a label identifier that
+;; represents its meaning of the context. Here is the structure of a state:
 ;;
 ;; (bit-vector (or nil atom (list atom integer)) (or nil or character))
 ;; (properties   state-name (group-name&index)           label
 ;;
-;; The probabilities are saved in arrays. In order to save calculations when the model is linear,
-;; are kept 2 lists that express the transition conexions between the states. These are, the conexions
-;; from the state x, and the conexions to the state x (used this in viterbi and forward)
+;; The probabilities are saved in arrays. In order to save calculations when the
+;; model is linear, two lists expressing the transition connections between the
+;; states are kept. These are, the connections from state x, and the connections
+;; to state x (used this in viterbi and forward).
 ;;
 
 (in-package :net.ashrentum.cl-hmm)
