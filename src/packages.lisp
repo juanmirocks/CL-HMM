@@ -26,7 +26,7 @@
 
    :hmm-name
    :hmm-no-states
-   :hmm-no-emisions
+   :hmm-no-emissions
    :hmm-alphabet
    :hmm-alphabet-hash
    :hmm-states
