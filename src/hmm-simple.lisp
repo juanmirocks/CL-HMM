@@ -89,13 +89,14 @@
     "Properties of the state"
     (declare (inline state-properties))
     (first state))
+
   (defun state-name (state)
     "Name of the state"
     (declare (inline state-name))
     (second state))
 
   (defun print-pretty-state-name (state-name)
-    "Given the name of a state -the group and the index- concatenate that information"
+    "Given the name of a state (the group and the index) concatenate that information"
     (cond
       ((null state-name) nil)
       ((listp state-name)
@@ -107,7 +108,7 @@
              (write-to-string state-name)))))
 
   (defun state-group (state)
-    "Group for the state is a member"
+    "Give state's group name, if any"
     (declare (inline state-group))
     (let ((sn (state-name state)))
       (cond
@@ -211,7 +212,7 @@
          ,@body)))
 
   (defun trans-array->itrans (A &optional (transpose nil))
-    ;;notice that when A is transposed the result is the info of the states that connect to
+    ;;notice that when A is transposed, the result is the info of the states that connect to
     (let* ((A. (if transpose (transpose A) A))
            (N (array-dimension A. 0))
            (itrans (make-typed-array N 'itrans-list nil))
@@ -380,7 +381,7 @@
    (M ;discrete alphabet size
     :initarg :M :type cbook-symbol :accessor hmm-no-emisions)
    (V ;individual observation symbols, alphabet
-    :initarg :V :type alphabet :initform (error "Must set the alphabet")  :accessor hmm-alphabet)
+    :initarg :V :type alphabet :initform (error "Must set the alphabet") :accessor hmm-alphabet)
    (V-hash ;observation symbols -> index
     :initarg :V-hash :type hash-table :accessor hmm-alphabet-hash)
    (S ;individual states
@@ -436,20 +437,20 @@
 
 (defun make-hmm-simple (no-states no-emisions alphabet model &key name (alphabet-type T) (model-spec :relevant))
   "Make an hmm-simple. Two ways to specify the model parameters as follows:
-	no-states:
-	no-emisions:
-	alphabet: list of emisions symbols (eg, '(A C G T))
-	model: depending on model-spec this list has 2 different forms
-	model1: (model-spec = :complete)
-		states: state names and labels
-		init: initial probs
-		trans: trans probs
-		emis: trans probs
-		example: '(((:fair #\F) (:biased #\B)) (1 0) ((.95 .05) (.15 .85)) ((1/6 ...) (1/2 1/10 ...)))
+  no-states:
+  no-emisions:
+  alphabet: list of emisions symbols (eg, '(A C G T))
+  model: depending on model-spec this list has 2 different forms
+  model1: (model-spec = :complete)
+    states: state names and labels
+    init: initial probs
+    trans: trans probs
+    emis: trans probs
+    example: '(((:fair #\F) (:biased #\B)) (1 0) ((.95 .05) (.15 .85)) ((1/6 ...) (1/2 1/10 ...)))
 
-	model2: (model-spec = :relevant)
-	every list represent the information of an individual state, format: state-name state-label init trans emis
-		example: ((:fair 0) #\F 0.95 (:fair .95 :biased .05) (1/6 1/6 1/6 1/6 1/6 1/6))"
+  model2: (model-spec = :relevant)
+  every list represent the information of an individual state, format: state-name state-label init trans emis
+    example: ((:fair 0) #\F 0.95 (:fair .95 :biased .05) (1/6 1/6 1/6 1/6 1/6 1/6))"
   (let* ((N no-states)
          (M no-emisions)
          (states)
@@ -505,13 +506,13 @@
 (defun make-random-hmm-simple
     (no-states no-emisions &key (eccentricity 2) states alphabet name (alphabet-type T))
   "Make a hmm-simple with no biased info
-	no-states
-	no-emisions
-	eccentricity: real / random eccentricity. The bigger, the more dispair. If 0, all the prob are equal
-	states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
-	alphabet: list / optional alphabet (eg, '(A C G T))
-	name: optional name
-	alphabet-type: type of the symbols"
+  no-states
+  no-emisions
+  eccentricity: real / random eccentricity. The bigger, the more dispair. If 0, all the prob are equal
+  states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
+  alphabet: list / optional alphabet (eg, '(A C G T))
+  name: optional name
+  alphabet-type: type of the symbols"
   (make-hmm-simple no-states no-emisions
                    (if alphabet
                        alphabet
@@ -605,7 +606,7 @@
 ;;; not quite nice form
 (defmacro hmm-simple-alter-model (N M PE A B alpha)
   "Alter, add noise, randomly the model
-	alpha: confidence in the current model (0 to 1) 1 to don't change the model"
+  alpha: confidence in the current model (0 to 1) 1 to don't change the model"
   `(unless (= +1-prob+ ,alpha)
      (!normalize-vector
       (!combine-float-vectors

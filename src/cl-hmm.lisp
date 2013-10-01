@@ -65,11 +65,11 @@
 (defmacro def-hmm-type (name direct-superclasses slot-types-name multi-accessor-name direct-slots &rest options)
   "Define a HMM class type:
   name: name of the HMM class
-  direct-superclasses: ordinary
+  direct-superclasses: superclasses, same as in DEFCLASS
   slot-types-name: name for the proper list that will store the types for the HMM class, see with-typed-slot-values (jmc.cl.utils)
   multi-accessor-name: name for the multi accessor macro, see with-typed-slot-values (jmc.cl.utils)
-  direct-slots: same definition as an ordinary DEFCLASS
-  options: ordinary options"
+  direct-slots: slot definitions, same as in DEFCLASS
+  options: options, same as in DEFCLASS"
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (progn
        (defclass ,name ,direct-superclasses
