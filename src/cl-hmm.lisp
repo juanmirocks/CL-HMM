@@ -64,12 +64,12 @@
 ;;;
 (defmacro def-hmm-type (name direct-superclasses slot-types-name multi-accessor-name direct-slots &rest options)
   "Define a HMM class type:
-	name: name of the HMM class
-	direct-superclasses: ordinary
-	slot-types-name: name for the proper list that will store the types for the HMM class, see with-typed-slot-values (jmc.cl.utils)
-	multi-accessor-name: name for the multi accessor macro, see with-typed-slot-values (jmc.cl.utils)
-	direct-slots: same definition as an ordinary DEFCLASS
-	options: ordinary options"
+  name: name of the HMM class
+  direct-superclasses: ordinary
+  slot-types-name: name for the proper list that will store the types for the HMM class, see with-typed-slot-values (jmc.cl.utils)
+  multi-accessor-name: name for the multi accessor macro, see with-typed-slot-values (jmc.cl.utils)
+  direct-slots: same definition as an ordinary DEFCLASS
+  options: ordinary options"
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (progn
        (defclass ,name ,direct-superclasses
@@ -90,9 +90,9 @@
 
 ;;;;
 ;;;; Rules to define a new hmm type *****
-;;;; 	Each new hmm or group of hmms must be declared in a new file called after it
-;;;; 	All hmm must be defined through the macro def-hmm-type
-;;;;	Order of specification: definition, initialization methods, specific procedures, common methods
+;;;;   Each new hmm or group of hmms must be declared in a new file called after it
+;;;;   All hmm must be defined through the macro def-hmm-type
+;;;;  Order of specification: definition, initialization methods, specific procedures, common methods
 ;;;;
 
 
@@ -119,14 +119,14 @@
 
 (defgeneric hmm-copy (hmm)
   (:documentation "Copy the hmm
-	hmm: hmm model
-	value: hmm model"))
+  hmm: hmm model
+  value: hmm model"))
 
 (defgeneric hmm-correctp (hmm)
   (:documentation "T if the hmm is a correct hmm for its type, NIL otherwise
-	hmm: hmm model
-	value1: boolean
-	value2: string / performed tests results"))
+  hmm: hmm model
+  value1: boolean
+  value2: string / performed tests results"))
 
 (define-condition hmm-incorrect (error)
   ((text :initarg :text :reader text)))
@@ -135,24 +135,24 @@
 
 (defgeneric hmm-compatiblep (hmm1 hmm2)
   (:documentation "T if the hmms could transform into the other because share the same characteristics. If NIL prints the reasons
-	hmm: hmm model
-	value: boolean"))
+  hmm: hmm model
+  value: boolean"))
 
 (defgeneric hmm-run (hmm &optional max-length)
   (:documentation "Run the hmm, ie, generate a random sequence
-	hmm: hmm model
-	max-length: integer / max length for the generated sequence
-	verbose: boolean / if T outputs the state-pathway"))
+  hmm: hmm model
+  max-length: integer / max length for the generated sequence
+  verbose: boolean / if T outputs the state-pathway"))
 
 (defgeneric hmm-no-transitions (hmm)
   (:documentation "Number of transitions
-	hmm: hmm model
-	value: integer"))
+  hmm: hmm model
+  value: integer"))
 
 (defgeneric hmm-complexity (hmm)
   (:documentation "Model complexity relative to the hmm model type
-	hmm: hmm model
-	value: integer"))
+  hmm: hmm model
+  value: integer"))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
