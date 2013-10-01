@@ -74,8 +74,8 @@
   (defun state-p (a)
     (and (listp a)
          (typep (first a) 'state-properties)
-         (typep (second a) 'state-name))
-    (typep (third a) 'state-label))
+         (typep (second a) 'state-name)
+         (typep (third a) 'state-label)))
 
   (deftype state () ;;****
     "State constituent"
