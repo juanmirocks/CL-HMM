@@ -89,10 +89,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;
-;;;; Rules to define a new hmm type *****
+;;;; Rules to define a new hmm type
 ;;;;   Each new hmm or group of hmms must be declared in a new file called after it
 ;;;;   All hmm must be defined through the macro def-hmm-type
-;;;;  Order of specification: definition, initialization methods, specific procedures, common methods
+;;;;   Order of specification: definition, initialization methods, specific procedures, common methods
 ;;;;
 
 
