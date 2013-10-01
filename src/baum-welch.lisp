@@ -157,8 +157,8 @@
                    (setf (aref nB i b) (aref rb i b))
                    (incf (aref Brow i) (aref rb i b)))))))
 
-;;; Group the emisions probabilities
-  (defun group-emisions (N M no-groups state-groups nB Brow)
+;;; Group the emissions probabilities
+  (defun group-emissions (N M no-groups state-groups nB Brow)
     (declare (cbook-state N M no-groups) (B-array nB) ((prob-array (*)) Brow))
     (let* ((nB-grouped (make-typed-array (list no-groups M) 'prob-float +0-prob+))
            (Brow-grouped (make-typed-array no-groups 'prob-float +0-prob+)))
@@ -173,7 +173,7 @@
 ;;; Actualize parameters
 (defun hmm-simple-actualize ()
   `(multiple-value-bind (nB-grouped Brow-grouped)
-       (group-emisions N M no-groups state-groups nB Brow)
+       (group-emissions N M no-groups state-groups nB Brow)
      (do* ((i 0 (1+ i))
            (pArow (aref Arow i) (aref Arow i))
            (gi (aref state-groups i) (aref state-groups i))
@@ -189,7 +189,7 @@
            (dolist-itrans (j (aref iA-from i))
              (setf (aref A i j) (/ (aref nA i j) pArow)
                    (aref nA i j) +0-prob+))) ;reset
-       ;;emisions GROUPED
+       ;;emissions GROUPED
        (if (= +0-prob+ pBrow-grouped) (error "No info for emis probability in state number: ~a" i)
            (dotimes (s M)
              (setf (aref B i s) (/ (aref nB-grouped gi s) pBrow-grouped)
@@ -291,7 +291,7 @@
                         `(*= pArow (* (aref A i j) 1/P{x^j})))
                    (incf (aref nA i j) pArow)
                    (incf (aref Arow i) pArow))))
-      ;;emisions
+      ;;emissions
         (loop for s of-type cbook-state from 0 to last-emis for emis of-type prob-float = (aref B i s) then (aref B i s) do
              (unless (zerop emis)
                (loop for t0 from 0 to x^j_leng-1 with pBrow of-type prob-float = +0-prob+ do

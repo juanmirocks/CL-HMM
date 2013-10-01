@@ -171,12 +171,12 @@
 ;; Alphabet
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (deftype emision-symbol ()
-    "Emission symbol type"
+  (deftype emission-symbol ()
+    "Emission symbol type. Accepts any type."
     t)
 
   (deftype alphabet ()
-    `(simple-array));; emision-symbol)) let it to be specialized
+    `(simple-array));; emission-symbol)) let it to be specialized
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Model properties
@@ -284,7 +284,7 @@
        emis)
       (t ses))))
 
-(defmacro ses->contribute-emis (ses state-index B) ;ses, after state emision specification
+(defmacro ses->contribute-emis (ses state-index B) ;ses, after state emission specification
   (let ((s (gensym)) (p (gensym)) (l (gensym)))
   `(do ((,s 0 (1+ ,s))
         (,p (first ,ses) (first ,l))
@@ -339,16 +339,16 @@
         (symbol)
         (name)
         (group)
-        (emisions)
-        (groups-emisions (make-hash-table :test 'equalp)))
+        (emissions)
+        (groups-emissions (make-hash-table :test 'equalp)))
     (declare (fixnum N M) (fixnum counter))
     (dotimes (i N (nreverse out))
       (setq group (state-group (aref S i)))
-      (if (and (tied-state-3p i S) (setq emisions (gethash group groups-emisions)))
+      (if (and (tied-state-3p i S) (setq emissions (gethash group groups-emissions)))
           (push (list (if real-name
                           (state-name (aref S i))
                           (print-pretty-state-name (state-name (aref S i))))
-                      (second emisions) (first emisions)) out)
+                      (second emissions) (first emissions)) out)
           (progn
             (setq indv-out nil
                   counter 0)
@@ -363,7 +363,7 @@
             (unless name (setf name i))
             (setq indv-out (cons name (cons counter (nreverse indv-out))))
             (push indv-out out)
-            (when (tied-state-3p i S) (setf (gethash group groups-emisions) indv-out)))))))
+            (when (tied-state-3p i S) (setf (gethash group groups-emissions) indv-out)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -379,7 +379,7 @@
    (N ;number of states
     :initarg :N :type cbook-state :accessor hmm-no-states)
    (M ;discrete alphabet size
-    :initarg :M :type cbook-symbol :accessor hmm-no-emisions)
+    :initarg :M :type cbook-symbol :accessor hmm-no-emissions)
    (V ;individual observation symbols, alphabet
     :initarg :V :type alphabet :initform (error "Must set the alphabet") :accessor hmm-alphabet)
    (V-hash ;observation symbols -> index
@@ -388,7 +388,7 @@
     :initarg :S :type vector-states :initform nil :accessor hmm-states)
    (S-hash ;state symbols -> index
     :initarg :S-hash :type hash-table :accessor hmm-states-hash)
-   (no-groups ;groups are the states which emision probs are tied
+   (no-groups ;groups are the states which emission probs are tied
     :type cbook-state :initform 0 :accessor hmm-no-groups)
    (groups ;group names
     :type vector-state-groups :accessor hmm-groups)
@@ -403,17 +403,16 @@
    (iA-to ;transitions to states from states list
     :type itrans :accessor hmm-itrans-to)
    (B ;observation symbol probability distribution
-    :initarg :B :type B-array :initform (error "Must set the emision probabilities") :accessor hmm-emis)))
+    :initarg :B :type B-array :initform (error "Must set the emission probabilities") :accessor hmm-emis)))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Finite and Infinite HMMs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;Change slightly the forward/backward/viterbi algs
 
 (def-hmm-type hmm-infinite (hmm-simple) nil nil nil)
 
-(def-hmm-type hmm-finite (hmm-simple) nil nil nil) ;downgrade, currently only infinite are fully implemented
+(def-hmm-type hmm-finite (hmm-simple) nil nil nil) ;TODO, currently only infinite is fully implemented
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -435,11 +434,11 @@
     (setf (hmm-itrans-to hmm) (trans-array->itrans A t))
     (hmm-state-properties-set hmm)))
 
-(defun make-hmm-simple (no-states no-emisions alphabet model &key name (alphabet-type T) (model-spec :relevant))
+(defun make-hmm-simple (no-states no-emissions alphabet model &key name (alphabet-type T) (model-spec :relevant))
   "Make an hmm-simple. Two ways to specify the model parameters as follows:
   no-states:
-  no-emisions:
-  alphabet: list of emisions symbols (eg, '(A C G T))
+  no-emissions:
+  alphabet: list of emissions symbols (eg, '(A C G T))
   model: depending on model-spec this list has 2 different forms
   model1: (model-spec = :complete)
     states: state names and labels
@@ -452,7 +451,7 @@
   every list represent the information of an individual state, format: state-name state-label init trans emis
     example: ((:fair 0) #\F 0.95 (:fair .95 :biased .05) (1/6 1/6 1/6 1/6 1/6 1/6))"
   (let* ((N no-states)
-         (M no-emisions)
+         (M no-emissions)
          (states)
          (V (make-array M :element-type alphabet-type))
          (V-hash)
@@ -498,26 +497,26 @@
     (!normalize-matrix A)
     (!normalize-matrix B)
 
-    (setf type 'hmm-infinite) ;;downgrade. Currently only infinite is supported
+    (setf type 'hmm-infinite) ;;TODO downgrade. Currently only infinite is supported
     (make-instance type :name name :N N :M M :V V :V-hash V-hash :S S :S-hash S-hash :PE PE :A A :B B)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun make-random-hmm-simple
-    (no-states no-emisions &key (eccentricity 2) states alphabet name (alphabet-type T))
+    (no-states no-emissions &key (eccentricity 2) states alphabet name (alphabet-type T))
   "Make a hmm-simple with no biased info
   no-states
-  no-emisions
+  no-emissions
   eccentricity: real / random eccentricity. The bigger, the more dispair. If 0, all the prob are equal
   states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
   alphabet: list / optional alphabet (eg, '(A C G T))
   name: optional name
   alphabet-type: type of the symbols"
-  (make-hmm-simple no-states no-emisions
+  (make-hmm-simple no-states no-emissions
                    (if alphabet
                        alphabet
                        (do ((a) (i 0 (1+ i)))
-                           ((= i no-emisions) (nreverse a))
+                           ((= i no-emissions) (nreverse a))
                          (push i a)))
                    (list
                     (if states
@@ -526,7 +525,7 @@
                             ((= i no-states) (nreverse a)) (push i a)))
                     (make-list-meval no-states (expt (random 1.0) eccentricity))
                     (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
-                    (make-list-meval no-states (make-list-meval no-emisions (expt (random 1.0) eccentricity))))
+                    (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
                    :name name :alphabet-type alphabet-type :model-spec :complete))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -730,7 +729,7 @@
 
 (defmethod hmm-copy ((hmm hmm-simple))
   (let ((N (hmm-no-states hmm))
-        (M (hmm-no-emisions hmm)))
+        (M (hmm-no-emissions hmm)))
     (make-instance (type-of hmm)
                    :N N
                    :M M
@@ -765,7 +764,7 @@
                           (push (print-verdict nil (format nil "     ~d" ,index) nil) wrong)))
                       (print-verdict buffer ,prefix (not wrong))
                       (print-list (nreverse wrong)))))
-        (let ((N (hmm-no-states hmm)) (M (hmm-no-emisions hmm))
+        (let ((N (hmm-no-states hmm)) (M (hmm-no-emissions hmm))
               (aPE (accum-array (hmm-init hmm) 1 prob-float))
               (aA (accum-array (hmm-trans hmm) 2 prob-float))
               (aB (accum-array (hmm-emis hmm) 2 prob-float))

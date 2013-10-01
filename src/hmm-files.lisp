@@ -46,7 +46,7 @@
 
               `(make-hmm-simple
                 ,(hmm-no-states hmm)
-                ,(hmm-no-emisions hmm)
+                ,(hmm-no-emissions hmm)
                 ',(sequence->list (hmm-alphabet hmm))
                 ,(ecase model-spec
                         (:complete
