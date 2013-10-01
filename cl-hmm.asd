@@ -29,6 +29,9 @@
        (:file "hmm-simple"
         :depends-on ("packages" "cl-hmm" "utilities"))
 
+       (:file "phmm"
+         :depends-on ("packages" "cl-hmm" "utilities"))
+
        (:file "viterbi"
         :depends-on ("packages" "cl-hmm" "utilities" "hmm-simple"))
        (:file "for&back-ward"
@@ -45,4 +48,3 @@
 
     :depends-on
     (:jmc.cl.utils))
-
