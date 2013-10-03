@@ -52,12 +52,12 @@
    (state-groups
     :type cbook-states :accessor hmm-state-groups)
    (PE ;initial state distribution, called PI in Rabiner //PE is PI in Phoenician
-    :initarg :PE :type PE-vec :initform (error "Must set the init probabilities") :accessor hmm-init)
+    :initarg :PE :type PE-vec :initform (error "Must set the initial probabilities") :accessor hmm-init)
    (A ;state transition probability distribution
     :initarg :A :type A-array :initform (error "Must set the transition probabilities") :accessor hmm-trans)
-   (iA-from ;transitions from states to states list
+   (iA-from ;list, transitions from states to states
     :type itrans :accessor hmm-itrans-from)
-   (iA-to ;transitions to states from states list
+   (iA-to ;list, transitions to states from states
     :type itrans :accessor hmm-itrans-to)
-   (B ;observation symbol probability distribution
-    :initarg :B :type B-2streams-array :initform (error "Must set the emission probabilities") :accessor hmm-emis)))
+   (B ;left&right pair observation probability distribution
+    :initarg :B :type B-2streams-array :initform (error "Must set the pair emission probabilities") :accessor hmm-emis)))
