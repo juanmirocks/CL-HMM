@@ -13,13 +13,13 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (deftype cbook-state ()
-    "Codebook state type. Defines in practise the maximum number of states" ;important to save memory in viterbi
+    "Codebook state type. Defines in practice the maximum number of states" ;important to save memory in viterbi
     `(unsigned-byte 16))
   (deftype cbook-states ()
     "Vector of codebook states"
     `(simple-array cbook-state (*)))
   (deftype cbook-symbol ()
-    "Codebook symbol type. Defines in practise the maximum number of symbols, alphabet size"
+    "Codebook symbol type. Defines in practice the maximum number of symbols, alphabet size"
     `(unsigned-byte 8))
   (deftype cbook-alphabet ()
     "Vector of codebook symbols, alphabet codebook type"

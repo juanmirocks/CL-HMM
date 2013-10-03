@@ -439,15 +439,15 @@
   no-states:
   no-emissions:
   alphabet: list of emissions symbols (eg, '(A C G T))
-  model: depending on model-spec this list has 2 different forms
-  model1: (model-spec = :complete)
+  model: depending on model-spec this, list has 2 different forms
+  model form 1: (model-spec = :complete)
     states: state names and labels
     init: initial probs
     trans: trans probs
     emis: trans probs
     example: '(((:fair #\F) (:biased #\B)) (1 0) ((.95 .05) (.15 .85)) ((1/6 ...) (1/2 1/10 ...)))
 
-  model2: (model-spec = :relevant)
+  model form 2: (model-spec = :relevant)
   every list represent the information of an individual state, format: state-name state-label init trans emis
     example: ((:fair 0) #\F 0.95 (:fair .95 :biased .05) (1/6 1/6 1/6 1/6 1/6 1/6))"
   (let* ((N no-states)
@@ -462,7 +462,7 @@
          (B (make-typed-array (list N M) 'prob-float +0-prob+))
          (groups-emis-hash (make-hash-table :test 'equal))
          (type))
-;;;what is different according to the way of giving the model specification
+;;;depends on model specification
     (ecase model-spec
       (:complete
        (setf states (first model))
@@ -487,7 +487,7 @@
            (push (list name (second l)) states)
            (sms-contribute-model i PE A B (third l) (fourth l) emis S-hash groups-emis-hash)))
          (setf states (nreverse states))))
-;;;what is the same
+;;;same for all model specifications
     (dolist-index (symbol alphabet i) ;alphabet
       (setf (aref V i) symbol))
     (setf V-hash (make-hash-table-with-list alphabet))
@@ -563,7 +563,7 @@
 ;; Specific Procedures
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;; codebook, translation between alphabet symbols and their index
+;;;; codebook, translation between alphabet symbols and their indexes
 (macrolet ((operation (source)
              `(dotimes (i len output)
                 (setf (aref output i) ,source)))
@@ -576,7 +576,7 @@
                   ,@body))))
 
   (defun cbook (hmm sequence)
-    "Codebook, from an observation of symbols to their indexes"
+    "Return codebook, from observation of symbols to their indexes"
     (declare (optimize (speed 3) (safety 0)) ((vector) sequence))
     (with- (V-hash) 'cbook-symbol
            (operation (gethash (aref sequence i) V-hash))))
