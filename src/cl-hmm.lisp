@@ -45,6 +45,10 @@
   (defconstant +least-negative-prob-float+ (symbol-value (intern (format nil "LEAST-NEGATIVE-~a" *prob-float*))))
   (defconstant +least-positive-prob-float+ (symbol-value (intern (format nil "LEAST-POSITIVE-~a" *prob-float*))))
 
+  ;;; Empty emission epsilon symbol, ε
+  (defconstant +epsilon+ "")
+  (defconstant +epsilon-cbook-index+ -1)
+
   ;;other
   (defconstant +buffer-stream-size+ 1024) ;buffer size for output random generated seqs. see hmm-run
   (defconstant +stream-correctness-size+ 4096) ;;see hmm-correctp
