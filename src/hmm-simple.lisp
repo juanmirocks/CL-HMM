@@ -494,8 +494,8 @@
     (dolist-index (e states i) ;the states
       (setf (aref S i) (cons (make-typed-array 8 'bit 0) (if (listp e) e (list e +label-null+)))))
     (!normalize-vector PE) ;normalize probs
-    (!normalize-matrix A)
-    (!normalize-matrix B)
+    (!normalize-2dmatrix-by-row A)
+    (!normalize-2dmatrix-by-row B)
 
     (setf type 'hmm-infinite) ;;TODO downgrade. Currently only infinite is supported
     (make-instance type :name name :N N :M M :V V :V-hash V-hash :S S :S-hash S-hash :PE PE :A A :B B)))
@@ -610,12 +610,12 @@
      (!normalize-vector
       (!combine-float-vectors
        ,PE (!normalize-vector (make-random-vector ,N +1-prob+ 'prob-float)) ,alpha 'prob-float t))
-     (!normalize-matrix
+     (!normalize-2dmatrix-by-row
       (!combine-float-matrices
-       ,A (!normalize-matrix (make-random-matrix (list ,N ,N) +1-prob+ 'prob-float)) ,alpha 'prob-float t))
-     (!normalize-matrix
+       ,A (!normalize-2dmatrix-by-row (make-random-matrix (list ,N ,N) +1-prob+ 'prob-float)) ,alpha 'prob-float t))
+     (!normalize-2dmatrix-by-row
       (!combine-float-matrices
-       ,B (!normalize-matrix (make-random-matrix (list ,N ,M) +1-prob+ 'prob-float)) ,alpha 'prob-float t))))
+       ,B (!normalize-2dmatrix-by-row (make-random-matrix (list ,N ,M) +1-prob+ 'prob-float)) ,alpha 'prob-float t))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; State properties
