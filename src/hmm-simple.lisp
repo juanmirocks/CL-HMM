@@ -661,7 +661,9 @@
   (declare (inline state-property-set))
   (setf (bit (state-properties (aref states stateindex)) flag) 1))
 
-(defun hmm-state-properties-set (hmm) ;initialize the properties
+(defgeneric hmm-state-properties-set (hmm))
+
+(defmethod hmm-state-properties-set ((hmm hmm-simple)) ;initialize the properties
   (macrolet ((seter (flag)
                `(state-property-set S i ,(symbol-value flag))))
     (hmm-simple-slots (N S PE A B) hmm
