@@ -47,7 +47,7 @@
 
   ;;; Empty emission epsilon symbol, ε
   (defconstant +epsilon+ "")
-  (defconstant +epsilon-cbook-index+ -1)
+  (defconstant +epsilon-cbook-index+ 0)
 
   ;;other
   (defconstant +buffer-stream-size+ 1024) ;buffer size for output random generated seqs. see hmm-run
