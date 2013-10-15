@@ -61,3 +61,34 @@
     :type itrans :accessor hmm-itrans-to)
    (B ;left&right pair observation probability distribution
     :initarg :B :type B-2streams-array :initform (error "Must set the pair emission probabilities") :accessor hmm-emis)))
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Initialization
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod initialize-instance :after ((hmm phmm) &key)
+  (phmm-slots (S S-hash N L L-hash L-size R R-hash R-size A) hmm
+    ;;states hash, TODO define this in common place
+    (do ((i 1 (1+ i)))
+        ((> i N))
+      (setf (gethash (state-name (aref S i)) S-hash) i))
+
+    ;;L-hash, TODO define this in common place
+    (do ((i 1 (1+ i)))
+        ((> i L-size))
+      (setf (gethash (aref L i) L-hash) i))
+
+    ;;R-hash, TODO define this in common place
+    (do ((i 1 (1+ i)))
+        ((> i L-size))
+      (setf (gethash (aref R i) R-hash) i))
+
+    (multiple-value-bind (no-groups groups state-groups) (define-groups S)
+                         (setf (hmm-no-groups hmm) no-groups)
+                         (setf (hmm-groups hmm) groups)
+                         (setf (hmm-state-groups hmm) state-groups))
+
+    (setf (hmm-itrans-from hmm) (trans-array->itrans A))
+    (setf (hmm-itrans-to hmm) (trans-array->itrans A t))
+    (hmm-state-properties-set hmm)))
