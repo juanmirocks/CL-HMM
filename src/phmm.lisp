@@ -166,20 +166,20 @@
                    :R R :R-size R-size :R-hash R-hash
                    :PE PE :A A :B B)))
 
-;; (defun make-random-phmm
-;;     (N L-size R-size &key (eccentricity 2) (states (range no-states)) ((L-list (range L-size)) (R-list (range R-size)) name (L-alphabet-type T) (R-alphabet-type T)))
-;;   "Make a phmm with no biased info
-;;   ...
-;;   eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
-;;   states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
-;;   ..."
-;;   (make-phmm N L-list R-list
-;;              (list
-;;               states
-;;               (make-list-meval no-states (expt (random 1.0) eccentricity))
-;;               (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
-;;               (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
-;;              :name name :alphabet-type alphabet-type :model-spec :complete))
+(defun make-random-phmm
+    (N L-size R-size &key (eccentricity 2) (states (range N)) (L-list (range L-size)) (R-list (range R-size)) name (L-alphabet-type T) (R-alphabet-type T))
+  "Make a phmm with no biased info
+  ...
+  eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
+  states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
+  ..."
+  (make-phmm N L-list R-list
+             (list
+              states
+              (make-list-meval N (expt (random 1.0) eccentricity))
+              (make-list-meval N (make-list-meval N (expt (random 1.0) eccentricity)))
+              (make-list-meval N (make-list-meval (1+ L-size) (make-list-meval (1+ R-size) (expt (random 1.0) eccentricity)))))
+             :name name :L-alphabet-type L-alphabet-type :R-alphabet-type R-alphabet-type :model-spec :complete))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
