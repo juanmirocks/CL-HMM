@@ -203,4 +203,4 @@
 
                    :PE (copy-seq (hmm-init hmm))
                    :A (copy-matrix (hmm-trans hmm))
-                   :B (copy-matrix (hmm-emis hmm)))))
+                   :B (copy-array (hmm-emis hmm)))))
