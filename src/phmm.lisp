@@ -32,18 +32,18 @@
     :initarg :S-hash :type hash-table :accessor hmm-states-hash)
    ;;;
    (L ;left stream alphabet
-    :initarg :V :type alphabet :initform (error "Must set the left stream alphabet") :accessor hmm-alphabet-left)
+    :initarg :L :type alphabet :initform (error "Must set the left stream alphabet") :accessor hmm-alphabet-left)
    (L-size ;left stream alphabet size
-    :initarg :M :type cbook-symbol :accessor hmm-alphabet-left-size)
+    :initarg :L-size :type cbook-symbol :accessor hmm-alphabet-left-size)
    (L-hash ;left stream alphabet symbols -> index
-    :initarg :V-hash :type hash-table :accessor hmm-alphabet-left-hash)
+    :initarg :L-hash :type hash-table :accessor hmm-alphabet-left-hash)
    ;;;
    (R ;right stream alphabet
-    :initarg :V :type alphabet :initform (error "Must set the right stream alphabet") :accessor hmm-alphabet-right)
+    :initarg :R :type alphabet :initform (error "Must set the right stream alphabet") :accessor hmm-alphabet-right)
    (R-size ;right stream alphabet size
-    :initarg :M :type cbook-symbol :accessor hmm-alphabet-right-size)
+    :initarg :R-size :type cbook-symbol :accessor hmm-alphabet-right-size)
    (R-hash ;right stream alphabet symbols -> index
-    :initarg :V-hash :type hash-table :accessor hmm-alphabet-right-hash)
+    :initarg :R-hash :type hash-table :accessor hmm-alphabet-right-hash)
    ;;;
    (groups ;group names
     :type vector-state-groups :accessor hmm-groups)
