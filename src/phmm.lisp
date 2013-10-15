@@ -155,6 +155,9 @@
       (setf (aref S i) (cons (make-typed-array 8 'bit 0) (if (listp e) e (list e +label-null+)))))
     (!normalize-vector PE) ;normalize probs
     (!normalize-2dmatrix-by-row A)
+    ;;emission probability(epsilon & epsilon) == 0
+    (dotimes (i N)
+      (setf (aref B i 0 0) +0-prob+))
     (!normalize-3dmatrix-by-row B)
 
     (make-instance 'phmm :name name
