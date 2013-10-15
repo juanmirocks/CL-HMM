@@ -513,16 +513,9 @@
   name: optional name
   alphabet-type: type of the symbols"
   (make-hmm-simple no-states no-emissions
-                   (if alphabet
-                       alphabet
-                       (do ((a) (i 0 (1+ i)))
-                           ((= i no-emissions) (nreverse a))
-                         (push i a)))
+                   (if alphabet alphabet (range no-emissions))
                    (list
-                    (if states
-                        states
-                        (do ((a) (i 0 (1+ i)))
-                            ((= i no-states) (nreverse a)) (push i a)))
+                    (if states states (range no-states))
                     (make-list-meval no-states (expt (random 1.0) eccentricity))
                     (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
                     (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
