@@ -503,7 +503,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun make-random-hmm-simple
-    (no-states no-emissions &key (eccentricity 2) states alphabet name (alphabet-type T))
+    (no-states no-emissions &key (eccentricity 2) (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
   "Make a hmm-simple with no biased info
   no-states
   no-emissions
@@ -513,16 +513,16 @@
   name: optional name
   alphabet-type: type of the symbols"
   (make-hmm-simple no-states no-emissions
-                   (if alphabet alphabet (range no-emissions))
+                   alphabet
                    (list
-                    (if states states (range no-states))
+                    states
                     (make-list-meval no-states (expt (random 1.0) eccentricity))
                     (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
-                    (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
+                    (make-list-meval No-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
                    :name name :alphabet-type alphabet-type :model-spec :complete))
 
 (defun make-uniform-hmm-simple
-    (no-states no-emissions &key states alphabet name (alphabet-type T))
+    (no-states no-emissions &key (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
   "Same as make-random-hmm-simple but with an uniform distribution for all probabilities, eccentricity 0"
   (make-random-hmm-simple no-states no-emissions :eccentricity 0 :states states :alphabet alphabet :name name :alphabet-type alphabet-type))
 
