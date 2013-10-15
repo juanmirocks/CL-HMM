@@ -518,7 +518,7 @@
                     states
                     (make-list-meval no-states (expt (random 1.0) eccentricity))
                     (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
-                    (make-list-meval No-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
+                    (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
                    :name name :alphabet-type alphabet-type :model-spec :complete))
 
 (defun make-uniform-hmm-simple
