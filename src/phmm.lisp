@@ -93,6 +93,30 @@
     (setf (hmm-itrans-to hmm) (trans-array->itrans A t))
     (hmm-state-properties-set hmm)))
 
+(defun make-random-phmm
+    (no-states no-emissions &key (eccentricity 2) (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
+  "Make a phmm with no biased info
+  no-states
+  no-emissions
+  eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
+  states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
+  alphabet: list / optional alphabet (eg, '(A C G T))
+  name: optional name
+  alphabet-type: type of the symbols"
+  (make-hmm-simple no-states no-emissions
+                   alphabet
+                   (list
+                    states
+                    (make-list-meval no-states (expt (random 1.0) eccentricity))
+                    (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
+                    (make-list-meval No-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
+                   :name name :alphabet-type alphabet-type :model-spec :complete))
+
+(defun make-uniform-phmm
+    (no-states no-emissions &key (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
+  "Same as make-random-phmm but with an uniform distribution for all probabilities, i.e., eccentricity == 0"
+  (make-random-hmm-simple no-states no-emissions :eccentricity 0 :states states :alphabet alphabet :name name :alphabet-type alphabet-type))
+
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
