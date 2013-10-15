@@ -62,6 +62,32 @@
    (B ;left&right pair observation probability distribution
     :initarg :B :type B-2streams-array :initform (error "Must set the pair emission probabilities") :accessor hmm-emis)))
 
+(defmethod print-object ((object phmm) stream)
+  (declare (stream stream))
+  (labels ((print-A (A S)
+             (let ((out ""))
+               (dolist-index (trans (multiple-value-bind (a b) (trans-stats A S)
+                                      (setf out (format nil " (~a): ~&" a)) b) i out)
+                 (setf out
+                       (concatenate 'string out (format nil "~5T~a (~a):  ~{~a:~3$~^  ~}~%"
+                                                        (car trans) (second trans) (cddr trans)))))))
+           (print-B ()
+             "TODO"))
+
+  (print-unreadable-object (object stream :type t)
+    (phmm-slots (name S N L L-size R R-size PE A B) object
+      (let ((no-begins) (begins))
+        (multiple-value-setq (no-begins begins) (init-stats PE S))
+        (format stream "~a (~d,~d,~d)~%  S: ~a~2%  L: ~a~%  R: ~a~2%  PE (~a): ~{~a:~3$~^  ~}~2%  A~a~%  B: ~a~%"
+                name N L-size R-size
+                S
+                L
+                R
+                no-begins
+                begins
+                (print-A A S)
+                (print-B)))))))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Initialization
