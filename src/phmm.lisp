@@ -92,3 +92,28 @@
     (setf (hmm-itrans-from hmm) (trans-array->itrans A))
     (setf (hmm-itrans-to hmm) (trans-array->itrans A t))
     (hmm-state-properties-set hmm)))
+
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Common Methods
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod hmm-copy ((hmm phmm))
+  (phmm-slots (S N L L-size R R-size) hmm
+    (make-instance (type-of hmm)
+                   :S S
+                   :N N
+                   :S-hash (make-hash-table :size N :test 'equalp)
+
+                   :L L
+                   :L-size L-size
+                   :L-hash (make-hash-table :size L-size :test 'equalp)
+
+                   :R R
+                   :R-size R-size
+                   :R-hash (make-hash-table :size R-size :test 'equalp)
+
+                   :PE (copy-seq (hmm-init hmm))
+                   :A (copy-matrix (hmm-trans hmm))
+                   :B (copy-matrix (hmm-emis hmm)))))
