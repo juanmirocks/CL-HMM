@@ -81,7 +81,7 @@
 
     ;;R-hash, TODO define this in common place
     (do ((i 1 (1+ i)))
-        ((> i L-size))
+        ((> i R-size))
       (setf (gethash (aref R i) R-hash) i))
 
     (multiple-value-bind (no-groups groups state-groups) (define-groups S)
