@@ -107,7 +107,8 @@
 ;; initializate-instance specification
 ;; print-object specification
 ;; (defun make-hmm(-*) ()
-;; (defun make-neutral-hmm(-*) ()
+;; (defun make-random-hmm(-*) ()
+;; (defun make-uniform-hmm(-*) ()
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
