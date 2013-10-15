@@ -507,7 +507,7 @@
   "Make a hmm-simple with no biased info
   no-states
   no-emissions
-  eccentricity: real / random eccentricity. The bigger, the more dispair. If 0, all the prob are equal
+  eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
   states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
   alphabet: list / optional alphabet (eg, '(A C G T))
   name: optional name
@@ -527,6 +527,11 @@
                     (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
                     (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
                    :name name :alphabet-type alphabet-type :model-spec :complete))
+
+(defun make-uniform-hmm-simple
+    (no-states no-emissions &key states alphabet name (alphabet-type T))
+  "Same as make-random-hmm-simple but with an uniform distribution for all probabilities, eccentricity 0"
+  (make-random-hmm-simple no-states no-emissions :eccentricity 0 :states states :alphabet alphabet :name name :alphabet-type alphabet-type))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
