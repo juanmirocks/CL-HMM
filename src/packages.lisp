@@ -66,6 +66,11 @@
    :cbook-indexes
    :cbook-list
 
+   ;;;phmm
+   :phmm
+
+   :make-phmm
+
    ;;forward&backward
    :forward
    :likelihood
