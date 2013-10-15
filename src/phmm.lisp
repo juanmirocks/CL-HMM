@@ -72,7 +72,7 @@
                        (concatenate 'string out (format nil "~5T~a (~a):  ~{~a:~3$~^  ~}~%"
                                                         (car trans) (second trans) (cddr trans)))))))
            (print-B ()
-             "TODO"))
+             "...")) ;;TODO
 
   (print-unreadable-object (object stream :type t)
     (phmm-slots (name S N L L-size R R-size PE A B) object
