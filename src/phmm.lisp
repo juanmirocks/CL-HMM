@@ -69,20 +69,24 @@
 
 (defmethod initialize-instance :after ((hmm phmm) &key)
   (phmm-slots (S S-hash N L L-hash L-size R R-hash R-size A) hmm
+
     ;;states hash, TODO define this in common place
-    (do ((i 1 (1+ i)))
-        ((> i N))
-      (setf (gethash (state-name (aref S i)) S-hash) i))
+    (do* ((i 0 i+1)
+          (i+1 1 (1+ i+1)))
+         ((= i N))
+      (setf (gethash (state-name (aref S i)) S-hash) i+1))
 
-    ;;L-hash, TODO define this in common place
-    (do ((i 1 (1+ i)))
-        ((> i L-size))
-      (setf (gethash (aref L i) L-hash) i))
+    ;; ;;L-hash, TODO define this in common place
+    (do* ((i 0 i+1)
+          (i+1 1 (1+ i+1)))
+        ((= i L-size))
+      (setf (gethash (aref L i) L-hash) i+1))
 
-    ;;R-hash, TODO define this in common place
-    (do ((i 1 (1+ i)))
-        ((> i R-size))
-      (setf (gethash (aref R i) R-hash) i))
+    ;; ;;R-hash, TODO define this in common place
+    (do* ((i 0 i+1)
+          (i+1 1 (1+ i+1)))
+         ((= i R-size))
+      (setf (gethash (aref R i) R-hash) i+1))
 
     (multiple-value-bind (no-groups groups state-groups) (define-groups S)
                          (setf (hmm-no-groups hmm) no-groups)
@@ -91,32 +95,88 @@
 
     (setf (hmm-itrans-from hmm) (trans-array->itrans A))
     (setf (hmm-itrans-to hmm) (trans-array->itrans A t))
-    (hmm-state-properties-set hmm)))
+    ;;(hmm-state-properties-set hmm) TODO
+    ))
 
-(defun make-random-phmm
-    (no-states no-emissions &key (eccentricity 2) (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
-  "Make a phmm with no biased info
-  no-states
-  no-emissions
-  eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
-  states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
-  alphabet: list / optional alphabet (eg, '(A C G T))
-  name: optional name
-  alphabet-type: type of the symbols"
-  (make-hmm-simple no-states no-emissions
-                   alphabet
-                   (list
-                    states
-                    (make-list-meval no-states (expt (random 1.0) eccentricity))
-                    (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
-                    (make-list-meval No-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
-                   :name name :alphabet-type alphabet-type :model-spec :complete))
+(defun make-phmm (N L-list R-list model &key name (L-alphabet-type T) (R-alphabet-type T) (model-spec :complete))
+  "Make a phmm. Two ways to specify the model parameters as follows:
+  N:
+  L-size:
+  R-size:
+  alphabet: list of emissions symbols (eg, '(A C G T))
+  model: depending on model-spec this, list has 2 different forms
+  model form 1: (model-spec = :complete)
+    states: state names and labels
+    init: initial probs
+    trans: trans probs
+    emis: trans probs
+    example: '(((:fair #\F) (:biased #\B)) (1 0) ((.95 .05) (.15 .85)) ((1/6 ...) (1/2 1/10 ...)))
 
-(defun make-uniform-phmm
-    (no-states no-emissions &key (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
-  "Same as make-random-phmm but with an uniform distribution for all probabilities, i.e., eccentricity == 0"
-  (make-random-hmm-simple no-states no-emissions :eccentricity 0 :states states :alphabet alphabet :name name :alphabet-type alphabet-type))
+  model form 2: (model-spec = :relevant)
+    NOT IMPLEMENTED"
 
+  (let* ((S (make-array N :element-type 'state :initial-element (list (make-typed-array 8 'bit 0))))
+         (states)
+         (S-hash)
+         ;;
+         (L-size (length L-list))
+         (L (make-array L-size :element-type L-alphabet-type))
+         (L-hash)
+         ;;
+         (R-size (length R-list))
+         (R (make-array R-size :element-type R-alphabet-type))
+         (R-hash)
+         ;;
+         (PE (make-typed-array N 'prob-float +0-prob+))
+         (A (make-typed-array (list N N) 'prob-float +0-prob+))
+         (B (make-typed-array (list N (1+ L-size) (1+ R-size)) 'prob-float +0-prob+)))
+;;;depends on model specification
+    (ecase model-spec
+      (:complete
+       (setf states (first model))
+       (setf S-hash (make-hash-table-with-list states :test 'equal)) ;S-hash
+       (dolist-index (a (second model) i) (setf (aref PE i) (prob a))) ;init probs
+       (dolist-index (state-transitions (third model) i)
+         (dolist-index (at state-transitions j)
+           (setf (aref A i j) (prob at))))
+       (dolist-index (state-emissions (fourth model) i)
+         (dolist-index (left state-emissions j)
+           (dolist-index (p left z)
+             (setf (aref B i j z) (prob p))))))
+      (:relevant
+       (error "relevant specification: NOT IMPLEMENTED")))
+;;;same for all model specifications
+    (dolist-index (symbol L-list i) (setf (aref L i) symbol))
+    (dolist-index (symbol R-list i) (setf (aref R i) symbol))
+    (setf L-hash (make-hash-table-with-list L-list)) ;TODO watch out with the indexes, must start in 1
+    (setf R-hash (make-hash-table-with-list R-list)) ;TODO watch out with the indexes, must start in 1
+
+    (dolist-index (e states i) ;the states
+      (setf (aref S i) (cons (make-typed-array 8 'bit 0) (if (listp e) e (list e +label-null+)))))
+    (!normalize-vector PE) ;normalize probs
+    (!normalize-2dmatrix-by-row A)
+    (!normalize-3dmatrix-by-row B)
+
+    (make-instance 'phmm :name name
+                   :S S :N N :S-hash S-hash
+                   :L L :L-size L-size :L-hash L-hash
+                   :R R :R-size R-size :R-hash R-hash
+                   :PE PE :A A :B B)))
+
+;; (defun make-random-phmm
+;;     (N L-size R-size &key (eccentricity 2) (states (range no-states)) ((L-list (range L-size)) (R-list (range R-size)) name (L-alphabet-type T) (R-alphabet-type T)))
+;;   "Make a phmm with no biased info
+;;   ...
+;;   eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
+;;   states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
+;;   ..."
+;;   (make-phmm N L-list R-list
+;;              (list
+;;               states
+;;               (make-list-meval no-states (expt (random 1.0) eccentricity))
+;;               (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
+;;               (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
+;;              :name name :alphabet-type alphabet-type :model-spec :complete))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
