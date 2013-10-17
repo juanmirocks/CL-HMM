@@ -8,12 +8,13 @@
 ;;
 ;;; Description:
 ;;
-;; Baum-Welch algorithm in the scaled and original versions. By now only for
-;; the class hmm inifinite (see hmm-simple). Possible training with labeled
+;; Baum-Welch algorithm in the 1) scaled and 2) original versions. By now only
+;; for the class hmm inifinite (see hmm-simple). Possible training with labeled
 ;; sequences. Optional initial noise, with diminishing normalized to the model
 ;;
-;; The code is divided in macros and functions in order to take advantage that both algorithms are pretty
-;; similar, having a common skeleton for both
+;; The code is divided in macros and functions in order to take advantage that
+;; both version algorithms are pretty similar, having a common skeleton for
+;; both.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -39,11 +40,11 @@
   (defconstant +bw-threshold+ (prob 0.01))
 
   ;;noise amplitude, A = S - (i / (log_B C))
-  ;;	A, amplitude
-  ;;	S, Starting noise
-  ;;	i, iteration
-  ;;	C, model Complexity
-  ;;	B, noise Base (to adjust)
+  ;;      A, amplitude
+  ;;      S, Starting noise
+  ;;      i, iteration
+  ;;      C, model Complexity
+  ;;      B, noise Base (to adjust)
   (defconstant +bw-noise-base+ (prob 1.04))
   (defconstant +bw-noise-start+ (prob 0.4))
 
@@ -63,33 +64,33 @@
 (defgeneric baum-welch
     (hmm obss-c &key obss-l starting-noise max-times threshold ri ra rb verbose)
   (:documentation "Train the hmm using the pure Baum-Welch algorithm
-	hmm: hmm to train
-	obss-c: observation index-coded to train with (see cbook or cbook-list)
-	obss-l: labeled observation if is desired a labeled training
-	starting-noise: initial noise to play with (0 to 1)
-	max-times: max-times to run the alg.
-	threshold: minimum difference change between 2 hmms to accept it and stop
-	ri: initial probs pseudoconts (vector)
-	ra: transition pseudoconts (array)
-	rb: emission pseudoconts (array)
-	(If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
-	verbose: prints detailed information about what is happening"))
+      hmm: hmm to train
+      obss-c: observation index-coded to train with (see cbook or cbook-list)
+      obss-l: labeled observation if is desired a labeled training
+      starting-noise: initial noise to play with (0 to 1)
+      max-times: max-times to run the alg.
+      threshold: minimum difference change between 2 hmms to accept it and stop
+      ri: initial probs pseudoconts (vector)
+      ra: transition pseudoconts (array)
+      rb: emission pseudoconts (array)
+      (If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
+      verbose: prints detailed information about what is happening"))
 
 (defgeneric baum-welch-scl
     (hmm obss-c &key obss-l starting-noise max-times threshold ri ra rb verbose)
   (:documentation "Train the hmm using the pure Baum-Welch algorithm
-	hmm: hmm to train
-	obss-c: observation index-coded to train with (see cbook or cbook-list)
-	obss-l: labeled observation if is desired a labeled
-	never-erase-transitions: if T, doesn't erase no given transitions in the training
-	starting-noise: initial noise to play with (0 to 1)
-	max-times: max-times to run the alg.
-	threshold: minimum difference change between 2 hmms to accept it and stop
-	ri: initial probs pseudoconts (vector)
-	ra: transition pseudoconts (array)
-	rb: emission pseudoconts (array)
-	(If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
-	verbose: prints detailed information about what is happening"))
+      hmm: hmm to train
+      obss-c: observation index-coded to train with (see cbook or cbook-list)
+      obss-l: labeled observation if is desired a labeled
+      never-erase-transitions: if T, doesn't erase no given transitions in the training
+      starting-noise: initial noise to play with (0 to 1)
+      max-times: max-times to run the alg.
+      threshold: minimum difference change between 2 hmms to accept it and stop
+      ri: initial probs pseudoconts (vector)
+      ra: transition pseudoconts (array)
+      rb: emission pseudoconts (array)
+      (If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
+      verbose: prints detailed information about what is happening"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
