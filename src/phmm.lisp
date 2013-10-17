@@ -248,10 +248,10 @@
   (phmm-slots (N PE A B iA-to) hmm
     (let* ((x (first obs-c))
            (y (second obs-c))
-           (n (length x))
-           (m (length y))
-           (alpha (make-typed-array `(,N (1+ ,n) (1+ ,m)) 'prob-float +0-prob+)))
-      (declare (fixnum n m)
+           (size_x (length x))
+           (size_y (length y))
+           (alpha (make-typed-array `(,N (1+ ,size_x) (1+ ,size_y)) 'prob-float +0-prob+)))
+      (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
       ;; Initialisation
@@ -270,8 +270,8 @@
       ;; -------------------------------------------------------------------------
       ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
       (loop for j below N do
-           (loop for l from 0 to n do
-                (loop for r from 0 to m do
+           (loop for l from 0 to size_x do
+                (loop for r from 0 to size_y do
                      (when (<= 2 (min l r))
                        (setf (aref alpha j l r)
                              (prob
@@ -284,5 +284,5 @@
       ;; Termination
       ;; -------------------------------------------------------------------------
       (values
-       (loop for j below N sum (aref alpha n m))
+       (loop for j below N sum (aref alpha size_x size_y))
        alpha))))
