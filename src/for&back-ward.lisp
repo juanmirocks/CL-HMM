@@ -129,7 +129,7 @@
 ;;
 ;; Forward and Backward (scaled)
 ;;
-;; for this moment are only written the infinite versions
+;; For the moment, only the hmm-infinite versions are written
 ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
