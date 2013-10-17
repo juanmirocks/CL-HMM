@@ -172,33 +172,33 @@
       (values nB-grouped Brow-grouped)))
 
 ;;; Actualize parameters
-(defun hmm-simple-actualize ()
-  `(multiple-value-bind (nB-grouped Brow-grouped)
-       (group-emissions N M no-groups state-groups nB Brow)
-     (do* ((i 0 (1+ i))
-           (pArow (aref Arow i) (aref Arow i))
-           (gi (aref state-groups i) (aref state-groups i))
-           (pBrow-grouped (aref Brow-grouped gi) (aref Brow-grouped gi)))
-         ((= i N) nil)
-       (declare (cbook-state i) (prob-float pArow pBrow-grouped))
-       ;;init
-       (if (= +0-prob+ PErow) (error "No info for init probabilities!")
-           (setf (aref PE i) (/ (aref nPE i) PErow)
-                 (aref nPE i) +0-prob+)) ;reset
-       ;;transitions
-       (if (= +0-prob+ pArow) (error "No info for trans probability in state number: ~a" i)
-           (dolist-itrans (j (aref iA-from i))
-             (setf (aref A i j) (/ (aref nA i j) pArow)
-                   (aref nA i j) +0-prob+))) ;reset
-       ;;emissions GROUPED
-       (if (= +0-prob+ pBrow-grouped) (error "No info for emis probability in state number: ~a" i)
-           (dotimes (s M)
-             (setf (aref B i s) (/ (aref nB-grouped gi s) pBrow-grouped)
-                   (aref nB i s) +0-prob+))) ;reset
-       ;;reset
-       (setf (aref Arow i) +0-prob+)
-       (setf (aref Brow i) +0-prob+))
-     (setf PErow +0-prob+))))
+  (defun hmm-simple-actualize ()
+    `(multiple-value-bind (nB-grouped Brow-grouped)
+         (group-emissions N M no-groups state-groups nB Brow)
+       (do* ((i 0 (1+ i))
+             (pArow (aref Arow i) (aref Arow i))
+             (gi (aref state-groups i) (aref state-groups i))
+             (pBrow-grouped (aref Brow-grouped gi) (aref Brow-grouped gi)))
+            ((= i N) nil)
+         (declare (cbook-state i) (prob-float pArow pBrow-grouped))
+         ;;init
+         (if (= +0-prob+ PErow) (error "No info for init probabilities!")
+             (setf (aref PE i) (/ (aref nPE i) PErow)
+                   (aref nPE i) +0-prob+)) ;reset
+         ;;transitions
+         (if (= +0-prob+ pArow) (error "No info for trans probability in state number: ~a" i)
+             (dolist-itrans (j (aref iA-from i))
+               (setf (aref A i j) (/ (aref nA i j) pArow)
+                     (aref nA i j) +0-prob+))) ;reset
+         ;;emissions GROUPED
+         (if (= +0-prob+ pBrow-grouped) (error "No info for emis probability in state number: ~a" i)
+             (dotimes (s M)
+               (setf (aref B i s) (/ (aref nB-grouped gi s) pBrow-grouped)
+                     (aref nB i s) +0-prob+))) ;reset
+         ;;reset
+         (setf (aref Arow i) +0-prob+)
+         (setf (aref Brow i) +0-prob+))
+       (setf PErow +0-prob+))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
