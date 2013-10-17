@@ -27,14 +27,14 @@
   (:documentation
    "Likelihood to the observation
       hmm:
-      obs-c: observation index-coded
+      obs-c: cbook-encoded observation
       value: likehihood"))
 
 (defgeneric backward (hmm obs-c)
   (:documentation
    "Run backward algorithm for the cbook-encoded observation
       hmm: model
-      obs-c: observation index-coded (see cbook)
+      obs-c: cbook-encoded observation
       value: betas matrix"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
