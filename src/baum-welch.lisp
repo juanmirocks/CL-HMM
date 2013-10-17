@@ -231,9 +231,14 @@
               (setf x^j (car obss)
                     x^j_leng-1 (1- (length x^j))
                     x^j-labels (car obssl))
-              ,@algorithm ;;here comes the sun
-              #+sbcl (sb-ext:gc :gen 1 :full t) ;;free memory
-              )
+
+              ;; Here comes the sun
+              ;; ----------------------------------------------------------------------
+              ,@algorithm
+              ;; ----------------------------------------------------------------------
+              ;; Little darling, the smiles returning to the faces
+
+              #+sbcl (sb-ext:gc :gen 1 :full t)) ;;free memory
 
             ,(hmm-simple-actualize) ;actualize parameters
 
@@ -265,7 +270,7 @@
 
 ;;; the actual core of the algorithm (2 versions, log and normal)
 (defmacro hmm-infinite-algorithm-core (&key (scaled nil))
-  ;;for all the statess
+  ;;for all the states
   `(loop for i of-type cbook-state from 0 to last-state do
       ;;init distribution
         (let ((pPErow (* (aref alphas 0 i) (aref betas 0 i))))
