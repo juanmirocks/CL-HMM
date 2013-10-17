@@ -22,7 +22,7 @@
 ;;       (+ arg1 arg2)))
 
 
-;;; functions to create the log versions of an array or a vector. Specialized for prob-float. Suitable to be an utility
+;;; functions to create the log versions of an array or a vector. Specialized for prob-float. Suitable to be a general utility
 (defun log-vector (array)
  (declare ((prob-array (*)) array))
   (let ((out (make-array (array-dimensions array) :element-type 'prob-float)) (v +0-prob+))
