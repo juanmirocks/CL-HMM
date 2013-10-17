@@ -114,7 +114,7 @@
            (last-state (1- N))
            (last-emis (1- M))
            (x^j_leng-1 0)
-           ;;pseudoconts. If not given, set them an uniform value to don't lost any parameter due to insufficient training
+           ;;pseudoconts. If not given, set them an uniform value not to lose any parameter due to insufficient training
            (ri (cond
                  (ri ri)
                  ((and (not ri) rip) nil)
@@ -144,7 +144,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-;;; Add the pseudocounts if are not nil
+;;; Add the pseudocounts if not nil
   (defun hmm-simple-pseudoconts ()
     `((when ri (dotimes (i N)
                  (setf (aref (the PE-vec nPE) i) (aref ri i))
