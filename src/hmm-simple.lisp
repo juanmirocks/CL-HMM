@@ -201,7 +201,7 @@
     "Vector of list of connected states"
     `(simple-array itrans-list (*)))
 
-  ;;; TODO move to base class, to be extended  by hmm-simple and phmm
+  ;;; TODO DEPRECATED & DELETE, same behavior can be achieved with loop
   (defmacro dolist-itrans ((var list &optional result) &body body)
     "Transverse a itrans-list"
     (let ((l (gensym)))
