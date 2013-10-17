@@ -244,14 +244,15 @@
 @return (1) probability of observation pair given hmm model
 @return (2) generated alpha 3d matrix
 "
-  (declare (optimize (speed 3) (safety 0)) (cbook-alphabet obs-c))
+  (declare (optimize (speed 3) (safety 0)))
   (phmm-slots (N PE A B iA-to) hmm
     (let* ((x (first obs-c))
            (y (second obs-c))
            (n (length x))
            (m (length y))
            (alpha (make-typed-array `(,N (1+ ,n) (1+ ,m)) 'prob-float +0-prob+)))
-      (declare (fixnum n m))
+      (declare (fixnum n m)
+               (cbook-alphabet x y))
 
       ;; Initialisation
       ;; -------------------------------------------------------------------------
