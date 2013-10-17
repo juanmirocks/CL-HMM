@@ -32,7 +32,7 @@
 
 (defgeneric backward (hmm obs-c)
   (:documentation
-   "Backward algorithm to the observation
+   "Run backward algorithm for the cbook-encoded observation
       hmm: model
       obs-c: observation index-coded (see cbook)
       value: betas matrix"))
