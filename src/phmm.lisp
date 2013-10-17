@@ -230,3 +230,58 @@
                    :PE (copy-seq (hmm-init hmm))
                    :A (copy-matrix (hmm-trans hmm))
                    :B (copy-array (hmm-emis hmm)))))
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Forward & Backward
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod forward ((hmm phmm) obs-c)
+  "
+@param hmm: pair hidden markov model
+@param obs-c: cbook-encoded pair observation, list of 2 elements
+
+@return (1) probability of observation pair given hmm model
+@return (2) generated alpha 3d matrix
+"
+  (declare (optimize (speed 3) (safety 0)) (cbook-alphabet obs-c))
+  (phmm-slots (N PE A B iA-to) hmm
+    (let* ((x (first obs-c))
+           (y (second obs-c))
+           (n (length x))
+           (m (length y))
+           (alpha (make-typed-array `(,N (1+ ,n) (1+ ,m)) 'prob-float +0-prob+)))
+      (declare (fixnum n m))
+
+      ;; Initialisation
+      ;; -------------------------------------------------------------------------
+      (loop for j below N do
+           (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (aref x 0) +epsilon-cbook-index+))))
+           (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (aref y 0)))))
+           (setf (aref alpha j 1 1)
+                 (prob (+
+                        (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
+                        (* (loop for i below N sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (aref x 0) +epsilon-cbook-index+))
+                        (* (loop for i below N sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (aref y 0)))))))
+
+
+      ;; Induction
+      ;; -------------------------------------------------------------------------
+      ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
+      (loop for j below N do
+           (loop for l from 0 to n do
+                (loop for r from 0 to m do
+                     (when (<= 2 (min l r))
+                       (setf (aref alpha j l r)
+                             (prob
+                              (+
+                               (* (loop for i below N sum (* (aref A i j) (aref alpha i (1- l) r))) (aref B j (aref x l) (aref y r)))
+                               (* (loop for i below N sum (* (aref A i j) (aref alpha i (1- l) r))) (aref B j (aref x l) +epsilon-cbook-index+))
+                               (* (loop for i below N sum (* (aref A i j) (aref alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (aref y r))))))))))
+
+
+      ;; Termination
+      ;; -------------------------------------------------------------------------
+      (values
+       (loop for j below N sum (aref alpha n m))
+       alpha))))
