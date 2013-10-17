@@ -75,7 +75,7 @@
              "...")) ;;TODO
 
   (print-unreadable-object (object stream :type t)
-    (phmm-slots (name S N L L-size R R-size PE A B) object
+    (phmm-slots (name S N L L-size R R-size PE A) object
       (let ((no-begins) (begins))
         (multiple-value-setq (no-begins begins) (init-stats PE S))
         (format stream "~a (~d,~d,~d)~%  S: ~a~2%  L: ~a~%  R: ~a~2%  PE (~a): ~{~a:~3$~^  ~}~2%  A~a~%  B: ~a~%"
