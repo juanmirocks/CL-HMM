@@ -3,6 +3,7 @@
 \usepackage[utf8x]{inputenc}
 %\usepackage[top=2.35cm, bottom=2.35cm, left=2.60cm, right=2.60cm]{geometry}
 \usepackage{amsmath,amssymb}
+\usepackage{hyperref} %hyperlinks for references
 \usepackage[ruled,vlined]{algorithm2e}
 \usepackage{array}
 \usepackage{ctable}
@@ -75,7 +76,7 @@
 For convenience we denote a model's complete parameter set and by extension a model as:
 $$\lambda = \langle A, B, \pi \rangle$$
 
-\section{Parameter Estimation for PHMMs}
+\section{Forward \& Backward Algorithms for PHMMs}
 
 We adapt the classical \emph{forward} and \emph{backward} HMM algorithms to PHMM
 as follows. Considering a PHMM model $\lambda$ and an input observation pair
@@ -98,13 +99,13 @@ y_m$ on the right stream and ending in any state $S_{end}$, for $1 \leq i, end
 
 Consequently, the forward algorithm is defined by induction on the alpha
 probabilities, see Algorithm \ref{fig:forward}, and analogously the backward
-algorithm is defined by induction on the beta probabilities. Note that in HMMs
-the alpha and beta variables are categorized by a two-dimensional matrix,
-whereas in PHMMs they are three-dimensional matrices.
+algorithm is defined by induction on the beta probabilities, see Algorithm
+\ref{fig:backward}. Note that in HMMs the alpha and beta variables are
+categorized by a two-dimensional matrix, whereas in PHMMs they are
+three-dimensional matrices.
 
-\vspace*{0.4cm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{algorithm}[H]
+\begin{algorithm}[]
 \caption{forward for PHMMs}
   \DontPrintSemicolon
 \KwIn{$\lambda$: PHMM; $(\vec{x}, \vec{y})$: observation pair (of lengths $n$
@@ -139,9 +140,48 @@ $$P((\vec{x}, \vec{y})|\lambda) = \displaystyle\sum_{i=j}^N \alpha_j(n, m)$$\;
 \label{fig:forward}
 \end{algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\vspace*{0.4cm}
 
-Furthermore, we define the variable:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[H]
+\caption{backward for PHMMs}
+  \DontPrintSemicolon
+\KwIn{$\lambda$: PHMM; $(\vec{x}, \vec{y})$: observation pair (of lengths $n$
+  and $m$)}
+\KwOut{$P((\vec{x}, \vec{y})|\lambda)$; $\alpha$ matrix}
+%\KwComplexityT{O(\#transitions T)}
+%\KwComplexityS{O(N T)}
+\BlankLine
+
+Initialization:
+\begin{flalign*}
+  & \alpha_j(1, 0) = \pi_j bj(x_1, \epsilon) \\
+  & \alpha_j(0, 1) = \pi_j bj(\epsilon, y_1) \\
+  & \alpha_j(1, 1) = \pi_j bj(x_1, y_1) + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(0, 1) \right] b_j(x_1, \epsilon)
+  + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(1, 0) \right] b_j(\epsilon, y_1) \\
+  & \alpha_j(*, -1) = \alpha_j(-1, *) = 0, \\
+  & \qquad 1 \leq j \leq N
+\end{flalign*}\;
+
+Induction:
+\begin{flalign*}
+  \alpha_{j}(l, r) =
+  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l-1, r-1) \right] b_j(x_l, y_r) + \\
+  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l-1, r) \right] b_j(x_l, \epsilon) + \\
+  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l, r-1) \right] b_j(\epsilon, y_r), \\
+  & \qquad 1 \leq j \leq N \\
+  & \qquad 0 \leq l \leq n, \; 0 \leq r \leq m, \; 2 \leq min(l, r)
+\end{flalign*}\;
+
+Termination: \;
+$$P((\vec{x}, \vec{y})|\lambda) = \displaystyle\sum_{i=j}^N \alpha_j(n, m)$$\;
+\label{fig:backward}
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Baum-Welch Algorithm for PHMMs}
+
+We define the variable:
 
 $$\xi_{ij}(l, r) = P(q_{(l, r) -1 } = S_i, q_{(l, r)} = S_j | (\vec{x}, \vec{y}), \lambda)$$
 
