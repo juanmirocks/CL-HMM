@@ -105,6 +105,7 @@ whereas in PHMMs they are three-dimensional matrices.
 \vspace*{0.4cm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{algorithm}[H]
+\caption{forward for PHMMs}
   \DontPrintSemicolon
 \KwIn{$\lambda$: PHMM; $(\vec{x}, \vec{y})$: observation pair (of lengths $n$
   and $m$)}
@@ -135,7 +136,6 @@ Induction:
 
 Termination: \;
 $$P((\vec{x}, \vec{y})|\lambda) = \displaystyle\sum_{i=j}^N \alpha_j(n, m)$$\;
-\caption{forward for PHMMs}
 \label{fig:forward}
 \end{algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -215,6 +215,7 @@ define the Baum-Welch algorithm for PHMMs in Algorithm \ref{alg:Baum-Welch}.
 \vspace{0.4cm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{algorithm}[H]
+\caption{Baum-Welch for PHMMs}
   \DontPrintSemicolon
 \KwIn{\\
 $\lambda: PHMM$; \\
@@ -254,7 +255,6 @@ $$\bar \lambda = \langle \bar A, \bar B, \bar \pi \rangle$$
 $\lambda^* = \bar\lambda$, stop if the change in log\_likelihood is less than some predefined threshold or a maximum number of iterations is
 exceeded.
 \BlankLine
-\caption{Baum-Welch for PHMMs}
 \label{alg:Baum-Welch}
 \end{algorithm}
 
