@@ -158,6 +158,12 @@
   hmm: hmm model
   value: integer"))
 
+(defgeneric cbook-encode (hmm observation)
+  (:documentation "cbook-encode observation sequence of symbols to sequence of cbook-indexes"))
+
+(defgeneric cbook-decode (hmm observation)
+  (:documentation "cbook-decode observation sequence of cbook-indexes to sequence of symbols"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; cl-hmm.lisp ends here

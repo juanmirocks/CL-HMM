@@ -565,7 +565,7 @@
 ;;;; codebook, translation between alphabet symbols and their indexes
 (macrolet ((with- ((&rest slots) output-type &body body)
              `(hmm-simple-slots ,slots hmm
-                (let* ((len (the fixnum (length sequence)))
+                (let* ((len (the fixnum (length observation)))
                        (output (make-array len :element-type ,output-type)))
                   (declare ((simple-array) output) (fixnum len))
                   ,@body)))
@@ -574,13 +574,13 @@
              `(dotimes (i len output)
                 (setf (aref output i) ,source))))
 
-  (defun cbook-encode (hmm observation)
+  (defmethod cbook-encode ((hmm hmm-simple) observation)
     "cbook-encode observation sequence of symbols to sequence of cbook-indexes"
     (declare (optimize (speed 3) (safety 0)) ((vector) observation))
     (with- (V-hash) 'cbook-symbol
            (forall (gethash (aref observation i) V-hash))))
 
-  (defun cbook-decode (hmm observation)
+  (defmethod cbook-decode ((hmm hmm-simple) observation)
     "cbook-decode observation sequence of cbook-indexes to sequence of symbols"
     (declare (optimize (speed 3) (safety 0)) (cbook-alphabet observation))
     (with- (V) (array-element-type V)
