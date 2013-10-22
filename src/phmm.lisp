@@ -207,6 +207,11 @@
               (make-list-meval N (make-list-meval (1+ L-size) (make-list-meval (1+ R-size) (expt (random 1.0) eccentricity)))))
              :name name :L-alphabet-type L-alphabet-type :R-alphabet-type R-alphabet-type :model-spec :complete))
 
+(defun make-uniform-phmm
+    (N L-size R-size &key (states (range N)) (L-list (range L-size)) (R-list (range R-size)) name (L-alphabet-type T) (R-alphabet-type T))
+  "Same as make-random-hmm-simple but with an uniform distribution for all probabilities, eccentricity 0"
+  (make-random-phmm N L-size R-size :eccentricity 0 :states states :L-list L-list :R-list R-list :name name :L-alphabet-type L-alphabet-type :R-alphabet-type R-alphabet-type))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Common Methods
