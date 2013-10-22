@@ -254,42 +254,47 @@
       (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
-      ;; Initialisation
-      ;; -------------------------------------------------------------------------
-      (loop for j below N do
-           (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (aref x 0) +epsilon-cbook-index+))))
-           (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (aref y 0)))))
-           (setf (aref alpha j 1 1)
-                 (prob (+
-                        (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
-                        (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (aref x 0) +epsilon-cbook-index+))
-                        (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (aref y 0)))))))
+      (labels ((arefout (matrix dim1 dim2 dim3)
+                 (if (or (< dim2 0) (< dim3 0))
+                     0
+                     (aref matrix dim1 dim2 dim3))))
+
+        ;; Initialisation
+        ;; -------------------------------------------------------------------------
+        (loop for j below N do
+             (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (aref x 0) +epsilon-cbook-index+))))
+             (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (aref y 0)))))
+             (setf (aref alpha j 1 1)
+                   (prob (+
+                          (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
+                          (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (aref x 0) +epsilon-cbook-index+))
+                          (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (aref y 0)))))))
 
 
-      ;; Induction
-      ;; -------------------------------------------------------------------------
-      ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
-      (loop for j below N do
-           (loop for l from 0 to size_x do
-                (loop for r from 0 to size_y do
-                     (when (<= 2 (min l r))
-                       (setf (aref alpha j l r)
-                             (prob
-                              (+
-                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i (1- l) r))) (aref B j (aref x l) (aref y r)))
-                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i (1- l) r))) (aref B j (aref x l) +epsilon-cbook-index+))
-                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (aref y r))))))))))
+        ;; Induction
+        ;; -------------------------------------------------------------------------
+        ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
+        (loop for j below N do
+             (loop for l from 0 to size_x do
+                  (loop for r from 0 to size_y do
+                       (when (<= 2 (min l r))
+                         (setf (aref alpha j l r)
+                               (prob
+                                (+
+                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i (1- l) r))) (aref B j (aref x l) (aref y r)))
+                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i (1- l) r))) (aref B j (aref x l) +epsilon-cbook-index+))
+                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (aref y r))))))))))
 
 
-      ;; Termination
-      ;; -------------------------------------------------------------------------
-      (values
-       (loop for j below N sum (aref alpha size_x size_y))
-       alpha))))
+        ;; Termination
+        ;; -------------------------------------------------------------------------
+        (values
+         (loop for j below N sum (aref alpha size_x size_y))
+         alpha)))))
 
 
 (defmethod backward ((hmm phmm) obs-c)
-    "
+  "
 @param hmm: pair hidden markov model
 @param obs-c: cbook-encoded pair observation, list of 2 elements
 
@@ -305,21 +310,26 @@
       (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
-      ;;Initialization
-      ;; -------------------------------------------------------------------------
-      (loop for i below N do
-           (setf (aref beta i size_x size_y) (prob 1)))
+      (labels ((arefout (matrix dim1 dim2 dim3)
+                 (if (or (> dim2 size_x) (> dim3 size_y))
+                     0
+                     (aref matrix dim1 dim2 dim3))))
 
-      ;;Induction
-      ;; -------------------------------------------------------------------------
-      (loop for i below N do
-           (loop for l from size_x downto 0 do
-                (loop for r from size_y downto 0 do
-                     (when (or (<= 1 (max l r)) (not (and (= l size_x) (= r size_y)))))
-                     (setf (aref beta i l r)
-                           (prob
-                            (loop for j in (aref iA-from i) sum
-                                 (* (aref A i j)
-                                    (+ (* (aref beta j (1+ l) (1+ r)) (aref B j (1+ l) (1+ r)))
-                                       (* (aref beta j (1+ l) r) (aref B j (1+ l) +epsilon-cbook-index+))
-                                       (* (aref beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (1+ r))))))))))))))
+        ;;Initialization
+        ;; -------------------------------------------------------------------------
+        (loop for i below N do
+             (setf (aref beta i size_x size_y) (prob 1)))
+
+        ;;Induction
+        ;; -------------------------------------------------------------------------
+        (loop for i below N do
+             (loop for l from size_x downto 0 do
+                  (loop for r from size_y downto 0 do
+                       (when (or (<= 1 (max l r)) (not (and (= l size_x) (= r size_y)))))
+                       (setf (aref beta i l r)
+                             (prob
+                              (loop for j in (aref iA-from i) sum
+                                   (* (aref A i j)
+                                      (+ (* (aref beta j (1+ l) (1+ r)) (aref B j (1+ l) (1+ r)))
+                                         (* (aref beta j (1+ l) r) (aref B j (1+ l) +epsilon-cbook-index+))
+                                         (* (aref beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (1+ r)))))))))))))))
