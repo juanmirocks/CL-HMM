@@ -562,30 +562,6 @@
 ;; Specific Procedures
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;; codebook, translation between alphabet symbols and their indexes
-(macrolet ((with- ((&rest slots) output-type &body body)
-             `(hmm-simple-slots ,slots hmm
-                (let* ((len (the fixnum (length observation)))
-                       (output (make-array len :element-type ,output-type)))
-                  (declare ((simple-array) output) (fixnum len))
-                  ,@body)))
-
-           (forall (source)
-             `(dotimes (i len output)
-                (setf (aref output i) ,source))))
-
-  (defmethod cbook-encode ((hmm hmm-simple) observation)
-    "cbook-encode observation sequence of symbols to sequence of cbook-indexes"
-    (declare (optimize (speed 3) (safety 0)) ((vector) observation))
-    (with- (V-hash) 'cbook-symbol
-           (forall (gethash (aref observation i) V-hash))))
-
-  (defmethod cbook-decode ((hmm hmm-simple) observation)
-    "cbook-decode observation sequence of cbook-indexes to sequence of symbols"
-    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet observation))
-    (with- (V) (array-element-type V)
-           (forall (aref V (aref observation i))))))
-
 (defun hmm-state-labels (hmm) ;review if make it common for all
   "Create a vector with the state's labels"
   (hmm-simple-slots (N S) hmm
@@ -819,3 +795,26 @@
   (declare (inline hmm-complexity))
   (hmm-simple-slots (M) hmm
     (* M (hmm-no-transitions hmm))))
+
+(macrolet ((with- ((&rest slots) output-type &body body)
+             `(hmm-simple-slots ,slots hmm
+                (let* ((len (the fixnum (length observation)))
+                       (output (make-array len :element-type ,output-type)))
+                  (declare ((simple-array) output) (fixnum len))
+                  ,@body)))
+
+           (forall (source)
+             `(dotimes (i len output)
+                (setf (aref output i) ,source))))
+
+  (defmethod cbook-encode ((hmm hmm-simple) observation)
+    "cbook-encode observation sequence of symbols to sequence of cbook-indexes"
+    (declare (optimize (speed 3) (safety 0)) ((vector) observation))
+    (with- (V-hash) 'cbook-symbol
+           (forall (gethash (aref observation i) V-hash))))
+
+  (defmethod cbook-decode ((hmm hmm-simple) observation)
+    "cbook-decode observation sequence of cbook-indexes to sequence of symbols"
+    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet observation))
+    (with- (V) (array-element-type V)
+           (forall (aref V (aref observation i))))))
