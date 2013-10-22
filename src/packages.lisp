@@ -62,8 +62,8 @@
    :fixed-state-2p
    :fixed-state-p
 
-   :cbook
-   :cbook-indexes
+   :cbook-encode
+   :cbook-decode
 
    ;;;phmm
    :phmm

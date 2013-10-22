@@ -574,13 +574,13 @@
              `(dotimes (i len output)
                 (setf (aref output i) ,source))))
 
-  (defun cbook (hmm sequence)
+  (defun cbook-encode (hmm sequence)
     "Return codebook, from observation of symbols to their indexes"
     (declare (optimize (speed 3) (safety 0)) ((vector) sequence))
     (with- (V-hash) 'cbook-symbol
            (forall (gethash (aref sequence i) V-hash))))
 
-  (defun cbook-indexes (hmm sequence)
+  (defun cbook-decode (hmm sequence)
     "Codebook, from an observation of the indexes to their symbols"
     (declare (optimize (speed 3) (safety 0)) (cbook-alphabet sequence))
     (with- (V) (array-element-type V)
