@@ -293,7 +293,7 @@
            (y (second obs-c))
            (size_x (length x))
            (size_y (length y))
-           (alpha (make-typed-array `(,N (1+ ,size_x) (1+ ,size_y)) 'prob-float +0-prob+)))
+           (alpha (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float +0-prob+)))
       (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
@@ -349,7 +349,7 @@
            (y (second obs-c))
            (size_x (length x))
            (size_y (length y))
-           (beta (make-typed-array `(,N (1+ ,size_x) (1+ ,size_y)) 'prob-float +0-prob+)))
+           (beta (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float +0-prob+)))
       (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
