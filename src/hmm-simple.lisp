@@ -586,14 +586,6 @@
     (with- (V) (array-element-type V)
            (forall (aref V (aref sequence i))))))
 
-(defun cbook-list (hmm sequences)
-  "Translate the list of sequences in a list of sequences index-coded"
-  (labels ((aux (hmm sequences cbooks)
-             (cond
-               ((null sequences) (nreverse cbooks))
-                (t (aux hmm (cdr sequences) (cons (cbook hmm (car sequences)) cbooks))))))
-    (aux hmm sequences nil)))
-
 (defun hmm-state-labels (hmm) ;review if make it common for all
   "Create a vector with the state's labels"
   (hmm-simple-slots (N S) hmm
