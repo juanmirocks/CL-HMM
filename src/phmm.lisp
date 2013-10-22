@@ -269,9 +269,9 @@
 
         (list
          (dotimes (i size_x out_x)
-           (setf (aref out_x i) (aref L (1+ (aref in_x i)))))
+           (setf (aref out_x i) (aref L (1- (aref in_x i))))) ;-1 since in L&R epsilon is not accounted for
          (dotimes (i size_y out_y)
-           (setf (aref out_y i) (aref R (1+ (aref in_y i))))))))))
+           (setf (aref out_y i) (aref R (1- (aref in_y i))))))))))
 
 
 
