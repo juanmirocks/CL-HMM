@@ -375,4 +375,6 @@
                                    (* (aref A i j)
                                       (+ (* (aref beta j (1+ l) (1+ r)) (aref B j (1+ l) (1+ r)))
                                          (* (aref beta j (1+ l) r) (aref B j (1+ l) +epsilon-cbook-index+))
-                                         (* (aref beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (1+ r)))))))))))))))
+                                         (* (aref beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (1+ r))))))))))))
+
+      beta)))
