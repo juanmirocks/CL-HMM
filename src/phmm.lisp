@@ -237,28 +237,41 @@
   (phmm-slots (N L-size R-size) hmm
     (* N L-size R-size)))
 
-(macrolet ((with- ((&rest slots) output-type &body body)
-             `(phmm-slots ,slots hmm
-                (let* ((len (the fixnum (length observation)))
-                       (output (make-array len :element-type ,output-type)))
-                  (declare ((simple-array) output) (fixnum len))
-                  ,@body)))
 
-           (forall (source)
-             `(dotimes (i len output)
-                (setf (aref output i) ,source))))
+(defmethod cbook-encode ((hmm phmm) observation)
+  "cbook-encode pair observation"
+  (declare (optimize (speed 3) (safety 0)))
+  (let* ((in_x (first observation))
+         (in_y (second observation))
+         (size_x (the fixnum (length in_x)))
+         (size_y (the fixnum (length in_y)))
+         (out_x (make-array size_x :element-type 'cbook-symbol))
+         (out_y (make-array size_y :element-type 'cbook-symbol)))
+    (declare ((vector) in_x in_y))
+    (phmm-slots (L-hash R-hash) hmm
+        (list
+         (dotimes (i size_x out_x)
+           (setf (aref out_x i) (gethash (aref in_x i) L-hash)))
+         (dotimes (i size_y out_y)
+           (setf (aref out_y i) (gethash (aref in_y i) R-hash)))))))
 
-  (defmethod cbook-encode ((hmm phmm) observation)
-    "cbook-encode pair observation"
-    (declare (optimize (speed 3) (safety 0)) ((vector) (first observation) (second observation)))
-    (with- (V-hash) 'cbook-symbol
-           (forall (gethash (aref observation i) V-hash))))
+(defmethod cbook-decode ((hmm phmm) observation)
+  "cbook-encode pair observation"
+  (declare (optimize (speed 3) (safety 0)))
+  (let* ((in_x (first observation))
+         (in_y (second observation))
+         (size_x (the fixnum (length in_x)))
+         (size_y (the fixnum (length in_y))))
+    (declare (cbook-alphabet in_x in_y))
+    (phmm-slots (L R) hmm
+      (let ((out_x (make-array size_x :element-type (array-element-type L)))
+            (out_y (make-array size_y :element-type (array-element-type R))))
 
-  (defmethod cbook-decode ((hmm phmm) observation)
-    "cbook-decode pair observation"
-    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet (first observation) (second observation)))
-    (with- (V) (array-element-type V)
-           (forall (aref V (aref observation i))))))
+        (list
+         (dotimes (i size_x out_x)
+           (setf (aref out_x i) (aref L (1+ (aref in_x i)))))
+         (dotimes (i size_y out_y)
+           (setf (aref out_y i) (aref R (1+ (aref in_y i))))))))))
 
 
 
