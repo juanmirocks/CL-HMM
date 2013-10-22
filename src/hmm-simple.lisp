@@ -574,17 +574,17 @@
              `(dotimes (i len output)
                 (setf (aref output i) ,source))))
 
-  (defun cbook-encode (hmm sequence)
-    "Return codebook, from observation of symbols to their indexes"
-    (declare (optimize (speed 3) (safety 0)) ((vector) sequence))
+  (defun cbook-encode (hmm observation)
+    "cbook-encode observation sequence of symbols to sequence of cbook-indexes"
+    (declare (optimize (speed 3) (safety 0)) ((vector) observation))
     (with- (V-hash) 'cbook-symbol
-           (forall (gethash (aref sequence i) V-hash))))
+           (forall (gethash (aref observation i) V-hash))))
 
-  (defun cbook-decode (hmm sequence)
-    "Codebook, from an observation of the indexes to their symbols"
-    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet sequence))
+  (defun cbook-decode (hmm observation)
+    "cbook-decode observation sequence of cbook-indexes to sequence of symbols"
+    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet observation))
     (with- (V) (array-element-type V)
-           (forall (aref V (aref sequence i))))))
+           (forall (aref V (aref observation i))))))
 
 (defun hmm-state-labels (hmm) ;review if make it common for all
   "Create a vector with the state's labels"
