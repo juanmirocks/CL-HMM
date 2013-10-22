@@ -64,7 +64,6 @@
 
    :cbook
    :cbook-indexes
-   :cbook-list
 
    ;;;phmm
    :phmm

@@ -65,7 +65,7 @@
     (hmm obss-c &key obss-l starting-noise max-times threshold ri ra rb verbose)
   (:documentation "Train the hmm using the pure Baum-Welch algorithm
       hmm: hmm to train
-      obss-c: observation index-coded to train with (see cbook or cbook-list)
+      obss-c: observation index-coded to train with (see cbook)
       obss-l: labeled observation if is desired a labeled training
       starting-noise: initial noise to play with (0 to 1)
       max-times: max-times to run the alg.
@@ -80,7 +80,7 @@
     (hmm obss-c &key obss-l starting-noise max-times threshold ri ra rb verbose)
   (:documentation "Train the hmm using the pure Baum-Welch algorithm
       hmm: hmm to train
-      obss-c: observation index-coded to train with (see cbook or cbook-list)
+      obss-c: observation index-coded to train with (see cbook)
       obss-l: labeled observation if is desired a labeled
       never-erase-transitions: if T, doesn't erase no given transitions in the training
       starting-noise: initial noise to play with (0 to 1)

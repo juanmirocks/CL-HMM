@@ -19,7 +19,7 @@
    "Estimate the model using BaumWelch-scaled with the given model parameters and learning observations.
       Repeat the estimation algorithm .iteration. times starting from a mixture of a random model and the one given. The proportion is balanced with .confidence. (range 0 to 1)
       hmm: model
-      obss-c: observation index-coded (see cbook and cbook-list)
+      obss-c: observation index-coded (see cbook)
       confidence: (float 0 1) / confidence in the given model parameters. 0 to start with a total random model
       iterations: number of iterations
       starting-noise: initial noise to play with in Baum-Welch;(0 to 1)
