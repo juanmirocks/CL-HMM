@@ -808,13 +808,11 @@
                 (setf (aref output i) ,source))))
 
   (defmethod cbook-encode ((hmm hmm-simple) observation)
-    "cbook-encode observation sequence of symbols to sequence of cbook-indexes"
     (declare (optimize (speed 3) (safety 0)) ((vector) observation))
     (with- (V-hash) 'cbook-symbol
            (forall (gethash (aref observation i) V-hash))))
 
   (defmethod cbook-decode ((hmm hmm-simple) observation)
-    "cbook-decode observation sequence of cbook-indexes to sequence of symbols"
     (declare (optimize (speed 3) (safety 0)) (cbook-alphabet observation))
     (with- (V) (array-element-type V)
            (forall (aref V (aref observation i))))))

@@ -231,6 +231,36 @@
                    :A (copy-matrix (hmm-trans hmm))
                    :B (copy-array (hmm-emis hmm)))))
 
+;;;this definition can change
+(defmethod hmm-complexity ((hmm phmm))
+  (declare (inline hmm-complexity))
+  (phmm-slots (N L-size R-size) hmm
+    (* N L-size R-size)))
+
+(macrolet ((with- ((&rest slots) output-type &body body)
+             `(phmm-slots ,slots hmm
+                (let* ((len (the fixnum (length observation)))
+                       (output (make-array len :element-type ,output-type)))
+                  (declare ((simple-array) output) (fixnum len))
+                  ,@body)))
+
+           (forall (source)
+             `(dotimes (i len output)
+                (setf (aref output i) ,source))))
+
+  (defmethod cbook-encode ((hmm phmm) observation)
+    "cbook-encode pair observation"
+    (declare (optimize (speed 3) (safety 0)) ((vector) (first observation) (second observation)))
+    (with- (V-hash) 'cbook-symbol
+           (forall (gethash (aref observation i) V-hash))))
+
+  (defmethod cbook-decode ((hmm phmm) observation)
+    "cbook-decode pair observation"
+    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet (first observation) (second observation)))
+    (with- (V) (array-element-type V)
+           (forall (aref V (aref observation i))))))
+
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Forward & Backward
