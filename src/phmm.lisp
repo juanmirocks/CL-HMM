@@ -286,3 +286,40 @@
       (values
        (loop for j below N sum (aref alpha size_x size_y))
        alpha))))
+
+
+(defmethod backward ((hmm phmm) obs-c)
+    "
+@param hmm: pair hidden markov model
+@param obs-c: cbook-encoded pair observation, list of 2 elements
+
+@return (1) generated beta 3d matrix
+"
+  (declare (optimize (speed 3) (safety 0)))
+  (phmm-slots (N A B iA-from) hmm
+    (let* ((x (first obs-c))
+           (y (second obs-c))
+           (size_x (length x))
+           (size_y (length y))
+           (beta (make-typed-array `(,N (1+ ,size_x) (1+ ,size_y)) 'prob-float +0-prob+)))
+      (declare (fixnum size_x size_y)
+               (cbook-alphabet x y))
+
+      ;;Initialization
+      ;; -------------------------------------------------------------------------
+      (loop for i below N do
+           (setf (aref beta i size_x size_y) (prob 1)))
+
+      ;;Induction
+      ;; -------------------------------------------------------------------------
+      (loop for i below N do
+           (loop for l from size_x downto 0 do
+                (loop for r from size_y downto 0 do
+                     (when (or (<= 1 (max l r)) (not (and (= l size_x) (= r size_y)))))
+                     (setf (aref beta i l r)
+                           (prob
+                            (loop for j in (aref iA-from i) sum
+                                 (* (aref A i j)
+                                    (+ (* (aref beta j (1+ l) (1+ r)) (aref B j (1+ l) (1+ r)))
+                                       (* (aref beta j (1+ l) r) (aref B j (1+ l) +epsilon-cbook-index+))
+                                       (* (aref beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (1+ r))))))))))))))
