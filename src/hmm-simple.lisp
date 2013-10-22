@@ -563,28 +563,28 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;; codebook, translation between alphabet symbols and their indexes
-(macrolet ((operation (source)
-             `(dotimes (i len output)
-                (setf (aref output i) ,source)))
-
-           (with- ((&rest slots) output-type &body body)
+(macrolet ((with- ((&rest slots) output-type &body body)
              `(hmm-simple-slots ,slots hmm
                 (let* ((len (the fixnum (length sequence)))
                        (output (make-array len :element-type ,output-type)))
                   (declare ((simple-array) output) (fixnum len))
-                  ,@body))))
+                  ,@body)))
+
+           (forall (source)
+             `(dotimes (i len output)
+                (setf (aref output i) ,source))))
 
   (defun cbook (hmm sequence)
     "Return codebook, from observation of symbols to their indexes"
     (declare (optimize (speed 3) (safety 0)) ((vector) sequence))
     (with- (V-hash) 'cbook-symbol
-           (operation (gethash (aref sequence i) V-hash))))
+           (forall (gethash (aref sequence i) V-hash))))
 
   (defun cbook-indexes (hmm sequence)
     "Codebook, from an observation of the indexes to their symbols"
     (declare (optimize (speed 3) (safety 0)) (cbook-alphabet sequence))
     (with- (V) (array-element-type V)
-           (operation (aref V (aref sequence i))))))
+           (forall (aref V (aref sequence i))))))
 
 (defun cbook-list (hmm sequences)
   "Translate the list of sequences in a list of sequences index-coded"
