@@ -147,33 +147,27 @@ $$P((\vec{x}, \vec{y})|\lambda) = \displaystyle\sum_{i=j}^N \alpha_j(n, m)$$\;
   \DontPrintSemicolon
 \KwIn{$\lambda$: PHMM; $(\vec{x}, \vec{y})$: observation pair (of lengths $n$
   and $m$)}
-\KwOut{$P((\vec{x}, \vec{y})|\lambda)$; $\alpha$ matrix}
+\KwOut{$\beta$ matrix}
 %\KwComplexityT{O(\#transitions T)}
 %\KwComplexityS{O(N T)}
 \BlankLine
 
 Initialization:
 \begin{flalign*}
-  & \alpha_j(1, 0) = \pi_j bj(x_1, \epsilon) \\
-  & \alpha_j(0, 1) = \pi_j bj(\epsilon, y_1) \\
-  & \alpha_j(1, 1) = \pi_j bj(x_1, y_1) + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(0, 1) \right] b_j(x_1, \epsilon)
-  + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(1, 0) \right] b_j(\epsilon, y_1) \\
-  & \alpha_j(*, -1) = \alpha_j(-1, *) = 0, \\
-  & \qquad 1 \leq j \leq N
+\beta_{i}(n, m) = 1, \quad  1 \leq i \leq N
 \end{flalign*}\;
 
 Induction:
 \begin{flalign*}
-  \alpha_{j}(l, r) =
-  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l-1, r-1) \right] b_j(x_l, y_r) + \\
-  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l-1, r) \right] b_j(x_l, \epsilon) + \\
-  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l, r-1) \right] b_j(\epsilon, y_r), \\
-  & \qquad 1 \leq j \leq N \\
-  & \qquad 0 \leq l \leq n, \; 0 \leq r \leq m, \; 2 \leq min(l, r)
+  \beta_{i}(l, r) = \displaystyle\sum_{j=1}^N a_{ij} \Bigl[
+    &\beta_j(l+1, r+1) \; b_j(x_{l+1}, y_{r+1}) \; + \\
+    &\beta_j(l+1, r) \; b_j(x_{l+1}, \epsilon) \; + \\
+    &\beta_j(l, r+1) \; b_j(\epsilon, y_{r+1}) \Bigr] \\
+  &\qquad 1 \leq i \leq N \\
+  &\qquad 0 \leq l \leq n, \; 0 \leq r \leq m, \; 1 \leq max(l, r), \; not ( l
+  = n \, \& \, r = m)
 \end{flalign*}\;
 
-Termination: \;
-$$P((\vec{x}, \vec{y})|\lambda) = \displaystyle\sum_{i=j}^N \alpha_j(n, m)$$\;
 \label{fig:backward}
 \end{algorithm}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
