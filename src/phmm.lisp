@@ -307,7 +307,7 @@
                      0
                      (aref matrix dim1 dim2 dim3))))
 
-        ;; Initialisation
+        ;; Initialization
         ;; -------------------------------------------------------------------------
         (loop for j below N do
              (when (> size_x 0) (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (aref x 0) +epsilon-cbook-index+)))))
