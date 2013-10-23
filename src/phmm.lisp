@@ -370,8 +370,8 @@
                      0
                      (aref matrix dim1 dim2 dim3)))
                (elt1 (seq i)
-                 "1-Index cbook-encoded input sequence. If 0, return epsilon's index"
-                 (if (= i 0)
+                 "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index"
+                 (if (> i (length seq))
                      +epsilon-cbook-index+
                      (elt seq (1- i)))))
 
