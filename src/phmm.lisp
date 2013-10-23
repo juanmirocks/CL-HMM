@@ -292,7 +292,7 @@
 @return (1) probability of observation pair given hmm model
 @return (2) generated alpha 3d matrix
 "
-  (declare (optimize (speed 3) (safety 0)))
+  ;;(declare (optimize (speed 3) (safety 0)))
   (phmm-slots (N PE A B iA-to) hmm
     (let* ((x (first obs-c))
            (y (second obs-c))
@@ -302,22 +302,28 @@
       (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
-      (labels ((arefout (matrix dim1 dim2 dim3)
+      (labels ((arefmat (matrix dim1 dim2 dim3)
                  (if (or (< dim2 0) (< dim3 0))
                      0
-                     (aref matrix dim1 dim2 dim3))))
+                     (aref matrix dim1 dim2 dim3)))
+               (elt1 (seq i)
+                 "1-Index cbook-encoded input sequence. If 0, return epsilon's index"
+                 (if (= i 0)
+                     +epsilon-cbook-index+
+                     (elt seq (1- i)))))
+
 
         ;; Initialization
         ;; -------------------------------------------------------------------------
         (loop for j below N do
-             (when (> size_x 0) (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (aref x 0) +epsilon-cbook-index+)))))
-             (when (> size_y 0) (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (aref y 0))))))
+             (when (> size_x 0) (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (elt1 x 1) +epsilon-cbook-index+)))))
+             (when (> size_y 0) (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (elt1 y 1))))))
              (when (and (> size_x 0) (> size_y 0))
                (setf (aref alpha j 1 1)
                      (prob (+
                             (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
-                            (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (aref x 0) +epsilon-cbook-index+))
-                            (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (aref y 0))))))))
+                            (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (elt1 x 1) +epsilon-cbook-index+))
+                            (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (elt1 y 1))))))))
 
 
         ;; Induction
@@ -330,9 +336,9 @@
                          (setf (aref alpha j l r)
                                (prob
                                 (+
-                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i (1- l) (1- r)))) (aref B j (aref x l) (aref y r)))
-                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i (1- l) r))) (aref B j (aref x l) +epsilon-cbook-index+))
-                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (aref y r))))))))))
+                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefmat alpha i (1- l) (1- r)))) (aref B j (elt1 x l) (elt1 y r)))
+                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefmat alpha i (1- l) r))) (aref B j (elt1 x l) +epsilon-cbook-index+))
+                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefmat alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (elt1 y r))))))))))
 
 
         ;; Termination
