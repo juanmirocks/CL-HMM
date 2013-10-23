@@ -365,10 +365,15 @@
       (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
-      (labels ((arefout (matrix dim1 dim2 dim3)
+      (labels ((arefmat (matrix dim1 dim2 dim3)
                  (if (or (> dim2 size_x) (> dim3 size_y))
                      0
-                     (aref matrix dim1 dim2 dim3))))
+                     (aref matrix dim1 dim2 dim3)))
+               (elt1 (seq i)
+                 "1-Index cbook-encoded input sequence. If 0, return epsilon's index"
+                 (if (= i 0)
+                     +epsilon-cbook-index+
+                     (elt seq (1- i)))))
 
         ;;Initialization
         ;; -------------------------------------------------------------------------
@@ -377,16 +382,16 @@
 
         ;;Induction
         ;; -------------------------------------------------------------------------
-        (loop for i below N do
-             (loop for l from size_x downto 0 do
-                  (loop for r from size_y downto 0 do
-                       (when (and (<= 1 (max l r)) (not (and (= l size_x) (= r size_y))))
+        (loop for l from size_x downto 0 do
+             (loop for r from size_y downto 0 do
+                  (when (and (<= 1 (max l r)) (not (and (= l size_x) (= r size_y))))
+                    (loop for i below N do
                          (setf (aref beta i l r)
                                (prob
                                 (loop for j in (aref iA-from i) sum
                                      (* (aref A i j)
-                                        (+ (* (aref beta j (1+ l) (1+ r)) (aref B j (1+ l) (1+ r)))
-                                           (* (aref beta j (1+ l) r) (aref B j (1+ l) +epsilon-cbook-index+))
-                                           (* (aref beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (1+ r)))))))))))))
+                                        (+ (* (arefmat beta j (1+ l) (1+ r)) (aref B j (elt1 x (1+ l)) (elt1 y (1+ r))))
+                                           (* (arefmat beta j (1+ l) r) (aref B j (elt1 x (1+ l)) +epsilon-cbook-index+))
+                                           (* (arefmat beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (elt1 y (1+ r))))))))))))))
 
       beta)))
