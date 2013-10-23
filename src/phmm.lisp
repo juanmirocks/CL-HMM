@@ -323,10 +323,10 @@
         ;; Induction
         ;; -------------------------------------------------------------------------
         ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
-        (loop for j below N do
-             (loop for l from 0 to size_x do
-                  (loop for r from 0 to size_y do
-                       (when (<= 2 (min l r))
+        (loop for l from 0 to size_x do
+             (loop for r from 0 to size_y do
+                  (when (<= 2 (max l r))
+                    (loop for j below N do
                          (setf (aref alpha j l r)
                                (prob
                                 (+
