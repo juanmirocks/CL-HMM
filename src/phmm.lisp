@@ -330,7 +330,7 @@
                          (setf (aref alpha j l r)
                                (prob
                                 (+
-                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i (1- l) r))) (aref B j (aref x l) (aref y r)))
+                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i (1- l) (1- r)))) (aref B j (aref x l) (aref y r)))
                                  (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i (1- l) r))) (aref B j (aref x l) +epsilon-cbook-index+))
                                  (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefout alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (aref y r))))))))))
 
