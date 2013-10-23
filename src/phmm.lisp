@@ -355,7 +355,7 @@
 
 @return (1) generated beta 3d matrix
 "
-  (declare (optimize (speed 3) (safety 0)))
+  ;;(declare (optimize (speed 3) (safety 0)))
   (phmm-slots (N A B iA-from) hmm
     (let* ((x (first obs-c))
            (y (second obs-c))
