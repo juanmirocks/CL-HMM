@@ -338,7 +338,7 @@
         ;; Termination
         ;; -------------------------------------------------------------------------
         (values
-         (loop for j below N sum (aref alpha size_x size_y))
+         (loop for j below N sum (aref alpha j size_x size_y))
          alpha)))))
 
 
