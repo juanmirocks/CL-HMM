@@ -121,7 +121,7 @@ Initialization:
   & \alpha_j(0, 1) = \pi_j bj(\epsilon, y_1) \\
   & \alpha_j(1, 1) = \pi_j bj(x_1, y_1) + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(0, 1) \right] b_j(x_1, \epsilon)
   + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(1, 0) \right] b_j(\epsilon, y_1) \\
-  & \alpha_j(*, -1) = \alpha_j(-1, *) = 0, \\
+  & \alpha_j(0, 0) = \alpha_j(*, -1) = \alpha_j(-1, *) = 0, \\
   & \qquad 1 \leq j \leq N
 \end{flalign*}\;
 
@@ -185,12 +185,12 @@ alpha and beta:
 
 \begin{center}
 \begin{flalign*}
-  \xi_{ij}(l, r) & = \frac{a_{ij} \left[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
-      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \right] \beta_j(l, r)}{P((\vec{x}, \vec{y}) | \lambda)}\\\\
-  & = \frac{a_{ij} \left[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
-      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \right] \beta_j(l, r)}
-  {\displaystyle\sum_{i=1}^N \displaystyle\sum_{j=1}^N a_{ij} \left[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
-      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \right] \beta_j(l, r)}
+  \xi_{ij}(l, r) & = \frac{a_{ij} \Bigl[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
+      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \Bigl] \beta_j(l, r)}{P((\vec{x}, \vec{y}) | \lambda)}\\\\
+  & = \frac{a_{ij} \Bigl[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
+      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \Bigl] \beta_j(l, r)}
+  {\displaystyle\sum_{i=1}^N \displaystyle\sum_{j=1}^N a_{ij} \Bigl[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
+      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \Bigl] \beta_j(l, r)}
 \end{flalign*}
 \end{center}
 
@@ -219,7 +219,7 @@ reestimate the $\lambda$ parameters:
 \begin{center}
 \begin{flalign}\label{eq:count_pi}
 \bar \pi_j =& \mbox{ expected number of times in state $S_j$ at time $(t=1)$ } = \notag\\
-&\gamma_j(1, 0) + \gamma_j(0, 1) + \left[\gamma_j(1, 1) + \sum_{i=1}^{N}
+&\gamma_j(1, 0) + \gamma_j(0, 1) + \left[\gamma_j(1, 1) - \sum_{i=1}^{N}
   \xi_{ij}(1, 1)\right]
 \end{flalign}
 \end{center}
@@ -293,7 +293,16 @@ exceeded.
 \end{algorithm}
 
 
-\bibliographystyle{is-unsrt}
+\section{Scaled Forward, Backward, \& Baum-Welch}
+
+The previous algorithms multiply large sequences of probabilities, which end up
+escaping a computer's float precision thus leading to underflow errors. To
+overcome this problem, the computation of the alpha and beta variables can be
+scaled as shown by Rabiner \cite{Rabiner:HMMs}. We adapt here the scaling
+procedure for the forward and backward and consequently Baum-Welch algorithms to
+PHMMs.
+
+\bibliographystyle{alpha}
 {\small
 \bibliography{simple}
 }
