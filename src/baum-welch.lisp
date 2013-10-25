@@ -170,8 +170,8 @@
           (incf (aref Brow-grouped group-i) (aref Brow i))))
       (values nB-grouped Brow-grouped)))
 
-;;; Actualize parameters
-  (defun hmm-simple-actualize ()
+;;; Update parameters
+  (defun hmm-simple-update ()
     `(multiple-value-bind (nB-grouped Brow-grouped)
          (group-emissions N M no-groups state-groups nB Brow)
        (do* ((i 0 (1+ i))
@@ -239,7 +239,7 @@
 
               #+sbcl (sb-ext:gc :gen 1 :full t)) ;;free memory
 
-            ,(hmm-simple-actualize) ;actualize parameters
+            ,(hmm-simple-update) ; update parameters
 
             ;;about the noise
             (setf noise (* (random +1-prob+) noise-amp))
