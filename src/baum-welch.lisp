@@ -204,9 +204,14 @@
 ;;; Define a Baum-Welch method
 (defmacro def-baum-welch (name specializer-hmm scaled &body algorithm)
   `(defmethod ,name
-       ((hmm ,specializer-hmm) obss-c &key obss-l
-        (starting-noise +bw-noise-start+) (max-times +bw-max-times+) (threshold +bw-threshold+)
-        (ri nil rip) (ra nil rap) (rb nil rbp) (verbose nil))
+       ((hmm ,specializer-hmm)
+        obss-c
+        &key
+          obss-l
+          (starting-noise +bw-noise-start+)
+          (max-times +bw-max-times+) (threshold +bw-threshold+)
+          (ri nil rip) (ra nil rap) (rb nil rbp)
+          (verbose nil))
      ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
      (declare (optimize (speed 3) (safety 0)) (fixnum max-times) (float threshold) (list obss-c))
      (restart-case (hmm-incorrect-signal hmm)
