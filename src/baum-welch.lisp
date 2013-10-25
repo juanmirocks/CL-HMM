@@ -78,18 +78,7 @@
 
 (defgeneric baum-welch-scl
     (hmm obss-c &key obss-l starting-noise max-times threshold ri ra rb verbose)
-  (:documentation "Train the hmm using the pure Baum-Welch algorithm
-      hmm: hmm to train
-      obss-c: list of cbook-encoded observations to train with
-      obss-l: (optional) list of labeled observations
-      starting-noise: initial noise to play with (0 to 1)
-      max-times: max-times to run the alg.
-      threshold: minimum difference change between 2 hmms to accept it and stop
-      ri: initial probs pseudoconts (vector)
-      ra: transition pseudoconts (array)
-      rb: emission pseudoconts (array) (If the pseudoconts are not given, these are set to a minimum value not to
-      lose any parameter. Set to nil if you do not want this behavior)
-      verbose: prints detailed information about what is happening"))
+  (:documentation "Scaled version of the Baum-Welch algorithm (see baum-welch)"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
