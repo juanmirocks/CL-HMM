@@ -94,8 +94,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;
-;;;; let's divide the code in parts to don't write that much
-;;;; basically everything is made to distinguish between the log version and the original one
+;;;; The code is divided into common parts to be reused for both the original
+;;;; and the scaled versions of the Baum-Welch algorithm
 ;;;;
 
 ;;;;variable definition (not very functional indeed)
