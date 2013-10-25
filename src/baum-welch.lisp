@@ -231,11 +231,9 @@
                     x^j_leng-1 (1- (length x^j))
                     x^j-labels (car obssl))
 
-              ;; Here comes the sun
               ;; ----------------------------------------------------------------------
               ,@algorithm
               ;; ----------------------------------------------------------------------
-              ;; Little darling, the smiles returning to the faces
 
               #+sbcl (sb-ext:gc :gen 1 :full t)) ;;free memory
 
