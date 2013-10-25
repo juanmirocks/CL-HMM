@@ -72,8 +72,8 @@
       threshold: minimum difference change between 2 hmms to accept it and stop
       ri: initial probs pseudoconts (vector)
       ra: transition pseudoconts (array)
-      rb: emission pseudoconts (array)
-      (If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
+      rb: emission pseudoconts (array) (If the pseudoconts are not given, these are set to a minimum value not to
+      lose any parameter. Set to nil if you do not want this behavior)
       verbose: prints detailed information about what is happening"))
 
 (defgeneric baum-welch-scl
@@ -82,14 +82,14 @@
       hmm: hmm to train
       obss-c: observation index-coded to train with (see cbook)
       obss-l: labeled observation if is desired a labeled
-      never-erase-transitions: if T, doesn't erase no given transitions in the training
+      never-erase-transitions: if T, do not erase non given transitions in the training (do not set to 0 probability)
       starting-noise: initial noise to play with (0 to 1)
       max-times: max-times to run the alg.
       threshold: minimum difference change between 2 hmms to accept it and stop
       ri: initial probs pseudoconts (vector)
       ra: transition pseudoconts (array)
-      rb: emission pseudoconts (array)
-      (If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
+      rb: emission pseudoconts (array) (If the pseudoconts are not given, these are set to a minimum value not to
+      lose any parameter. Set to nil if you do not want this behavior)
       verbose: prints detailed information about what is happening"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
