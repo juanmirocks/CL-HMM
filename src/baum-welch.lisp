@@ -82,7 +82,6 @@
       hmm: hmm to train
       obss-c: observation index-coded to train with (see cbook)
       obss-l: labeled observation if is desired a labeled
-      never-erase-transitions: if T, do not erase non given transitions in the training (do not set to 0 probability)
       starting-noise: initial noise to play with (0 to 1)
       max-times: max-times to run the alg.
       threshold: minimum difference change between 2 hmms to accept it and stop
