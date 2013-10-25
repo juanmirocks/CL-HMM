@@ -7,7 +7,8 @@
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Estimpation process, Using repeatedly different learning algorithms
+;; Parameter estimation learning algorithms. Currently implemented:
+;;   * Baum-Welch (scaled) parameter estimation for HMMs.
 ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -20,18 +21,22 @@
       Repeat the estimation algorithm .iteration. times starting from a mixture of a random model and the one given. The proportion is balanced with .confidence. (range 0 to 1)
       hmm: model
       obss-c: list of cbook-encoded observations to train with
-      confidence: (float 0 1) / confidence in the given model parameters. 0 to start with a total random model
+      confidence: float in [0, 1], confidence in the given model parameters. 0 to start with a total random model
       iterations: number of iterations
+      verbose-estimation:
+      obss-l: (optional) list of labeled observations
       starting-noise: initial noise to play with in Baum-Welch;(0 to 1)
       max-times: max number of iterations for Baum-Welch scl
       threshold: minimum difference with the last loglikelihood to stop the process
       ri: initial probs pseudoconts (vector)
       ra: transition pseudoconts (array)
-      rb: emission pseudoconts (array)
-      (If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
-      value1: estimated model
-      value2: loglikelihood of the estimated model
-      value3: list of achieved loglikelihoods"))
+      rb: emission pseudoconts (array) (If the pseudoconts are not given, these are set to a minimum value not to
+      lose any parameter. Set to nil if you do not want this behavior)
+      verbose:
+
+      @return (1) estimated model
+      @return (2) loglikelihood of the estimated model
+      @return (3) list of the observations' loglikelihoods for the estimated model"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -53,7 +58,7 @@
       (format t
               "~2%@@@ Estimate the HMM using BaumWelch scaled @@@  - i: ~a, c: ~3$, s:~3$, m: ~a, t:~3$~%"
               iterations confidence starting-noise max-times threshold))
-    (when (or (< alpha 0) (> alpha 1)) (error "model confidence in [0, 1]"))
+    (when (or (< alpha 0) (> alpha 1)) (error "model confidence must be within [0, 1]"))
     (dotimes (i iterations (list best-model best-loglikelihood (nreverse logs)))
       (when verbose-estimation
         (format t "~2%*** iter: # ~a~%" i)
