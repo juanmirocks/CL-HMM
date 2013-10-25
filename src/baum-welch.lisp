@@ -55,7 +55,7 @@
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Baum-Welch, simple&scaled
+;; Baum-Welch, pure&scaled
 ;;
 ;; By now only version for HMM infinite are avalaible
 ;;
