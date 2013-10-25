@@ -19,7 +19,7 @@
    "Estimate the model using BaumWelch-scaled with the given model parameters and learning observations.
       Repeat the estimation algorithm .iteration. times starting from a mixture of a random model and the one given. The proportion is balanced with .confidence. (range 0 to 1)
       hmm: model
-      obss-c: observation index-coded (see cbook)
+      obss-c: list of cbook-encoded observations to train with
       confidence: (float 0 1) / confidence in the given model parameters. 0 to start with a total random model
       iterations: number of iterations
       starting-noise: initial noise to play with in Baum-Welch;(0 to 1)
@@ -82,7 +82,7 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun soften-label-boundaries (prediction wildcard-label &optional (grade 2))
-  "Soften the boundaries between the labels regions. Useful when training with labeled sequences not relieable at all"
+  "Soften the boundaries between the labels regions. Useful when training with labeled sequences of disputable reliability"
     (do ((prediction. (copy-seq prediction))
          (length (length prediction))
          (cur-pos nil next-pos)
