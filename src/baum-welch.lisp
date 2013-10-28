@@ -258,7 +258,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; the actual core of the algorithm (2 versions, log and normal)
+;;; the actual core of the algorithm (2 versions, pure & scaled)
 (defmacro hmm-infinite-algorithm-core (&key (scaled nil))
   ;;for all the states
   `(loop for i of-type cbook-state from 0 below N do
