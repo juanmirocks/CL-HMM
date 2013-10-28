@@ -22,7 +22,7 @@
 ;; 12-Jul-2008    Ashrentum
 ;;    Last-Updated: Sat Jul 12 11:09:03 2008 (CEST) #60 (Ashrentum)
 ;;    Fixed sbcl operation (gc) not compliant with ANSI Common Lisp.
-;;    Init Pseudoconts for all parameters no to lost them due to
+;;    Init Pseudocounts for all parameters no to lost them due to
 ;;      insufficient training data
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -72,9 +72,9 @@
       starting-noise: initial noise to play with (0 to 1)
       max-times: max-times to run the alg.
       threshold: minimum difference change between 2 hmms to accept it and stop
-      ri: initial probs pseudoconts (vector)
-      ra: transition pseudoconts (array)
-      rb: emission pseudoconts (array) (If the pseudoconts are not given, these are set to a minimum value not to
+      ri: initial probs pseudocounts (vector)
+      ra: transition pseudocounts (array)
+      rb: emission pseudocounts (array) (If the pseudocounts are not given, these are set to a minimum value not to
       lose any parameter. Set to nil if you do not want this behavior)
       verbose: prints detailed information about what is happening"))
 
@@ -101,7 +101,7 @@
            (last-loglikelihood +most-negative-prob-float+)
            (cur-loglikelihood +most-negative-prob-float+)
            (x^k_size 0)
-           ;;pseudoconts. If not given, set them an uniform value not to lose any parameter due to insufficient training
+           ;;pseudocounts. If not given, set them an uniform value not to lose any parameter due to insufficient training
            (ri (cond
                  (ri ri)
                  ((and (not ri) rip) nil)
@@ -130,7 +130,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 ;;; Add the pseudocounts if not nil
-  (defun hmm-simple-pseudoconts ()
+  (defun hmm-simple-pseudocounts ()
     `((when ri (dotimes (i N)
                  (setf (aref (the PE-vec nPE) i) (aref ri i))
                  (incf PErow (aref ri i))))
@@ -211,7 +211,7 @@
             (setq last-loglikelihood cur-loglikelihood
                   cur-loglikelihood +0-prob+)
 
-            ,@(hmm-simple-pseudoconts) ;constant pseudoconts
+            ,@(hmm-simple-pseudocounts)
 
             (do ((obss obss-c (cdr obss))
                  (x^k (make-typed-array 0 'cbook-symbol 0))
