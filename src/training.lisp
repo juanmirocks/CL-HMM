@@ -51,33 +51,31 @@
         (best-loglikelihood +most-negative-prob-float+)
         (cur-loglikelihood +most-negative-prob-float+)
         (logs)
-        (alpha (prob confidence))
+        (init-model-noise (prob (- 1 confidence)))
         (bws-iter 0)
         (time0 0))
     (when verbose-estimation
       (format t
               "~2%@@@ Estimate the HMM using BaumWelch scaled @@@  - i: ~a, c: ~3$, s:~3$, m: ~a, t:~3$~%"
               iterations confidence starting-noise max-times threshold))
-    (when (or (< alpha 0) (> alpha 1)) (error "model confidence must be within [0, 1]"))
+    (when (or (< init-model-noise 0) (> init-model-noise 1)) (error "model confidence must be within [0, 1]"))
     (dotimes (i iterations (list best-model best-loglikelihood (nreverse logs)))
       (when verbose-estimation
         (format t "~2%*** iter: # ~a~%" i)
-        (format t
-                "---------------------------------------------------------------------------------------------------~%"))
+        (format t "---------------------------------------------------------------------------------------------------~%"))
       (setf cur-model (hmm-copy hmm))
-      (hmm-simple-slots (N M PE A B) hmm
-        (hmm-simple-alter-model N M PE A B alpha) ;;combine the model with a random one, controlled by alpha
-        (setq time0 (get-internal-real-time))
-        (multiple-value-setq (cur-model cur-loglikelihood bws-iter)
-          (baum-welch-scl cur-model obss-c :obss-l obss-l
-                          :starting-noise starting-noise :max-times max-times :threshold threshold
-                          :ri ri :ra ra :rb rb :verbose verbose-bws))
-        (when verbose-estimation (format t "~% ->loglikelihood: ~a, no-itr: ~a, time: ~a s~%"
-                                         cur-loglikelihood bws-iter (time-elapsed time0)))
-        (push cur-loglikelihood logs)
-        (when (> cur-loglikelihood best-loglikelihood)
-          (setq best-model cur-model
-                best-loglikelihood cur-loglikelihood))))))
+      (!hmm-noisify hmm init-model-noise)
+      (setq time0 (get-internal-real-time))
+      (multiple-value-setq (cur-model cur-loglikelihood bws-iter)
+        (baum-welch-scl cur-model obss-c :obss-l obss-l
+                        :starting-noise starting-noise :max-times max-times :threshold threshold
+                        :ri ri :ra ra :rb rb :verbose verbose-bws))
+      (when verbose-estimation (format t "~% ->loglikelihood: ~a, no-itr: ~a, time: ~a s~%"
+                                       cur-loglikelihood bws-iter (time-elapsed time0)))
+      (push cur-loglikelihood logs)
+      (when (> cur-loglikelihood best-loglikelihood)
+        (setq best-model cur-model
+              best-loglikelihood cur-loglikelihood)))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

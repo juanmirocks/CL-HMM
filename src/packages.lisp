@@ -16,6 +16,9 @@
    :hmm-correctp
    :hmm-compatiblep
    :hmm-run
+   :cbook-encode
+   :cbook-decode
+   :!hmm-noisify
 
    ;;;hmm-simple
    :hmm-simple
@@ -61,9 +64,6 @@
    :fixed-state-3p
    :fixed-state-2p
    :fixed-state-p
-
-   :cbook-encode
-   :cbook-decode
 
    ;;;phmm
    :phmm

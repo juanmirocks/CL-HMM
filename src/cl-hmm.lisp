@@ -164,6 +164,6 @@
 (defgeneric cbook-decode (hmm observation)
   (:documentation "cbook-decode observation sequence of cbook-indexes to sequence of symbols"))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; cl-hmm.lisp ends here
+(defgeneric !hmm-noisify (hmm noise)
+  (:documentation "(DESTRUCTIVE) Randomly add noise to the model parameters
+  @param noise: float in [0, 1]; 0 to not change the model, 1 for completely random model"))

@@ -569,21 +569,6 @@
       (dotimes (i N out)
         (setf (aref out i) (state-label (aref S i)))))))
 
-;;; not quite nice form
-(defmacro hmm-simple-alter-model (N M PE A B alpha)
-  "Alter, add noise, randomly the model
-  alpha: confidence in the current model (0 to 1) 1 to don't change the model"
-  `(unless (= +1-prob+ ,alpha)
-     (!normalize-vector
-      (!combine-float-vectors
-       ,PE (!normalize-vector (make-random-vector ,N +1-prob+ 'prob-float)) ,alpha 'prob-float t))
-     (!normalize-2dmatrix-by-row
-      (!combine-float-matrices
-       ,A (!normalize-2dmatrix-by-row (make-random-matrix (list ,N ,N) +1-prob+ 'prob-float)) ,alpha 'prob-float t))
-     (!normalize-2dmatrix-by-row
-      (!combine-float-matrices
-       ,B (!normalize-2dmatrix-by-row (make-random-matrix (list ,N ,M) +1-prob+ 'prob-float)) ,alpha 'prob-float t))))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; State properties
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -816,3 +801,16 @@
     (declare (optimize (speed 3) (safety 0)) (cbook-alphabet observation))
     (with- (V) (array-element-type V)
            (forall (aref V (aref observation i))))))
+
+;;;TODO normalize twice for each??
+(defmethod !hmm-noisify ((hmm hmm-simple) noise)
+  (unless (= +0-prob+ noise)
+    (let ((confidence (- 1 noise)))
+      (hmm-simple-slots (N M PE A B) hmm
+        (!normalize-vector
+         (!combine-float-vectors PE (!normalize-vector (make-random-vector N +1-prob+ 'prob-float)) confidence 'prob-float t))
+        (!normalize-2dmatrix-by-row
+         (!combine-float-matrices A (!normalize-2dmatrix-by-row (make-random-matrix (list N N) +1-prob+ 'prob-float)) confidence 'prob-float t))
+        (!normalize-2dmatrix-by-row
+         (!combine-float-matrices B (!normalize-2dmatrix-by-row (make-random-matrix (list N M) +1-prob+ 'prob-float)) confidence 'prob-float t)))))
+    hmm)
