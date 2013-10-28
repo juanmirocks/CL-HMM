@@ -96,7 +96,6 @@
            (Arow (make-typed-array N 'prob-float +0-prob+))
            (nB (make-typed-array (list N M) 'prob-float +0-prob+))
            (Brow (make-typed-array N 'prob-float +0-prob+))
-           ;;some other needed binds throught the alg.
            (last-loglikelihood +most-negative-prob-float+)
            (cur-loglikelihood +most-negative-prob-float+)
            (x^k_size 0)
@@ -113,10 +112,8 @@
                  (rb rb)
                  ((and (not rb) rbp) nil)
                  (t (make-typed-array (list N M) 'prob-float (prob 1d-4)))))
-           ;;measuring
-           (time0 0)
-           ;;noise amplitude
-           (noise-amp (prob starting-noise))
+           (time0 0) ; to measure the algorithm's running time
+           (noise-amp (prob starting-noise)) ;noise amplitude
            (noise +0-prob+)
            (noise-decrease (prob (/ (log (hmm-complexity hmm) +bw-noise-base+))))
            ,@(if scaled `((scale (make-typed-array '(0) 'prob-float +0-prob+)) (P{x^k} +0-prob+)) `((1/P{x^k} +0-prob+))))
