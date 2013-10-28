@@ -40,11 +40,11 @@
   (defconstant +bw-threshold+ (prob 0.01))
 
   ;;noise amplitude, A = S - (i / (log_B C))
-  ;;      A, amplitude
+  ;;      A, Amplitude
   ;;      S, Starting noise
   ;;      i, iteration
   ;;      C, model Complexity
-  ;;      B, noise Base (to adjust)
+  ;;      B, Base noise (to adjust)
   (defconstant +bw-noise-base+ (prob 1.04))
   (defconstant +bw-noise-start+ (prob 0.4))
 
