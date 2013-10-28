@@ -245,7 +245,7 @@
 
 (defmethod cbook-encode ((hmm phmm) observation)
   "cbook-encode pair observation"
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3)))
   (let* ((in_x (first observation))
          (in_y (second observation))
          (size_x (the fixnum (length in_x)))
