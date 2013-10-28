@@ -346,12 +346,12 @@
        (rb (default-pseudocounts (list (hmm-no-states hmm) (hmm-alphabet-left-size hmm) (hmm-alphabet-right-size hmm))))
        (verbose nil))
 
+  (when (and verbose obss-l) (warn "obss-l is NOT used"))
+  (when rb
+    (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
+
   (phmm-slots (N L-size R-size) hmm
-
-    (when rb
-      (loop for i below N do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
-
     (let ((nPE (make-typed-array N 'prob-float +0-prob+))
           (nA (make-typed-array (list N N) 'prob-float +0-prob+))
           (nB (make-typed-array (list N L-size R-size) 'prob-float +0-prob+)))
