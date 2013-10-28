@@ -99,7 +99,6 @@
            ;;some other needed binds throught the alg.
            (last-loglikelihood +most-negative-prob-float+)
            (cur-loglikelihood +most-negative-prob-float+)
-           (last-emis (1- M))
            (x^j_leng-1 0)
            ;;pseudoconts. If not given, set them an uniform value not to lose any parameter due to insufficient training
            (ri (cond
@@ -124,7 +123,7 @@
        (declare ((prob-array (*)) nPE Arow Brow)
                 ((prob-array (* *)) nA nB)
                 (prob-float PErow last-loglikelihood cur-loglikelihood noise-amp noise-decrease)
-                (fixnum last-emis x^j_leng-1 time0))
+                (fixnum x^j_leng-1 time0))
        (declare ,@(if scaled `(((prob-array (*)) scale) (prob-float P{x^j})) `((prob-float 1/P{x^j}))))
        ,@body)))
 
@@ -288,7 +287,7 @@
                    (incf (aref nA i j) pArow)
                    (incf (aref Arow i) pArow))))
       ;;emissions
-        (loop for s of-type cbook-state from 0 to last-emis for emis of-type prob-float = (aref B i s) then (aref B i s) do
+        (loop for s of-type cbook-state from 0 below M for emis of-type prob-float = (aref B i s) then (aref B i s) do
              (unless (zerop emis)
                (loop for t0 from 0 to x^j_leng-1 with pBrow of-type prob-float = +0-prob+ do
                     (when (= s (aref x^j t0))
