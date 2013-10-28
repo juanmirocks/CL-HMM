@@ -205,6 +205,7 @@
        (continue-anyway () nil))
      (setf hmm (hmm-copy hmm)) ;;we don't overwrite the given hmm
      (hmm-simple-vars ,scaled
+
        ;;Recurrence. Termination when max-times or likelihood is less than the threshold
        (loop for z fixnum from 1 to max-times do
             (setq time0 (get-internal-real-time))
