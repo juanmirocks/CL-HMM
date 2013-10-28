@@ -346,6 +346,7 @@
        (rb (default-pseudocounts (list (hmm-no-states hmm) (hmm-alphabet-left-size hmm) (hmm-alphabet-right-size hmm))))
        (verbose nil))
 
+  (declare (optimize (speed 3)))
   (when (and verbose obss-l) (warn "obss-l is NOT used"))
   (when rb
     (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
