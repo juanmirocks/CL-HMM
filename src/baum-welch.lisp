@@ -44,12 +44,14 @@
   ;;      S, Starting noise
   ;;      i, iteration
   ;;      C, model Complexity
-  ;;      B, Base noise (to adjust)
+  ;;      B, noise log Base (to adjust)
   (defconstant +bw-noise-base+ (prob 1.04))
   (defconstant +bw-noise-start+ (prob 0.4))
 
   (defconstant +es-model-confidence+ (prob 0.7)) ;after estimation
-  (defconstant +es-iterations+ 10))
+  (defconstant +es-iterations+ 10)
+
+  (defconstant +bw-default-min-pseudocount+ (prob 1d-4)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -103,15 +105,15 @@
            (ri (cond
                  (ri ri)
                  ((and (not ri) rip) nil)
-                 (t (make-typed-array N 'prob-float (prob 1d-4)))))
+                 (t (make-typed-array N 'prob-float +bw-default-min-pseudocount+))))
            (ra (cond
                  (ra ra)
                  ((and (not ra) rap) nil)
-                 (t (make-typed-array (list N N) 'prob-float (prob 1d-4)))))
+                 (t (make-typed-array (list N N) 'prob-float +bw-default-min-pseudocount+))))
            (rb (cond
                  (rb rb)
                  ((and (not rb) rbp) nil)
-                 (t (make-typed-array (list N M) 'prob-float (prob 1d-4)))))
+                 (t (make-typed-array (list N M) 'prob-float +bw-default-min-pseudocount+))))
            (time0 0) ; to measure the algorithm's running time
            (noise-amp (prob starting-noise)) ;noise amplitude
            (noise +0-prob+)
@@ -229,7 +231,7 @@
 
             ,(hmm-simple-update) ;update parameters
 
-            ;; Apply noise
+          ;; Apply noise
             (setf noise (* (random +1-prob+) noise-amp))
             (!hmm-noisify hmm noise)
             (decf noise-amp noise-decrease)
@@ -325,3 +327,63 @@
     (setf betas (backward-scl hmm x^k scale x^k-labels))
     (incf cur-loglikelihood P{x^k})
     (hmm-infinite-algorithm-core :scaled t)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun pseudocounts (var varp size)
+  (cond
+    (var var)
+    (varp nil)
+    (t (make-typed-array size 'prob-float +bw-default-min-pseudocount+))))
+
+(defmethod baum-welch
+    ((hmm phmm)
+     obss-c
+     &key
+       obss-l
+       (starting-noise +bw-noise-start+)
+       (max-times +bw-max-times+) (threshold +bw-threshold+)
+       (ri nil rip) (ra nil rap) (rb nil rbp)
+       (verbose nil))
+
+  (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
+
+  (phmm-slots (N L-size R-size) hmm
+    (let ((ri (pseudocounts ri rip N))
+          (ra (pseudocounts ra rap `(,N ,N)))
+          (rb (pseudocounts rb rbp `(,N ,L-size ,R-size))))
+
+    (loop for iteration from 1
+       for time-itr-start = (get-internal-real-time)
+       for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
+       for cur-loglikelihood = +most-negative-prob-float+
+       for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
+       for noise = (* (random +1-prob+) noise-amplitude)
+       do
+         (loop for o in obss-c
+            for x = (first o)
+            for y = (second o)
+            for size_x fixnum = (length x)
+            for size_y fixnum = (length y)
+            for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
+            for beta = (backward hmm o)
+            do
+
+              (print o))
+
+         (when verbose
+           (format t "~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed time-itr-start))
+           (when (< cur-loglikelihood last-loglikelihood)
+             (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
+           (fresh-line))
+
+       until (or (= iteration max-times)
+                 (and
+                  (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
+                  (> cur-loglikelihood last-loglikelihood))
+                 (zerop cur-loglikelihood)) ;perfect model to the training data
+
+       finally
+         (multiple-value-bind (correct details) (hmm-correctp hmm)
+           (unless correct (warn "The output model is incorrect. Output of hmm-correct-p:~2%~a~%" details)))
+         (return (values hmm cur-loglikelihood iteration))))))
