@@ -99,7 +99,7 @@
            ;;some other needed binds throught the alg.
            (last-loglikelihood +most-negative-prob-float+)
            (cur-loglikelihood +most-negative-prob-float+)
-           (x^j_size 0)
+           (x^k_size 0)
            ;;pseudoconts. If not given, set them an uniform value not to lose any parameter due to insufficient training
            (ri (cond
                  (ri ri)
@@ -119,12 +119,12 @@
            (noise-amp (prob starting-noise))
            (noise +0-prob+)
            (noise-decrease (prob (/ (log (hmm-complexity hmm) +bw-noise-base+))))
-           ,@(if scaled `((scale (make-typed-array '(0) 'prob-float +0-prob+)) (P{x^j} +0-prob+)) `((1/P{x^j} +0-prob+))))
+           ,@(if scaled `((scale (make-typed-array '(0) 'prob-float +0-prob+)) (P{x^k} +0-prob+)) `((1/P{x^k} +0-prob+))))
        (declare ((prob-array (*)) nPE Arow Brow)
                 ((prob-array (* *)) nA nB)
                 (prob-float PErow last-loglikelihood cur-loglikelihood noise-amp noise-decrease)
-                (fixnum x^j_size time0))
-       (declare ,@(if scaled `(((prob-array (*)) scale) (prob-float P{x^j})) `((prob-float 1/P{x^j}))))
+                (fixnum x^k_size time0))
+       (declare ,@(if scaled `(((prob-array (*)) scale) (prob-float P{x^k})) `((prob-float 1/P{x^k}))))
        ,@body)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -214,14 +214,14 @@
             ,@(hmm-simple-pseudoconts) ;constant pseudoconts
 
             (do ((obss obss-c (cdr obss))
-                 (x^j (make-typed-array 0 'cbook-symbol 0))
+                 (x^k (make-typed-array 0 'cbook-symbol 0))
                  (obssl obss-l (cdr obssl))
-                 (x^j-labels (make-typed-array 0 'state-label +label-wildcard+)))
+                 (x^k-labels (make-typed-array 0 'state-label +label-wildcard+)))
                 ((null obss) nil)
-              (declare (cbook-alphabet x^j))
-              (setf x^j (car obss)
-                    x^j_size (length x^j)
-                    x^j-labels (car obssl))
+              (declare (cbook-alphabet x^k))
+              (setf x^k (car obss)
+                    x^k_size (length x^k)
+                    x^k-labels (car obssl))
 
               ;; ----------------------------------------------------------------------
               ,@algorithm
@@ -267,7 +267,7 @@
                `(if (/= +0-prob+ (aref scale 0))
                     (setq pPErow (/ pPErow (aref scale 0)))
                     (error "Error, value for scale 0 is 0. Check the model or the labels"))
-               `(*= pPErow 1/P{x^j}))
+               `(*= pPErow 1/P{x^k}))
           (incf (aref nPE i) pPErow)
           (incf PErow pPErow))
       ;;transitions
@@ -276,21 +276,21 @@
               (incf (aref nA i (car (aref iA-from i))) +1-prob+) ;;the probability is fixed, it's always 1
               (incf (aref Arow i) +1-prob+))
             (dolist-itrans (j (aref iA-from i))
-              (loop for t0 = 0 then t+1 for t+1 from 1 below x^j_size
+              (loop for t0 = 0 then t+1 for t+1 from 1 below x^k_size
                  sum (* (aref alphas t0 i)
-                        (aref B j (aref x^j t+1))
+                        (aref B j (aref x^k t+1))
                         (aref betas t+1 j)) into pArow of-type prob-float
                  finally
                    ,(if scaled
                         `(*= pArow (aref A i j))
-                        `(*= pArow (* (aref A i j) 1/P{x^j})))
+                        `(*= pArow (* (aref A i j) 1/P{x^k})))
                    (incf (aref nA i j) pArow)
                    (incf (aref Arow i) pArow))))
       ;;emissions
         (loop for s of-type cbook-state from 0 below M for emis of-type prob-float = (aref B i s) then (aref B i s) do
              (unless (zerop emis)
-               (loop for t0 from 0 below x^j_size with pBrow of-type prob-float = +0-prob+ do
-                    (when (= s (aref x^j t0))
+               (loop for t0 from 0 below x^k_size with pBrow of-type prob-float = +0-prob+ do
+                    (when (= s (aref x^k t0))
                       ,(if scaled
                            `(if (/= +0-prob+ (aref scale t0))
                                 (incf pBrow (/ (* (aref alphas t0 i) (aref betas t0 i)) (aref scale t0)))
@@ -299,7 +299,7 @@
                   finally
                     ,@(if scaled
                           `((incf (aref nB i s) pBrow))
-                          `((*= pBrow 1/P{x^j})
+                          `((*= pBrow 1/P{x^k})
                             (incf (aref nB i s) pBrow)))
                     (incf (aref bRow i) pBrow))))))
 
@@ -310,11 +310,11 @@
   (let ((alphas (make-typed-array '(0 0) 'prob-float +0-prob+))
         (betas (make-typed-array '(0 0) 'prob-float +0-prob+)))
     (declare ((prob-array (* *)) alphas betas)) ;we declare here the alphas and betas for memory issues
-    (multiple-value-setq (1/P{x^j} alphas) (forward hmm x^j))
-    (setf betas (backward hmm x^j))
-    (unless (zerop 1/P{x^j})
-      (incf cur-loglikelihood (the prob-float (log 1/P{x^j})))
-      (setf 1/P{x^j} (/ 1/P{x^j})) ;now yes, it's the inverse
+    (multiple-value-setq (1/P{x^k} alphas) (forward hmm x^k))
+    (setf betas (backward hmm x^k))
+    (unless (zerop 1/P{x^k})
+      (incf cur-loglikelihood (the prob-float (log 1/P{x^k})))
+      (setf 1/P{x^k} (/ 1/P{x^k})) ;now yes, it's the inverse
       (hmm-infinite-algorithm-core :scaled nil))))
 
 ;;baum-welch scaled :: hmm-infinite
@@ -322,7 +322,7 @@
   (let ((alphas (make-typed-array '(0 0) 'prob-float +0-prob+))
         (betas (make-typed-array '(0 0) 'prob-float +0-prob+)))
     (declare ((prob-array (* *)) alphas betas))
-    (multiple-value-setq (P{x^j} alphas scale) (forward-scl hmm x^j x^j-labels))
-    (setf betas (backward-scl hmm x^j scale x^j-labels))
-    (incf cur-loglikelihood P{x^j})
+    (multiple-value-setq (P{x^k} alphas scale) (forward-scl hmm x^k x^k-labels))
+    (setf betas (backward-scl hmm x^k scale x^k-labels))
+    (incf cur-loglikelihood P{x^k})
     (hmm-infinite-algorithm-core :scaled t)))
