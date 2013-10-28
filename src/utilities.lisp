@@ -94,3 +94,21 @@ stopped."
            and sum 1 into nr-elts
            until (>= right end)
            finally (return (values subseqs right))))))
+
+
+(defun read-pair-observations-file (path)
+  (with-open-file (stream path)
+    (loop for line = (read-line stream nil)
+       while line
+       for (x_ y_ p) = (split-sequence #\Space line)
+       for x = (mapcar #'parse-integer (split-sequence #\_ x_))
+       for y = (mapcar #'parse-integer (split-sequence #\_ y_))
+       with left-alphabet = (make-hash-table :test 'equalp)
+       with right-alphabet = (make-hash-table :test 'equalp)
+       do
+         (loop for l in x do
+              (setf (gethash l left-alphabet) nil))
+         (loop for r in y do
+              (setf (gethash r right-alphabet) nil))
+       collecting (list (make-array (length x) :initial-contents x) (make-array (length y) :initial-contents y)) into observations
+       finally (return (values observations (hash-table-size left-alphabet) (hash-table-size right-alphabet))))))
