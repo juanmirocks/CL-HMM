@@ -353,7 +353,7 @@
 @param hmm: pair hidden markov model
 @param obs-c: cbook-encoded pair observation, list of 2 elements
 
-@return (1) generated beta 3d matrix
+@return generated beta 3d matrix
 "
   ;;(declare (optimize (speed 3) (safety 0)))
   (phmm-slots (N A B iA-from) hmm
