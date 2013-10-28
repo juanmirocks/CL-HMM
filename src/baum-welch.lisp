@@ -99,7 +99,7 @@
            ;;some other needed binds throught the alg.
            (last-loglikelihood +most-negative-prob-float+)
            (cur-loglikelihood +most-negative-prob-float+)
-           (x^j_leng-1 0)
+           (x^j_size-1 0)
            ;;pseudoconts. If not given, set them an uniform value not to lose any parameter due to insufficient training
            (ri (cond
                  (ri ri)
@@ -123,7 +123,7 @@
        (declare ((prob-array (*)) nPE Arow Brow)
                 ((prob-array (* *)) nA nB)
                 (prob-float PErow last-loglikelihood cur-loglikelihood noise-amp noise-decrease)
-                (fixnum x^j_leng-1 time0))
+                (fixnum x^j_size-1 time0))
        (declare ,@(if scaled `(((prob-array (*)) scale) (prob-float P{x^j})) `((prob-float 1/P{x^j}))))
        ,@body)))
 
@@ -220,7 +220,7 @@
                 ((null obss) nil)
               (declare (cbook-alphabet x^j))
               (setf x^j (car obss)
-                    x^j_leng-1 (1- (length x^j))
+                    x^j_size-1 (1- (length x^j))
                     x^j-labels (car obssl))
 
               ;; ----------------------------------------------------------------------
@@ -276,7 +276,7 @@
               (incf (aref nA i (car (aref iA-from i))) +1-prob+) ;;the probability is fixed, it's always 1
               (incf (aref Arow i) +1-prob+))
             (dolist-itrans (j (aref iA-from i))
-              (loop for t0 = 0 then t+1 for t+1 from 1 to x^j_leng-1
+              (loop for t0 = 0 then t+1 for t+1 from 1 to x^j_size-1
                  sum (* (aref alphas t0 i)
                         (aref B j (aref x^j t+1))
                         (aref betas t+1 j)) into pArow of-type prob-float
@@ -289,7 +289,7 @@
       ;;emissions
         (loop for s of-type cbook-state from 0 below M for emis of-type prob-float = (aref B i s) then (aref B i s) do
              (unless (zerop emis)
-               (loop for t0 from 0 to x^j_leng-1 with pBrow of-type prob-float = +0-prob+ do
+               (loop for t0 from 0 to x^j_size-1 with pBrow of-type prob-float = +0-prob+ do
                     (when (= s (aref x^j t0))
                       ,(if scaled
                            `(if (/= +0-prob+ (aref scale t0))
