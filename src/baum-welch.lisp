@@ -231,9 +231,9 @@
 
             ,(hmm-simple-update) ; update parameters
 
-            ;;about the noise
+            ;;; Apply noise
             (setf noise (* (random +1-prob+) noise-amp))
-            (hmm-simple-alter-model N M PE A B (- 1 noise)) ;;add noise
+            (hmm-simple-alter-model N M PE A B (- 1 noise))
             (decf noise-amp noise-decrease)
             (when (< noise-amp 0) (setf noise-amp +0-prob+))
 
