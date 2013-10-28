@@ -196,11 +196,11 @@
           (max-times +bw-max-times+) (threshold +bw-threshold+)
           (ri nil rip) (ra nil rap) (rb nil rbp)
           (verbose nil))
-     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
      (declare (optimize (speed 3) (safety 0)) (fixnum max-times) (float threshold) (list obss-c))
      (restart-case (hmm-incorrect-signal hmm)
        (continue-anyway () nil))
-     (setf hmm (hmm-copy hmm)) ;;we don't overwrite the given hmm
+     (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
      (hmm-simple-vars ,scaled
 
        ;;Recurrence. Termination when max-times or likelihood is less than the threshold
@@ -225,11 +225,11 @@
               ,@algorithm
               ;; ----------------------------------------------------------------------
 
-              #+sbcl (sb-ext:gc :gen 1 :full t)) ;;free memory
+              #+sbcl (sb-ext:gc :gen 1 :full t)) ;free memory
 
-            ,(hmm-simple-update) ; update parameters
+            ,(hmm-simple-update) ;update parameters
 
-            ;;; Apply noise
+            ;; Apply noise
             (setf noise (* (random +1-prob+) noise-amp))
             (!hmm-noisify hmm noise)
             (decf noise-amp noise-decrease)
@@ -247,6 +247,7 @@
                       (> cur-loglikelihood last-loglikelihood)
                       (zerop noise-amp))
                  (zerop cur-loglikelihood))
+
           finally
             (multiple-value-bind (correct details) (hmm-correctp hmm)
               (unless correct
