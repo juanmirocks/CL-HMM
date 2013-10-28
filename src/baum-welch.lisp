@@ -330,11 +330,8 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun pseudocounts (var varp size)
-  (cond
-    (var var)
-    (varp nil)
-    (t (make-typed-array size 'prob-float +bw-default-min-pseudocount+))))
+(defun default-pseudocounts (size)
+  (make-typed-array size 'prob-float +bw-default-min-pseudocount+))
 
 (defmethod baum-welch
     ((hmm phmm)
@@ -342,48 +339,62 @@
      &key
        obss-l
        (starting-noise +bw-noise-start+)
-       (max-times +bw-max-times+) (threshold +bw-threshold+)
-       (ri nil rip) (ra nil rap) (rb nil rbp)
+       (max-times +bw-max-times+)
+       (threshold +bw-threshold+)
+       (ri (default-pseudocounts (hmm-no-states hmm)))
+       (ra (default-pseudocounts (list (hmm-no-states hmm) (hmm-no-states hmm))))
+       (rb (default-pseudocounts (list (hmm-no-states hmm) (hmm-alphabet-left-size hmm) (hmm-alphabet-right-size hmm))))
        (verbose nil))
 
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
-
   (phmm-slots (N L-size R-size) hmm
-    (let ((ri (pseudocounts ri rip N))
-          (ra (pseudocounts ra rap `(,N ,N)))
-          (rb (pseudocounts rb rbp `(,N ,L-size ,R-size))))
+    (let ((nPE (make-typed-array N 'prob-float +0-prob+))
+          (nA (make-typed-array (list N N) 'prob-float +0-prob+))
+          (nB (make-typed-array (list N L-size R-size) 'prob-float +0-prob+)))
 
-    (loop for iteration from 1
-       for time-itr-start = (get-internal-real-time)
-       for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
-       for cur-loglikelihood = +most-negative-prob-float+
-       for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
-       for noise = (* (random +1-prob+) noise-amplitude)
-       do
-         (loop for o in obss-c
-            for x = (first o)
-            for y = (second o)
-            for size_x fixnum = (length x)
-            for size_y fixnum = (length y)
-            for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
-            for beta = (backward hmm o)
-            do
+      (loop for iteration from 1
+         for time-itr-start = (get-internal-real-time)
+         for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
+         for cur-loglikelihood = +most-negative-prob-float+
+         for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
+         for noise = (* (random +1-prob+) noise-amplitude)
+         do
 
-              (print o))
+         ;; Add pseudocounts
+           (when ri (dotimes (i N)
+                      (setf (aref nPE i) (aref ri i))))
+           (when ra (dotimes (i N)
+                      (dotimes (j N)
+                        (setf (aref nA i j) (aref ra i j)))))
+           (when rb (dotimes (i N)
+                      (dotimes (l L-size)
+                        (dotimes (r R-size)
+                          (setf (aref nB i l r) (aref rb i l r))))))
 
-         (when verbose
-           (format t "~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed time-itr-start))
-           (when (< cur-loglikelihood last-loglikelihood)
-             (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
-           (fresh-line))
+           (loop for o in obss-c
+              for x = (first o)
+              for y = (second o)
+              for size_x fixnum = (length x)
+              for size_y fixnum = (length y)
+              for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
+              for beta = (backward hmm o)
+              do
 
-       until (or (= iteration max-times)
-                 (and
-                  (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
-                  (> cur-loglikelihood last-loglikelihood))
-                 (zerop cur-loglikelihood)) ;perfect model to the training data
+                (print o))
 
-       finally
-         (multiple-value-bind (correct details) (hmm-correctp hmm)
-           (unless correct (warn "The output model is incorrect. Output of hmm-correct-p:~2%~a~%" details)))
-         (return (values hmm cur-loglikelihood iteration))))))
+           (when verbose
+             (format t "~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed time-itr-start))
+             (when (< cur-loglikelihood last-loglikelihood)
+               (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
+             (fresh-line))
+
+         until (or (= iteration max-times)
+                   (and
+                    (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
+                    (> cur-loglikelihood last-loglikelihood))
+                   (zerop cur-loglikelihood)) ;perfect model to the training data
+
+         finally
+           (multiple-value-bind (correct details) (hmm-correctp hmm)
+             (unless correct (warn "The output model is incorrect. Output of hmm-correct-p:~2%~a~%" details)))
+           (return (values hmm cur-loglikelihood iteration))))))
