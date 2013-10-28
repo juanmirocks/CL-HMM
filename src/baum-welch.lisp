@@ -108,7 +108,7 @@
            (ra (cond
                  (ra ra)
                  ((and (not ra) rap) nil)
-                 (t (make-typed-array (list N N)'prob-float (prob 1d-4)))))
+                 (t (make-typed-array (list N N) 'prob-float (prob 1d-4)))))
            (rb (cond
                  (rb rb)
                  ((and (not rb) rbp) nil)
