@@ -99,7 +99,6 @@
            ;;some other needed binds throught the alg.
            (last-loglikelihood +most-negative-prob-float+)
            (cur-loglikelihood +most-negative-prob-float+)
-           (last-state (1- N))
            (last-emis (1- M))
            (x^j_leng-1 0)
            ;;pseudoconts. If not given, set them an uniform value not to lose any parameter due to insufficient training
@@ -125,7 +124,7 @@
        (declare ((prob-array (*)) nPE Arow Brow)
                 ((prob-array (* *)) nA nB)
                 (prob-float PErow last-loglikelihood cur-loglikelihood noise-amp noise-decrease)
-                (fixnum last-state last-emis x^j_leng-1 time0))
+                (fixnum last-emis x^j_leng-1 time0))
        (declare ,@(if scaled `(((prob-array (*)) scale) (prob-float P{x^j})) `((prob-float 1/P{x^j}))))
        ,@body)))
 
@@ -262,7 +261,7 @@
 ;;; the actual core of the algorithm (2 versions, log and normal)
 (defmacro hmm-infinite-algorithm-core (&key (scaled nil))
   ;;for all the states
-  `(loop for i of-type cbook-state from 0 to last-state do
+  `(loop for i of-type cbook-state from 0 below N do
       ;;init distribution
         (let ((pPErow (* (aref alphas 0 i) (aref betas 0 i))))
           ,(if scaled
