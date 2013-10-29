@@ -351,10 +351,10 @@
     (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
-  (phmm-slots (N L-size R-size PE A B) hmm
-    (let ((newPE (make-typed-array N 'prob-float +0-prob+))
-          (newA (make-typed-array (list N N) 'prob-float +0-prob+))
-          (newB (make-typed-array (list N L-size R-size) 'prob-float +0-prob+)))
+  (phmm-slots (N PE A B) hmm
+    (let ((newPE (make-typed-array (array-dimensionss PE) 'prob-float +0-prob+))
+          (newA (make-typed-array (array-dimensions A) 'prob-float +0-prob+))
+          (newB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
 
       (loop for iteration from 1
          for itr-time-start = (get-internal-real-time)
@@ -365,9 +365,9 @@
          do
 
          ;; Init new parameters with pseudocounts if given or 0 otherwise
-           (if ri (!combine-float-arrays newPE ri 0) (array-reset newPE +0-prob+))
-           (if ra (!combine-float-arrays newA ra 0) (array-reset newA +0-prob+))
-           (if rb (!combine-float-arrays newB rb 0) (array-reset newB +0-prob+))
+           (if ri (array-set newPE ri) (array-reset newPE +0-prob+))
+           (if ra (array-set newA ra) (array-reset newA +0-prob+))
+           (if rb (array-set newB rb) (array-reset newB +0-prob+))
 
            (loop for o in obss-c
               for x = (first o)
@@ -381,7 +381,9 @@
                 )
 
          ;; Set model with new parameters
-           (setq PE newPE A newA B newB)
+           (array-set PE newPE)
+           (array-set A newA)
+           (array-set B newB)
          ;; & noisify
            (!hmm-noisify hmm noise)
 
