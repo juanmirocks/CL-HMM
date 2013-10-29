@@ -365,15 +365,9 @@
          do
 
          ;; Init new parameters with pseudocounts if given or 0 otherwise
-           (dotimes (i N)
-             (setf (aref newPE i) (if ri (aref ri i) +0-prob+)))
-           (dotimes (i N)
-             (dotimes (j N)
-               (setf (aref newA i j) (if ra (aref ra i j) +0-prob+))))
-           (dotimes (i N)
-             (dotimes (l L-size)
-               (dotimes (r R-size)
-                 (setf (aref newB i l r) (if (aref rb i l r) +0-prob+)))))
+           (if ri (!combine-float-arrays newPE ri 0) (array-reset newPE +0-prob+))
+           (if ra (!combine-float-arrays newA ra 0) (array-reset newA +0-prob+))
+           (if rb (!combine-float-arrays newB rb 0) (array-reset newB +0-prob+))
 
            (loop for o in obss-c
               for x = (first o)
