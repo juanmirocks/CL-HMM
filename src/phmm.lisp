@@ -278,7 +278,18 @@
          (dotimes (i size_y out_y)
            (setf (aref out_y i) (aref R (1- (aref in_y i))))))))))
 
-
+(defmethod !hmm-noisify ((hmm phmm) noise)
+  (unless (zerop noise)
+    (let ((confidence (coerce (- 1 noise) 'prob-float)))
+      (print confidence)
+      (phmm-slots (PE A B) hmm
+        (!normalize-vector
+         (!combine-float-arrays PE (!normalize-vector (make-random-array (array-dimensions PE) +1-prob+)) confidence t))
+        (!normalize-2dmatrix-by-row
+         (!combine-float-arrays A (!normalize-2dmatrix-by-row (make-random-array (array-dimensions A) +1-prob+)) confidence t))
+        (!normalize-3dmatrix-by-row
+         (!combine-float-arrays B (!normalize-3dmatrix-by-row (make-random-array (array-dimensions B) +1-prob+)) confidence t)))))
+  hmm)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Forward & Backward
