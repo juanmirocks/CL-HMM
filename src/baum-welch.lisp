@@ -351,13 +351,13 @@
     (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
-  (phmm-slots (N L-size R-size) hmm
+  (phmm-slots (N L-size R-size PE A B) hmm
     (let ((newPE (make-typed-array N 'prob-float +0-prob+))
           (newA (make-typed-array (list N N) 'prob-float +0-prob+))
           (newB (make-typed-array (list N L-size R-size) 'prob-float +0-prob+)))
 
       (loop for iteration from 1
-         for time-itr-start = (get-internal-real-time)
+         for itr-time-start = (get-internal-real-time)
          for last-loglikelihood = +0-prob+ then cur-loglikelihood
          for cur-loglikelihood = +0-prob+
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
@@ -384,11 +384,15 @@
               for beta = (backward hmm o)
               do
                 (incf cur-loglikelihood (log o_likelihood))
+                )
 
-                (print o))
+         ;; Set model with new parameters
+           (setq PE newPE A newA B newB)
+         ;; & noisify
+           (!hmm-noisify hmm noise)
 
            (when verbose
-             (format t "~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed time-itr-start))
+             (format t "~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start))
              (when (< cur-loglikelihood last-loglikelihood)
                (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
              (fresh-line))
