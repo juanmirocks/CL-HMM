@@ -54,11 +54,11 @@
 \begin{description}
 \item $N$: number of states.
 \item $S$: finite set of states, $S = \{S_1, S_2, ... , S_N\}$.
-\item $L$: finite alphabet of the left stream.
-\item $R$: finite alphabet of the right stream.
+\item $L$: left stream's finite alphabet.
+\item $R$: right stream's finite alphabet.
 \item $A$: state transition probability distribution, $A = \{a_{ij}\}$,
   $$a_{ij} = P(S_j | S_i), \quad 1 \leq i,j \leq N$$
-\item $B$: state pair observation probability distribution, $B = \{b_i(x, y\}$,
+\item $B$: state pair observation probability distribution, $B = \{b_i(x, y)\}$,
   \begin{flalign*}
     b_i(x, y = P(x, y | S_i),
     & \quad 1 \leq i \leq N \\
@@ -85,9 +85,9 @@ define the alpha probability as:
 
 $$\alpha_i(l, r) = P((x_1 ...\, x_l, y_1 ...\, y_r), S_i|\lambda)$$
 
-i.e., the probability of starting from any state $S_{start}$, and emitting
-the symbols $x_1 ...\, x_l$ on the left stream and the symbols $y_1 ...\, y_r$
-on the right stream and ending in the state $S_i$, for $1 \leq i, start \leq N$. We
+i.e., the probability of starting from any state $S_{start}$, and emitting the
+symbols $x_1 ...\, x_l$ on the left stream and the symbols $y_1 ...\, y_r$ on
+the right stream and ending in the state $S_i$, for $1 \leq i, start \leq N$. We
 define the complimentary beta probability as:
 
 $$\beta_i(l, r) = P((x_{l+1} ...\, x_n, y_{r+1} ...\, y_m), S_i|\lambda)$$
@@ -97,12 +97,11 @@ symbols $x_{l+1} ...\, x_n$ on the left stream and the symbols $y_{r+1} ...\,
 y_m$ on the right stream and ending in any state $S_{end}$, for $1 \leq i, end
 \leq N$.
 
-Consequently, the forward algorithm is defined by induction on the alpha
-probabilities, see Algorithm \ref{fig:forward}, and analogously the backward
-algorithm is defined by induction on the beta probabilities, see Algorithm
-\ref{fig:backward}. Note that in HMMs the alpha and beta variables are
-categorized by a two-dimensional matrix, whereas in PHMMs they are
-three-dimensional matrices.
+The forward algorithm is defined by induction on the alpha probabilities, see
+Algorithm \ref{fig:forward}, and analogously the backward algorithm is defined
+by induction on the beta probabilities, see Algorithm \ref{fig:backward}. Note
+that in HMMs the alpha and beta variables are categorized by a two-dimensional
+matrix, whereas in PHMMs they are three-dimensional matrices.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{algorithm}[]
