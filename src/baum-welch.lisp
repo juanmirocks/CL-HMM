@@ -226,8 +226,7 @@
               ;; ----------------------------------------------------------------------
               ,@algorithm
               ;; ----------------------------------------------------------------------
-
-              #+sbcl (sb-ext:gc :gen 1 :full t)) ;free memory
+              #+sbcl (sb-ext:gc :gen 1 :full t)) ;free memory on sbcl
 
             ,(hmm-simple-update) ;update parameters
 
