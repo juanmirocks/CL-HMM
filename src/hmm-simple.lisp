@@ -802,7 +802,7 @@
     (with- (V) (array-element-type V)
            (forall (aref V (aref observation i))))))
 
-;;;TODO normalize twice for each??
+;;;The normalization is applied twice. Internally to make sure that both arrays have the same numerical total range
 (defmethod !hmm-noisify ((hmm hmm-simple) noise)
   (unless (= +0-prob+ noise)
     (let ((confidence (- 1 noise)))
