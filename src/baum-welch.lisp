@@ -351,8 +351,8 @@
     (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
-  (phmm-slots (N PE A B) hmm
-    (let ((newPE (make-typed-array (array-dimensionss PE) 'prob-float +0-prob+))
+  (phmm-slots (PE A B) hmm
+    (let ((newPE (make-typed-array (array-dimensions PE) 'prob-float +0-prob+))
           (newA (make-typed-array (array-dimensions A) 'prob-float +0-prob+))
           (newB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
 
@@ -381,9 +381,7 @@
                 )
 
          ;; Set model with new parameters
-           (array-set PE newPE)
-           (array-set A newA)
-           (array-set B newB)
+           (array-set PE newPE) (array-set A newA) (array-set B newB)
          ;; & noisify
            (!hmm-noisify hmm noise)
 
