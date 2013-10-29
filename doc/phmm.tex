@@ -265,22 +265,22 @@ Initialization\;
 
 \Indm Recurrence\;\Indp
 \BlankLine
-Set $\hat \pi_i,\; \hat a_{ij},\; \hat b_i(l, r)$ to the prior counts if given,
+Set $\bar \pi_i,\; \bar a_{ij},\; \bar b_i(l, r)$ to the prior counts if given,
 otherwise 0 matrices\;
 For each observation pair $(\vec{x}, \vec{y})$ in $O$:\;\Indp
 Calculate $\alpha(l,r)$, $\beta(l,r)$, $P(o | \bar\lambda)$ using the forward
 and backward algs.\;
 log\_likelihood += $\log P(o | \bar \lambda)$\;
 Using equations \ref{eq:count_pi}, \ref{eq:count_a}, and \ref{eq:count_b}, add
-expected counts to $\hat \pi_i,\; \hat a_{ij},\; \hat b_i(l, r)$.
+expected counts to $\bar \pi_i,\; \bar a_{ij},\; \bar b_i(l, r)$.
 
 \BlankLine
 \Indm Normalize over all pair observations to obtain the new parameters:
 
-$$\bar \pi_i = \frac{\hat \pi_i}{\displaystyle\sum_{i=1}^N \hat \pi_i} \qquad
-\bar a_{ij} = \frac{\hat a_{ij}}{\displaystyle\sum_{i=1, j=1}^N \hat a_{ij}}
-\qquad \bar b_i(l,r) = \frac{\hat b_i(l,r)}{\displaystyle\sum_{l=1, r=1}^{|L|, |R|}
-  \hat b_i(l,r)}$$
+$$\bar \pi_i = \frac{\bar \pi_i}{\displaystyle\sum_{i=1}^N \bar \pi_i} \qquad
+\bar a_{ij} = \frac{\bar a_{ij}}{\displaystyle\sum_{i=1, j=1}^N \bar a_{ij}}
+\qquad \bar b_i(l,r) = \frac{\bar b_i(l,r)}{\displaystyle\sum_{l=1, r=1}^{|L|, |R|}
+  \bar b_i(l,r)}$$
 
 $$\bar \lambda = \langle \bar A, \bar B, \bar \pi \rangle$$
 
