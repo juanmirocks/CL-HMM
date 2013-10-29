@@ -352,9 +352,9 @@
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
   (phmm-slots (N L-size R-size) hmm
-    (let ((nPE (make-typed-array N 'prob-float +0-prob+))
-          (nA (make-typed-array (list N N) 'prob-float +0-prob+))
-          (nB (make-typed-array (list N L-size R-size) 'prob-float +0-prob+)))
+    (let ((newPE (make-typed-array N 'prob-float +0-prob+))
+          (newA (make-typed-array (list N N) 'prob-float +0-prob+))
+          (newB (make-typed-array (list N L-size R-size) 'prob-float +0-prob+)))
 
       (loop for iteration from 1
          for time-itr-start = (get-internal-real-time)
@@ -364,16 +364,16 @@
          for noise = (* (random +1-prob+) noise-amplitude)
          do
 
-         ;; Add pseudocounts
-           (when ri (dotimes (i N)
-                      (setf (aref nPE i) (aref ri i))))
-           (when ra (dotimes (i N)
-                      (dotimes (j N)
-                        (setf (aref nA i j) (aref ra i j)))))
-           (when rb (dotimes (i N)
-                      (dotimes (l L-size)
-                        (dotimes (r R-size)
-                          (setf (aref nB i l r) (aref rb i l r))))))
+         ;; Init new parameters with pseudocounts if given or 0 otherwise
+           (dotimes (i N)
+             (setf (aref newPE i) (if ri (aref ri i) +0-prob+)))
+           (dotimes (i N)
+             (dotimes (j N)
+               (setf (aref newA i j) (if ra (aref ra i j) +0-prob+))))
+           (dotimes (i N)
+             (dotimes (l L-size)
+               (dotimes (r R-size)
+                 (setf (aref newB i l r) (if (aref rb i l r) +0-prob+)))))
 
            (loop for o in obss-c
               for x = (first o)
