@@ -340,15 +340,16 @@
        (starting-noise +bw-noise-start+)
        (max-times +bw-max-times+)
        (threshold +bw-threshold+)
-       (ri (default-pseudocounts (hmm-no-states hmm)))
-       (ra (default-pseudocounts (list (hmm-no-states hmm) (hmm-no-states hmm))))
-       (rb (default-pseudocounts (list (hmm-no-states hmm) (hmm-alphabet-left-size hmm) (hmm-alphabet-right-size hmm))))
+       (ri (default-pseudocounts (array-dimensions (hmm-init hmm))))
+       (ra (default-pseudocounts (array-dimensions (hmm-trans hmm))))
+       (rb (default-pseudocounts (array-dimensions (hmm-emis hmm))))
        (verbose nil))
 
   (declare (optimize (speed 3)))
   (when (and verbose obss-l) (warn "obss-l is NOT used"))
   (when rb
     (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
+
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
   (phmm-slots (PE A B) hmm
