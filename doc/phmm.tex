@@ -295,6 +295,77 @@ exceeded.
 
 \nocite{Rabiner:HMMs}
 
+\section{Translations with PHMMs}
+
+The problem we look at is, given a model $\lambda$ and a left-stream input
+$\vec{x}$, generate in a meaningful way right-stream translation(s) $\vec{y}$.
+
+\subsection{Issues}
+
+\subsubsection{Infinite number of translations if epsilon on the left stream}
+
+Let's consider that we can obtain a translation $\vec{y}$ of size $m$. To
+generate this, the model follows a state path, $q_1 ... \; q_T$. Let $S_i$ at
+time $q_t$ be a state in the path that has an epsilon emission on the left
+stream, i.e., $\exists \; b_i(\epsilon, y) > 0$. We can always construct a
+longer translation $\vec{y}$ of size $m+1$ by emitting in $S_i$ $(\epsilon, y)$
+and then continue with the previous state path.
+
+\subsubsection{Exponential number of translations on $n$}
+
+The problem's upper bound happens with a $\lambda$ that is fully connected and
+has no 0 emission probabilities for any $(x, y)$ combination. Even without
+considering epsilon emissions, the number of possible translations is:
+${|R|}^n$.
+
+Note that the dynamic forward, backward, or viterbi algorithms do not compute
+all these paths/translations.
+
+\subsubsection{Shorter translations are always more probable}\label{sec:shorter_more}
+
+Consider a training data with an observation pair where $n = m$, and the rest of
+the observations, at least 2, are the same but with an extra symbol on
+$\vec{y}$, $m = n + 1$. Let's denote $q_t$ as the state that emits the extra
+symbol, i.e., $q_t$ emits ($\epsilon$, y). Therefore in the training data it's
+more probable for state $q_t$ to generate ($\epsilon$, y) rather than ($x,
+y$). Let's then consider a trained model that can generate translations
+$\vec{y_m}$ and $\vec{y_{m+1}}$ by following the same state path but in
+$q_t$. $P(\vec{y_m}|\lambda) > P(\vec{y_{m+1}}|\lambda)$ because the translation
+$\vec{y_m}$ incurs in a transition less, i.e., in a multiplication less of a
+probability within $(0, 1)$.
+
+\subsection{Possible Solutions}
+
+An exhaustive search of translations is impossible, therefore we look at
+solutions that generate a finite and limited number of translations. Due to
+issue \ref{sec:shorter_more}, it's not meaningful to obtain the translation with
+highest probability given the model.
+
+\subsubsection{With Backward}
+
+Reduce the PHMM $\lambda$ to a HMM $\lambda_{L}$ for the left stream by removing
+epsilon emissions on the left stream and setting $b_i(x) =
+\displaystyle\sum_{y=1}^{|R|} b_i(x, y)$. Let $q_1 ... \; q_T$ be the state path
+to generate the translation. Select state $S_i = q_1$ by the random distribution
+$\beta_i(1)$. Make state $S_i$ in the original PHMM emit an observation by the
+random distribution $b_i(x, y)$. If the emitted symbol on the left stream is not
+$\epsilon$, select $q_2$ as before, if $\epsilon$, repeat the emission until not
+$\epsilon$ (note that there cannot be a $b_i(\epsilon, y) = 1$ since the
+training data consists of finite sequences) . Repeat until emitting all symbols
+of $\vec{x}$.
+
+We can calculate the probability of the translation as:
+
+$$P(\vec{y}|\lambda, \vec{x}) = \frac{P((\vec{x},
+  \vec{y})|\lambda)}{P(\vec{y}|\lambda_L)}$$
+
+We can repeat this procedure to sample a finite number of translations.
+
+\subsubsection{With Viterbi}
+
+Same as before but this time select the path given by the viterbi algorithm on
+$\lambda_L$.
+
 % \section{Scaled Forward, Backward, \& Baum-Welch}
 
 % The previous algorithms multiply large sequences of probabilities, which end up
