@@ -361,7 +361,7 @@
          for last-loglikelihood = +0-prob+ then cur-loglikelihood
          for cur-loglikelihood = +0-prob+
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
-         for noise = (* (random +1-prob+) noise-amplitude)
+         for noise = (random noise-amplitude)
          do
 
          ;; Init new parameters with pseudocounts if given or 0 otherwise
