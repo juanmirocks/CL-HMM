@@ -281,7 +281,6 @@
 (defmethod !hmm-noisify ((hmm phmm) noise)
   (unless (zerop noise)
     (let ((confidence (coerce (- 1 noise) 'prob-float)))
-      (print confidence)
       (phmm-slots (PE A B) hmm
         (!normalize-vector
          (!combine-float-arrays PE (!normalize-vector (make-random-array (array-dimensions PE) +1-prob+)) confidence t))
