@@ -431,7 +431,7 @@
                                        (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
 
          ;; Set model with new parameters
-           (!normalize-vector PE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
+           (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
            (array-set PE newPE) (array-set A newA) (array-set B newB)
          ;; & noisify
            (!hmm-noisify hmm noise)
