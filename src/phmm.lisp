@@ -217,6 +217,9 @@
 ;; Common Methods
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defmethod hmm-correctp ((hmm phmm))
+  (warn "TODO, Not implemented"))
+
 (defmethod hmm-copy ((hmm phmm))
   (phmm-slots (S N L L-size R R-size) hmm
     (make-instance (type-of hmm)
