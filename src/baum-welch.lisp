@@ -394,7 +394,7 @@
                                                                     (* (aref alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
                                                                     (* (aref alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0))
                                                                     (* (aref alpha i l      (1- r)) (aref B j 0            (cbelt1 y r))))
-                                                      (aref B j l r))
+                                                      (aref beta j l r))
                                                    o_likelihood))
                                           ;; add to gamma
                                           (incf (aref gamma i l r) (aref xi i j l r))))))
