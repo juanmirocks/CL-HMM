@@ -267,6 +267,12 @@
       +epsilon-cbook-index+
       (elt seq (1- i))))
 
+(defmacro arefalpha (matrix dim1 dim2 dim3)
+  "Alpha matrix accessor"
+  `(if (or (< ,dim2 0) (< ,dim3 0))
+       +0-prob+
+       (aref ,matrix ,dim1 ,dim2 ,dim3)))
+
 (defmethod cbook-decode ((hmm phmm) observation)
   "cbook-encode pair observation"
   (declare (optimize (speed 3) (safety 0)))
@@ -319,42 +325,39 @@
       (declare (fixnum size_x size_y)
                (cbook-alphabet x y))
 
-      (labels ((arefmat (matrix dim1 dim2 dim3)
-                 (if (or (< dim2 0) (< dim3 0)) +0-prob+ (aref matrix dim1 dim2 dim3))))
-
-        ;; Initialization
-        ;; -------------------------------------------------------------------------
-        (loop for j below N do
-             (when (> size_x 0) (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (cbelt1 x 1) +epsilon-cbook-index+)))))
-             (when (> size_y 0) (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (cbelt1 y 1))))))
-             (when (and (> size_x 0) (> size_y 0))
-               (setf (aref alpha j 1 1)
-                     (prob (+
-                            (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
-                            (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (cbelt1 x 1) +epsilon-cbook-index+))
-                            (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (cbelt1 y 1))))))))
+      ;; Initialization
+      ;; -------------------------------------------------------------------------
+      (loop for j below N do
+           (when (> size_x 0) (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (cbelt1 x 1) +epsilon-cbook-index+)))))
+           (when (> size_y 0) (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (cbelt1 y 1))))))
+           (when (and (> size_x 0) (> size_y 0))
+             (setf (aref alpha j 1 1)
+                   (prob (+
+                          (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
+                          (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (cbelt1 x 1) +epsilon-cbook-index+))
+                          (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (cbelt1 y 1))))))))
 
 
-        ;; Induction
-        ;; -------------------------------------------------------------------------
-        ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
-        (loop for l from 0 to size_x do
-             (loop for r from 0 to size_y do
-                  (when (<= 2 (max l r))
-                    (loop for j below N do
-                         (setf (aref alpha j l r)
-                               (prob
-                                (+
-                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefmat alpha i (1- l) (1- r)))) (aref B j (cbelt1 x l) (cbelt1 y r)))
-                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefmat alpha i (1- l) r))) (aref B j (cbelt1 x l) +epsilon-cbook-index+))
-                                 (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefmat alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (cbelt1 y r))))))))))
+      ;; Induction
+      ;; -------------------------------------------------------------------------
+      ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
+      (loop for l from 0 to size_x do
+           (loop for r from 0 to size_y do
+                (when (<= 2 (max l r))
+                  (loop for j below N do
+                       (setf (aref alpha j l r)
+                             (prob
+                              (+
+                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) (1- r)))) (aref B j (cbelt1 x l) (cbelt1 y r)))
+                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) r))) (aref B j (cbelt1 x l) +epsilon-cbook-index+))
+                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (cbelt1 y r))))))))))
 
 
-        ;; Termination
-        ;; -------------------------------------------------------------------------
-        (values
-         (loop for j below N sum (aref alpha j size_x size_y))
-         alpha)))))
+      ;; Termination
+      ;; -------------------------------------------------------------------------
+      (values
+       (loop for j below N sum (aref alpha j size_x size_y))
+       alpha))))
 
 
 (defmethod backward ((hmm phmm) obs-c)

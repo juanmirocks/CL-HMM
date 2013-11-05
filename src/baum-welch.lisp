@@ -390,10 +390,10 @@
                                      (loop for r below size_y do
                                           ;; xi
                                           (setf (aref xi i j l  r)
-                                                (/ (* (aref A i j) (+ ;;TODO wrong indexation
-                                                                    (* (aref alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
-                                                                    (* (aref alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0))
-                                                                    (* (aref alpha i l      (1- r)) (aref B j 0            (cbelt1 y r))))
+                                                (/ (* (aref A i j) (+
+                                                                    (* (arefalpha alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
+                                                                    (* (arefalpha alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0))
+                                                                    (* (arefalpha alpha i l      (1- r)) (aref B j 0            (cbelt1 y r))))
                                                       (aref beta j l r))
                                                    o_likelihood))
                                           ;; add to gamma
