@@ -359,7 +359,7 @@
 
       (loop for iteration from 1
          for itr-time-start = (get-internal-real-time)
-         for last-loglikelihood = +0-prob+ then cur-loglikelihood
+         for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
          for cur-loglikelihood = +0-prob+
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
          for noise = (random noise-amplitude)
