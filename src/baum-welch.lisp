@@ -352,7 +352,7 @@
 
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
-  (phmm-slots (N PE A B) hmm
+  (phmm-slots (N PE A B L-size R-size) hmm
     (let ((newPE (make-typed-array (array-dimensions PE) 'prob-float +0-prob+))
           (newA (make-typed-array (array-dimensions A) 'prob-float +0-prob+))
           (newB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
@@ -389,13 +389,41 @@
                                 (loop for l below size_x do
                                      (loop for r below size_y do
                                           (setf (aref xi i j l  r)
-                                                (/ (* (aref A i j) (+
+                                                (/ (* (aref A i j) (+ ;;TODO wrong indexation
                                                                     (* (aref alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
                                                                     (* (aref alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0))
                                                                     (* (aref alpha i l      (1- r)) (aref B j 0            (cbelt1 y r))))
                                                       (aref B j l r))
-                                                   o_likelihood)))))))))
+                                                   o_likelihood)))))
+                           (loop for l below size_x do
+                                (loop for r below size_y do
+                                     (setf (aref gamma i l r)
+                                           (loop for j below N sum (aref xi i j l r))))))
+                      ;;
+                      ;; newPE
+                      (loop for j below N do
+                           (incf (aref newPE j)
+                                 (+ (aref gamma j 1 0)
+                                    (aref gamma j 0 1)
+                                    (- (aref gamma j 1 1) (loop for i below N sum (aref xi i j 1 1))))))
 
+                      ;; newA
+                      (loop for i below N
+                         with dem = +0-prob+
+                         do
+                           (loop for l below size_x do
+                                (loop for r below size_y do
+                                     (incf dem (aref gamma i l r))
+                                     (loop for j below N do
+                                          (incf (aref newA i j) (/ (aref xi i j l r) dem))))))
+
+                      ;; newB
+                      (loop for i below N
+                         with dem = +0-prob+
+                         do
+                           (loop for x to L-size do
+                                (loop for y to L-size do ;;TODO
+                                     (print y)))))))
 
          ;; Set model with new parameters
            (array-set PE newPE) (array-set A newA) (array-set B newB)
