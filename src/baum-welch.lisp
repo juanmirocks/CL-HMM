@@ -352,7 +352,7 @@
 
   (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
-  (phmm-slots (PE A B) hmm
+  (phmm-slots (N PE A B) hmm
     (let ((newPE (make-typed-array (array-dimensions PE) 'prob-float +0-prob+))
           (newA (make-typed-array (array-dimensions A) 'prob-float +0-prob+))
           (newB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
@@ -377,9 +377,25 @@
               for size_y fixnum = (length y)
               for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
               for beta = (backward hmm o)
+              for xi = (make-typed-array (list N N size_x size_y) 'prob-float +0-prob+)
+              for gamma = (make-typed-array (list N size_x size_y) 'prob-float +0-prob+)
               do
-                (incf cur-loglikelihood (log o_likelihood))
-                )
+                (if (zerop o_likelihood)
+                    (warn "0 probability for input pair: ~2%~a~%" o)
+                    (progn
+                      (incf cur-loglikelihood (log o_likelihood))
+                      (loop for i below N do
+                           (loop for j below N do
+                                (loop for l below size_x do
+                                     (loop for r below size_y do
+                                          (setf (aref xi i j l  r)
+                                                (/ (* (aref A i j) (+
+                                                                    (* (aref alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
+                                                                    (* (aref alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0))
+                                                                    (* (aref alpha i l      (1- r)) (aref B j 0            (cbelt1 y r))))
+                                                      (aref B j l r))
+                                                   o_likelihood)))))))))
+
 
          ;; Set model with new parameters
            (array-set PE newPE) (array-set A newA) (array-set B newB)
