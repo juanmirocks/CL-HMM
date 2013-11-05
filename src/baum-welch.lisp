@@ -377,8 +377,8 @@
               for size_y fixnum = (length y)
               for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
               for beta = (backward hmm o)
-              for xi = (make-typed-array (list N N size_x size_y) 'prob-float +0-prob+)
-              for gamma = (make-typed-array (list N size_x size_y) 'prob-float +0-prob+)
+              for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+              for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
               for k = 0 then (1+ k)
               do
                 (if (zerop o_likelihood)
@@ -388,8 +388,8 @@
                       (incf cur-loglikelihood (log o_likelihood))
                       (loop for i below N do
                            (loop for j below N do
-                                (loop for l below size_x do
-                                     (loop for r below size_y do
+                                (loop for l to size_x do
+                                     (loop for r to size_y do
                                           ;; xi
                                           (setf (aref xi i j l  r)
                                                 (/ (* (aref A i j) (+
@@ -405,8 +405,8 @@
                             (xi_notime (make-typed-array (list N N) 'prob-float +0-prob+))
                             (tempB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
                         (loop for i below N do
-                             (loop for l below size_x do
-                                  (loop for r below size_y do
+                             (loop for l to size_x do
+                                  (loop for r to size_y do
                                        (incf (aref gamma_notime i) (aref gamma i l r))
                                        (incf (aref tempB i (cbelt1 x l) (cbelt1 y r)) (aref gamma i l r))
                                        (loop for j below N do
