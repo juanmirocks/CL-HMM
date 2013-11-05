@@ -428,7 +428,7 @@
                         (loop for i below N do
                              (loop for xl to L-size do
                                   (loop for yr to R-size do
-                                       (incf (aref newB xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
+                                       (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
 
          ;; Set model with new parameters
            (!normalize-vector PE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
