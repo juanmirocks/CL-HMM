@@ -379,10 +379,12 @@
               for beta = (backward hmm o)
               for xi = (make-typed-array (list N N size_x size_y) 'prob-float +0-prob+)
               for gamma = (make-typed-array (list N size_x size_y) 'prob-float +0-prob+)
+              for k = 0 then (1+ k)
               do
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~2%~a~%" o)
                     (progn
+                      (when verbose (format t "~d " k))
                       (incf cur-loglikelihood (log o_likelihood))
                       (loop for i below N do
                            (loop for j below N do
@@ -429,15 +431,17 @@
                                        (incf (aref newB xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
 
          ;; Set model with new parameters
+           (!normalize-vector PE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
            (array-set PE newPE) (array-set A newA) (array-set B newB)
          ;; & noisify
            (!hmm-noisify hmm noise)
 
            (when verbose
-             (format t "~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start))
+             (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start))
              (when (< cur-loglikelihood last-loglikelihood)
                (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
-             (fresh-line))
+             (fresh-line)
+             (format t "~%"))
 
          until (or (= iteration max-times)
                    (and
