@@ -422,7 +422,7 @@
                          with dem = +0-prob+
                          do
                            (loop for x to L-size do
-                                (loop for y to L-size do ;;TODO
+                                (loop for y to R-size do ;;TODO
                                      (print y)))))))
 
          ;; Set model with new parameters
