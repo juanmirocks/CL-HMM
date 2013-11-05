@@ -12,13 +12,13 @@ CL-HMM: HMM Library for Common Lisp
 Features:
 --------------------------------------------------------------------------------
 
-* Discrete observation densities
-* Alphabet symbols of any kind
-* Exponential state duration densities
-* Homogeneous HMMs
-* First order
+* Discrete observation densities.
+* Alphabet symbols of any kind.
+* Exponential state duration densities.
+* Homogeneous HMMs.
+* First order chains.
 
-* HMMs
+* HMMs:
   * Tied emission parameters
   * Finite and infinite HMMs
   * Forward/Backward scaled, Viterbi in log
