@@ -388,42 +388,45 @@
                            (loop for j below N do
                                 (loop for l below size_x do
                                      (loop for r below size_y do
+                                          ;; xi
                                           (setf (aref xi i j l  r)
                                                 (/ (* (aref A i j) (+ ;;TODO wrong indexation
                                                                     (* (aref alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
                                                                     (* (aref alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0))
                                                                     (* (aref alpha i l      (1- r)) (aref B j 0            (cbelt1 y r))))
                                                       (aref B j l r))
-                                                   o_likelihood)))))
-                           (loop for l below size_x do
-                                (loop for r below size_y do
-                                     (setf (aref gamma i l r)
-                                           (loop for j below N sum (aref xi i j l r))))))
-                      ;;
-                      ;; newPE
-                      (loop for j below N do
-                           (incf (aref newPE j)
-                                 (+ (aref gamma j 1 0)
-                                    (aref gamma j 0 1)
-                                    (- (aref gamma j 1 1) (loop for i below N sum (aref xi i j 1 1))))))
+                                                   o_likelihood))
+                                          ;; add to gamma
+                                          (incf (aref gamma i l r) (aref xi i j l r))))))
 
-                      ;; newA
-                      (loop for i below N
-                         with dem = +0-prob+
-                         do
-                           (loop for l below size_x do
-                                (loop for r below size_y do
-                                     (incf dem (aref gamma i l r))
-                                     (loop for j below N do
-                                          (incf (aref newA i j) (/ (aref xi i j l r) dem))))))
+                      (let ((gamma_notime (make-typed-array (list N) 'prob-float +0-prob+))
+                            (xi_notime (make-typed-array (list N N) 'prob-float +0-prob+))
+                            (tempB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
+                        (loop for i below N do
+                             (loop for l below size_x do
+                                  (loop for r below size_y do
+                                       (incf (aref gamma_notime i) (aref gamma i l r))
+                                       (incf (aref tempB i (cbelt1 x l) (cbelt1 y r)) (aref gamma i l r))
+                                       (loop for j below N do
+                                            (incf (aref xi_notime i j) (aref xi i l r))))))
 
-                      ;; newB
-                      (loop for i below N
-                         with dem = +0-prob+
-                         do
-                           (loop for x to L-size do
-                                (loop for y to R-size do ;;TODO
-                                     (print y)))))))
+                        ;; newPE
+                        (loop for j below N do
+                             (incf (aref newPE j)
+                                   (+ (aref gamma j 1 0)
+                                      (aref gamma j 0 1)
+                                      (- (aref gamma j 1 1) (loop for i below N sum (aref xi i j 1 1))))))
+
+                        ;; newA
+                        (loop for i below N do
+                             (loop for j below N sum
+                                  (incf (aref newA i j) (/ (aref xi_notime i j) (aref gamma_notime i)))))
+
+                        ;; newB
+                        (loop for i below N do
+                             (loop for xl to L-size do
+                                  (loop for yr to R-size do
+                                       (incf (aref newB xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
 
          ;; Set model with new parameters
            (array-set PE newPE) (array-set A newA) (array-set B newB)
