@@ -380,6 +380,7 @@
               for beta = (backward hmm o)
               for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
               for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+              for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
               do
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~2%~a~%" o)
@@ -390,20 +391,25 @@
                            (loop for j below N do
                                 (loop for l to size_x do
                                      (loop for r to size_y do
-                                          ;; xi
-                                          (setf (aref xi i j l  r)
-                                                (/ (* (aref A i j) (+
-                                                                    (* (arefalpha alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
-                                                                    (* (arefalpha alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0))
-                                                                    (* (arefalpha alpha i l      (1- r)) (aref B j 0            (cbelt1 y r))))
-                                                      (aref beta j l r))
-                                                   o_likelihood))
+                                        ;; xi
+                                          (setf (aref xi i j l r)
+                                                (let* ((base (/ (* (aref A i j) (aref beta j l r)) o_likelihood))
+                                                       (diag (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r))))
+                                                       (l-1  (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0)))
+                                                       (r-1  (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbelt1 y r)))))
+
+                                                  (incf (aref tempB j (cbelt1 x l) (cbelt1 y r)) diag)
+                                                  (incf (aref tempB j (cbelt1 x l) 0           ) l-1)
+                                                  (incf (aref tempB j 0            (cbelt1 y r)) r-1)
+
+                                                  (+ diag l-1 r-1)))
+
                                           ;; add to gamma
                                           (incf (aref gamma i l r) (aref xi i j l r))))))
 
+                      ;;TODO calculate together with xi
                       (let ((gamma_notime (make-typed-array (list N) 'prob-float +0-prob+))
-                            (xi_notime (make-typed-array (list N N) 'prob-float +0-prob+))
-                            (tempB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
+                            (xi_notime (make-typed-array (list N N) 'prob-float +0-prob+)))
                         (loop for i below N do
                              (loop for l to size_x do
                                   (loop for r to size_y do
@@ -432,7 +438,9 @@
 
          ;; Set model with new parameters
            (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
-           (array-set PE newPE) (array-set A newA) (array-set B newB)
+           (array-set PE newPE)
+           (array-set A newA)
+           (array-set B newB)
          ;; & noisify
            (!hmm-noisify hmm noise)
 
