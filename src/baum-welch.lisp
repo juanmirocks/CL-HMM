@@ -345,7 +345,8 @@
        (rb (default-pseudocounts (array-dimensions (hmm-emis hmm))))
        (verbose nil))
 
-  (declare (optimize (speed 3)))
+  ;;(declare (optimize (speed 3)))
+  (declare (optimize (safety 3) (debug 3)))
   (when (and verbose obss-l) (warn "obss-l is NOT used"))
   (when rb
     (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
