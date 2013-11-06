@@ -371,6 +371,7 @@
            (if rb (array-set newB rb) (array-reset newB +0-prob+))
 
            (loop for o in obss-c
+              for k = 0 then (1+ k)
               for x = (first o)
               for y = (second o)
               for size_x fixnum = (length x)
@@ -379,7 +380,6 @@
               for beta = (backward hmm o)
               for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
               for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-              for k = 0 then (1+ k)
               do
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~2%~a~%" o)
