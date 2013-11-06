@@ -218,11 +218,25 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod hmm-correctp ((hmm phmm))
-  (labels ((existsNegative (matrix)
-             (dotimes (i (array-total-size matrix) nil)
-               (if (< (row-major-aref matrix i) 0) (return t)))))
+  (warn "TODO, Not fully implemented")
+  (let ((buffer (make-array +stream-correctness-size+ :element-type 'character :adjustable t :fill-pointer 0))
+        (correct true))
 
-  (warn "TODO, Not implemented")))
+    (labels ((existsNegative (matrix)
+               (dotimes (i (array-total-size matrix) nil)
+                 (if (< (row-major-aref matrix i) 0) (return t))))
+             (assume (condition errorMsg)
+               (unless condition (setq correct nil) (format buffer errorMsg))))
+
+
+      (phmm-slots (N PE A B) hmm
+        (assume (not (existsNegative PE)) "Negative value in PE")
+        (assume (not (existsNegative A)) "Negative value in A")
+        (assume (not (existsNegative B)) "Negative value in B")
+        (loop for i below N do
+             (assume (zerop (aref B i 0 0)) "Non-zero! b_~i(epsilon, epsilon)"))))
+
+    (values correct buffer)))
 
 (defmethod hmm-copy ((hmm phmm))
   (phmm-slots (S N L L-size R R-size) hmm
