@@ -218,7 +218,11 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod hmm-correctp ((hmm phmm))
-  (warn "TODO, Not implemented"))
+  (labels ((existsNegative (matrix)
+             (dotimes (i (array-total-size matrix) nil)
+               (if (< (row-major-aref matrix i) 0) (return t)))))
+
+  (warn "TODO, Not implemented")))
 
 (defmethod hmm-copy ((hmm phmm))
   (phmm-slots (S N L L-size R R-size) hmm
