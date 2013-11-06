@@ -414,7 +414,6 @@
                              (loop for l to size_x do
                                   (loop for r to size_y do
                                        (incf (aref gamma_notime i) (aref gamma i l r))
-                                       (incf (aref tempB i (cbelt1 x l) (cbelt1 y r)) (aref gamma i l r))
                                        (loop for j below N do
                                             (incf (aref xi_notime i j) (aref xi i j l r))))))
 
