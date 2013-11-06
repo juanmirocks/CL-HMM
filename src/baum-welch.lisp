@@ -420,9 +420,13 @@
                         ;; newPE
                         (loop for j below N do
                              (incf (aref newPE j)
-                                   (+ (aref gamma j 1 0)
-                                      (aref gamma j 0 1)
-                                      (- (aref gamma j 1 1) (loop for i below N sum (aref xi i j 1 1))))))
+                                   (let* ((gammaj10 (/ (* (aref alpha j 1 0) (aref beta j 1 0)) o_likelihood))
+                                          (gammaj01 (/ (* (aref alpha j 0 1) (aref beta j 0 1)) o_likelihood))
+                                          (gammaj11 (/ (* (aref alpha j 1 1) (aref beta j 1 1)) o_likelihood))
+                                          ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
+                                          )
+
+                                     (+ gammaj10 gammaj01 gammaj11))))
 
                         ;; newA
                         (loop for i below N do
