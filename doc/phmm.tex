@@ -227,7 +227,7 @@ reestimate the $\lambda$ parameters:
 \begin{flalign}\label{eq:count_a}
 \bar a_{ij} =& \frac{\mbox{ expected number of transitions from state $S_i$ to state $S_j$ }}{\mbox{ expected number of
     transitions from state $S_i$ }} = \notag\\
-& \frac{\displaystyle\sum_{l=1}^{n} \displaystyle\sum_{r=1}^{m} \xi_{ij}(l, r)}{\displaystyle\sum_{l=1}^{n} \displaystyle\sum_{r=1}^{m} \gamma_i(l, r)}
+& \frac{\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \xi_{ij}(l, r)}{\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \gamma_i(l, r)}
 \end{flalign}
 \end{center}
 
@@ -236,8 +236,8 @@ reestimate the $\lambda$ parameters:
 \bar b_i(x, y) =& \frac{\mbox{ expected number of times in state $S_i$ and
     observing (x, y)}}{\mbox{ expected number
     of times in state $S_i$ }} = \notag\\
-& \frac{\displaystyle\sum_{l=1}^{n}
-  \displaystyle\sum_{r=1}^{m} \gamma_i(l, r) \; \mbox{if} \; (l, r) = (x, y)}{\displaystyle\sum_{l=1}^{n} \displaystyle\sum_{r=1}^{m} \gamma_i(l, r)}
+& \frac{\displaystyle\sum_{l=0}^{n}
+  \displaystyle\sum_{r=0}^{m} \gamma_i(l, r) \; \mbox{if} \; (l, r) = (x, y)}{\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \gamma_i(l, r)}
 \end{flalign}
 \end{center}
 
