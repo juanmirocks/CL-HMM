@@ -467,6 +467,8 @@
 
 @return(0) Y: a translation of X, cbook-encoded right-stream input sequence"
 
+  (declare (cbook-alphabet X))
+
   (phmm-slots (PE A B) phmm
     (let ((size_x (length X))
           (init_state (select-random PE i)))
