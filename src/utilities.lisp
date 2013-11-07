@@ -11,21 +11,22 @@
 ;;;fastest search in a prob-float array, (see jmc.cl.utils)
 (def-lin-search array-search prob-float (simple-array prob-float) >=)
 
-(defun select-random (accum-array &optional (subscripts-1 nil) (fixed-pick nil))
+(defun select-random (accum-array &key (indices-1 nil) (fixed-max nil) (fixed-pick nil))
   (declare (optimize (speed 3) (safety 0)))
   (let ((dims (array-dimensions accum-array)))
-    (unless (= (length dims) (1+ (length subscripts-1))) (error "The size of subscripts-1 must be exactly array's dimensions - 1"))
-    (labels ((fstart (subscripts-1 dims-1 accum)
-               (if (null subscripts-1)
+    (unless (= (length dims) (1+ (length indices-1))) (error "The size of indices-1 must be exactly array's dimensions - 1"))
+    (labels ((fstart (indices-1 dims-1 accum)
+               (if (null indices-1)
                    accum
-                   (fstart (cdr subscripts-1) (cdr dims-1) (+ accum (apply #'* (car subscripts-1) dims-1))))))
-      (let* ((start (fstart subscripts-1 (cdr dims) 0))
+                   (fstart (cdr indices-1) (cdr dims-1) (+ accum (apply #'* (car indices-1) dims-1))))))
+      (let* ((start (fstart indices-1 (cdr dims) 0))
              (end (+ start (car (last dims))))
-             (max (row-major-aref accum-array (1- end)))
-             (pick (if (zerop max) (return-from select-random nil) (if fixed-pick fixed-pick (random max)))))
-        (if (> pick max)
-            nil
-            (- (array-search pick accum-array start end) start))))))
+             (max (if fixed-max fixed-max (row-major-aref accum-array (1- end))))
+             (pick (if (zerop max) (return-from select-random nil) (if fixed-pick fixed-pick (random max))))
+             (found-total-index (array-search pick accum-array start end))
+             (relative-index (if found-total-index (- found-total-index start) nil)))
+        (print (list max pick))
+        relative-index))))
 
 ;;; DEPRECATED, see +very-negative-prob-float+
 ;; (defmacro +small (arg1 arg2)
