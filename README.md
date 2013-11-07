@@ -27,8 +27,8 @@ Features:
   * Comparable efficiency to GHMM written in C (1x - 2x slower)
 * PHMMs (Pair HMMs) -- **ongoing development**
   * Forward & backward pure algorithms (non-scaled)
+  * Sequence translations: X --> Y
   * (ONGOING) Baum-Welch pure
-  * (ONGOING) Sequence translations: X --> Y
 
 
 Comments:
