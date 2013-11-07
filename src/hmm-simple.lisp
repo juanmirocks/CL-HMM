@@ -812,7 +812,7 @@
          (!combine-float-matrices B (!normalize-2dmatrix-by-row (make-random-matrix (list N M) +1-prob+ 'prob-float)) confidence 'prob-float t)))))
     hmm)
 
-(defmethod hmm-save (filename (hmm hmm-simple) &optional (model-spec :relevant))
+(defmethod hmm-save ((hmm hmm-simple) filename &optional (model-spec :relevant))
   (labels ((model-spec-relevant (hmm states)
              (hmm-simple-slots (V S PE A B) hmm
                (let ((trans (multiple-value-bind (a b) (trans-stats A S nil t) a b))
@@ -836,8 +836,6 @@
                           (push (list (first s) (second s) (aref PE i) (nreverse ia)) model-spec)))
                  (nreverse model-spec)))))
 
-    (unless (typep hmm 'hmm)
-      (error "The object is not a valid hmm"))
     (with-open-file (stream filename :direction :output :if-does-not-exist :create :if-exists :rename)
       (prin1
        (ecase (type-of hmm)
@@ -850,6 +848,7 @@
               `(make-hmm-simple
                 ,(hmm-no-states hmm)
                 ,(hmm-no-emissions hmm)
+
                 ',(sequence->list (hmm-alphabet hmm))
                 ,(ecase model-spec
                         (:complete
