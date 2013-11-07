@@ -263,23 +263,30 @@
   (phmm-slots (N L-size R-size) hmm
     (* N L-size R-size)))
 
+(defmethod cbook-encode-left ((hmm phmm) x)
+  "cbook-encode left string, that is, the input of a pair observation"
+  (declare (optimize (speed 3)) ((vector) x))
+  (let* ((size_x (the fixnum (length x)))
+         (out_x (make-array size_x :element-type 'cbook-symbol)))
+    (phmm-slots (L-hash) hmm
+      (dotimes (i size_x out_x)
+        (setf (aref out_x i) (gethash (aref x i) L-hash))))))
+
+(defmethod cbook-encode-right ((hmm phmm) y)
+  "cbook-encode right string, that is, the output of a pair observation"
+  (declare (optimize (speed 3)) ((vector) y))
+  (let* ((size_y (the fixnum (length y)))
+         (out_y (make-array size_y :element-type 'cbook-symbol)))
+    (phmm-slots (R-hash) hmm
+      (dotimes (i size_y out_y)
+        (setf (aref out_y i) (gethash (aref y i) R-hash))))))
 
 (defmethod cbook-encode ((hmm phmm) observation)
   "cbook-encode pair observation"
   (declare (optimize (speed 3)))
-  (let* ((in_x (first observation))
-         (in_y (second observation))
-         (size_x (the fixnum (length in_x)))
-         (size_y (the fixnum (length in_y)))
-         (out_x (make-array size_x :element-type 'cbook-symbol))
-         (out_y (make-array size_y :element-type 'cbook-symbol)))
-    (declare ((vector) in_x in_y))
-    (phmm-slots (L-hash R-hash) hmm
-        (list
-         (dotimes (i size_x out_x)
-           (setf (aref out_x i) (gethash (aref in_x i) L-hash)))
-         (dotimes (i size_y out_y)
-           (setf (aref out_y i) (gethash (aref in_y i) R-hash)))))))
+  (let* ((x (first observation))
+         (y (second observation)))
+    (list (cbook-encode-left hmm x) (cbook-encode-right hmm y))))
 
 (defun cbelt1 (seq i)
   "1-indexed cbook-encoded input sequence. If 0, return epsilon's index"
