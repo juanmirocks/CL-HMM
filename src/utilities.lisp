@@ -22,7 +22,7 @@
       (let* ((start (fstart subscripts-1 (cdr dims) 0))
              (end (+ start (car (last dims))))
              (max (row-major-aref accum-array (1- end)))
-             (pick (if fixed-pick fixed-pick (random max))))
+             (pick (if (zerop max) (return-from select-random nil) (if fixed-pick fixed-pick (random max)))))
         (if (> pick max)
             nil
             (- (array-search pick accum-array start end) start))))))
