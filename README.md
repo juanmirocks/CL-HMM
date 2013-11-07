@@ -45,6 +45,6 @@ Installation:
 --------------------------------------------------------------------------------
 
 1. Download & load latest version of [jmc.cl.utils system](https://github.com/jmcejuela/jmc.cl.utils)
-  -> In your lisp prompt: `(asdf:operate 'asdf:load-op :jmc.cl.utils)`
 2. Download & load latest version of CL-HMM's code
-  -> In your lisp prompt: `(asdf:operate 'asdf:load-op :cl-hmm)`
+3. Make ASDF locate the downloaded packaged, for instance: `(setf asdf:*central-registry* (append '(#p"...local path..." :*central-registry*)))`
+4. `(asdf:operate 'asdf:load-op :cl-hmm)`
