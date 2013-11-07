@@ -486,7 +486,7 @@
                  (if (= l size_x)
                      (make-array (length Y) :element-type 'cbook-symbol :initial-contents (reverse Y))
                      (if (zerop-emission-prob state (elt X l))
-                         (rec size_x -1 Y) ;dead end
+                         (progn (warn "dead end") (rec size_x -1 Y))
                          (let ((Yr (select-random accumB (list state (elt X l)))))
                            (rec (if (= Yr +epsilon-cbook-index+) l (1+ l)) (select-random accumA (list state)) (cons Yr Y)))))))
         (rec 0 init_state nil)))))
