@@ -44,7 +44,8 @@ Comments:
 Installation:
 --------------------------------------------------------------------------------
 
-1. Download & load latest version of [jmc.cl.utils system](https://github.com/jmcejuela/jmc.cl.utils)
-2. Download & load latest version of CL-HMM's code
-3. Make ASDF locate the downloaded packaged, for instance: `(setf asdf:*central-registry* (append '(#p"...local path..." :*central-registry*)))`
-4. `(asdf:operate 'asdf:load-op :cl-hmm)`
+1. You need to install a Common Lisp implementation. For instance: [SBCL](http://www.sbcl.org/)
+2. Download & load latest version of [jmc.cl.utils system](https://github.com/jmcejuela/jmc.cl.utils)
+3. Download & load latest version of CL-HMM's code
+4. Make ASDF locate the downloaded packaged, for instance: `(setf asdf:*central-registry* (append '(#p"...local path..." :*central-registry*)))`
+5. Load & compile the package: `(asdf:operate 'asdf:load-op :cl-hmm)`
