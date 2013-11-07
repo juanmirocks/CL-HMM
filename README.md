@@ -19,16 +19,20 @@ Features:
 * Exponential state duration densities.
 * Homogeneous HMMs.
 * First order chains.
+* Comparable efficiency to GHMM written in C (1x - 2x slower)
 * HMMs:
   * Tied emission parameters
   * Finite and infinite HMMs
   * Forward/Backward scaled, Viterbi in log
   * Baum-Welch (scaled) for multiple labeled sequences and normalized noise
-  * Comparable efficiency to GHMM written in C (1x - 2x slower)
+
 * PHMMs (Pair HMMs) -- **ongoing development**
   * Forward & backward pure algorithms (non-scaled)
   * Sequence translations: X --> Y
-  * (ONGOING) Baum-Welch pure
+  * (soon) Baum-Welch pure
+  * (soon) Viterbi
+  * (soon) Scaled versions of the algorithms
+  * (not soon; help anyone?) Tied emission parameters
 
 
 Comments:
