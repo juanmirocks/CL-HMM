@@ -481,12 +481,18 @@
           (init_state (select-random (accum-array PE 1 prob-float)))
           (accumA (accum-array A 2 prob-float))
           (accumB (accum-array B 3 prob-float)))
-      (labels ((zerop-emission-prob (i l) (not (select-random accumB (list i l)))) ;TODO wrong: all could be 0 but the epsilon
+      (labels ((zerop-emission-prob (state l) (not (select-random accumB :indices-1 (list state l))))
                (rec (l state Y)
                  (if (= l size_x)
                      (make-array (length Y) :element-type 'cbook-symbol :initial-contents (reverse Y))
                      (if (zerop-emission-prob state (elt X l))
                          (progn (warn "dead end") (rec size_x -1 Y))
-                         (let ((Yr (select-random accumB (list state (elt X l)))))
-                           (rec (if (= Yr +epsilon-cbook-index+) l (1+ l)) (select-random accumA (list state)) (cons Yr Y)))))))
+                         (let ((next_state (select-random accumA :indices-1 (list state)))
+                               (Yr (select-random accumB :indices-1 (list state 0) :fixed-max +1-prob+)))
+                           (if Yr
+                               (rec l next_state (cons Yr Y)) ;epsilon on X
+                               (let ((Yr (select-random accumB :indices-1 (list state (elt X l)))))
+                                 (rec (1+ l) next_state (if (= Yr +epsilon-cbook-index+)
+                                                            Y ;epsilon on Y
+                                                            (cons Yr Y))))))))))
         (rec 0 init_state nil)))))
