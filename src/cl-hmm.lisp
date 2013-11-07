@@ -96,7 +96,7 @@
 ;;;; Rules to define a new hmm type
 ;;;;   Each new hmm or group of hmms must be declared in a new file called after it
 ;;;;   All hmm must be defined through the macro def-hmm-type
-;;;;   Order of specification: definition, initialization methods, specific procedures, common methods
+;;;;   Order of specification: definition, initialization methods, common methods, specific methods
 ;;;;
 
 
@@ -108,13 +108,6 @@
 ;; (defun make-hmm(-*) ()
 ;; (defun make-random-hmm(-*) ()
 ;; (defun make-uniform-hmm(-*) ()
-
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Specific procedures
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;...
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -167,3 +160,19 @@
 (defgeneric !hmm-noisify (hmm noise)
   (:documentation "(DESTRUCTIVE) Randomly add noise to the model parameters
   @param noise: float in [0, 1]; 0 to not change the model, 1 for completely random model"))
+
+(defgeneric hmm-save (hmm filename &optional model-spec)
+  (:documentation
+   "Save hmm to file
+
+    @param hmm: hmm to save
+    @param filename: filename to save the hmm to
+    @param model-spec (optional): [complete|relevant] specification-way to save the model
+
+    @return nil"))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Specific methods
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;...

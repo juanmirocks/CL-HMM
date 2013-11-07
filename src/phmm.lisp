@@ -220,7 +220,7 @@
 (defmethod hmm-correctp ((hmm phmm))
   (warn "TODO, Not fully implemented")
   (let ((buffer (make-array +stream-correctness-size+ :element-type 'character :adjustable t :fill-pointer 0))
-        (correct true))
+        (correct t))
 
     (labels ((existsNegative (matrix)
                (dotimes (i (array-total-size matrix) nil)
@@ -323,6 +323,26 @@
         (!normalize-3dmatrix-by-row
          (!combine-float-arrays B (!normalize-3dmatrix-by-row (make-random-array (array-dimensions B) +1-prob+)) confidence t)))))
   hmm)
+
+(defmethod hmm-save ((hmm phmm) filename &optional model-spec)
+  (when (not (eql model-spec :complete)) (error "Only the model-spec ':complete' is supported"))
+  (phmm-slots (name N L R S PE A B) hmm
+    (let ((states (loop for i below N collect (list (state-name (aref S i)) (state-label (aref S i))))))
+      (with-open-file (stream filename :direction :output :if-does-not-exist :create :if-exists :rename)
+        (prin1
+         `(make-phmm
+           ,N
+           ',(array->list L)
+           ',(array->list R)
+           ,`'(,states
+               ,(array->list PE)
+               ,(array->list A)
+               ,(array->list B))
+           :name ,name
+           :L-alphabet-type ',(array-element-type L)
+           :R-alphabet-type ',(array-element-type R)
+           :model-spec ,model-spec)
+         stream)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Forward & Backward
