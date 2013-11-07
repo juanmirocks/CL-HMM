@@ -11,6 +11,22 @@
 ;;;fastest search in a prob-float array, (see jmc.cl.utils)
 (def-lin-search array-search prob-float (simple-array prob-float) >=)
 
+(defun select-random (accum-array &optional (subscripts-1 nil) (fixed-pick nil))
+  (declare (optimize (speed 3) (safety 0)))
+  (let ((dims (array-dimensions accum-array)))
+    (unless (= (length dims) (1+ (length subscripts-1))) (error "The size of subscripts-1 must be exactly array's dimensions - 1"))
+    (labels ((fstart (subscripts-1 dims-1 accum)
+               (if (null subscripts-1)
+                   accum
+                   (fstart (cdr subscripts-1) (cdr dims-1) (+ accum (apply #'* (car subscripts-1) dims-1))))))
+      (let* ((start (fstart subscripts-1 (cdr dims) 0))
+             (end (+ start (car (last dims))))
+             (max (row-major-aref accum-array (1- end)))
+             (pick (if fixed-pick fixed-pick (random max))))
+        (if (> pick max)
+            nil
+            (- (array-search pick accum-array start end) start))))))
+
 ;;; DEPRECATED, see +very-negative-prob-float+
 ;; (defmacro +small (arg1 arg2)
 ;;   `(handler-case (+ ,arg1 ,arg2)
