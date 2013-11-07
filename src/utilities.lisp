@@ -25,7 +25,6 @@
              (pick (if (zerop max) (return-from select-random nil) (if fixed-pick fixed-pick (random max))))
              (found-total-index (array-search pick accum-array start end))
              (relative-index (if found-total-index (- found-total-index start) nil)))
-        (print (list max pick))
         relative-index))))
 
 ;;; DEPRECATED, see +very-negative-prob-float+
