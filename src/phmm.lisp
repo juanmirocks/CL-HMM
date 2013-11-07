@@ -448,3 +448,33 @@
                                            (* (arefmat beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (elt1 y (1+ r))))))))))))))
 
       beta)))
+
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Translations
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod hmm-translate (phmm X)
+  "Translate X input sequence (left stream) -> Y output sequence (right stream)
+
+  The Y translation is non-deterministic and is constructed following a random path
+  determined by the transition and emission distributions of the model. Some randomly-generated
+  paths may lead to dead ends, that is, where the X is not completely generated.
+
+  @param phmm: model with probability distributions to use for translation
+  @param X: cbook-encoded left-stream input sequence
+
+@return(0) Y: a translation of X, cbook-encoded right-stream input sequence"
+
+  (phmm-slots (PE A B) phmm
+    (let ((size_x (length X))
+          (init_state (select-random PE i)))
+      (labels ((rec (l state Y)
+                 (if (= l size_x)
+                     (make-array (length Y) :element-type 'cbook-symbol :initial-contents (reverse Y))
+                     (if (zerop (total-prob B state (elt X l)))
+                         (rec size_x -1 Y) ;dead end
+                         (let ((Yr (select-random B state (elt X l))))
+                           (rec (if (= Yr +epsilon-cbook-index+) l (1+ l)) (select-random A i) (cons Yr Y)))))))
+        (rec 0 init_state nil)))))
