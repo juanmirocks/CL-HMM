@@ -482,7 +482,7 @@
           (accumA (accum-array A 2 prob-float))
           (accumB (accum-array B 3 prob-float)))
       (labels ((zerop-emission-prob (i l) (not (select-random accumB (list i l)))) ;TODO wrong: all could be 0 but the epsilon
-               (rec (l state Y) ;TODO wrong: empty input sequences can output something
+               (rec (l state Y)
                  (if (= l size_x)
                      (make-array (length Y) :element-type 'cbook-symbol :initial-contents (reverse Y))
                      (if (zerop-emission-prob state (elt X l))
