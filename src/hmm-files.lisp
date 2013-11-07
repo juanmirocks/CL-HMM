@@ -9,29 +9,29 @@
 (declaim (optimize (speed 3) (safety 0)))
 
 
-(defun hmm-save (filename hmm &optional (model-spec :relevant))
+(defmethod hmm-save (filename (hmm hmm-simple) &optional (model-spec :relevant))
   (labels ((model-spec-relevant (hmm states)
              (hmm-simple-slots (V S PE A B) hmm
                (let ((trans (multiple-value-bind (a b) (trans-stats A S nil t) a b))
                      (emis (emis-stats B V S t))
                      (model-spec))
-                   (loop
-                      for i = 0 then (1+ i)
-                      for s in states
-                      for a in trans
-                      for e in emis
-                      for ia = nil then nil
-                      for ie = nil then nil do
-                        (loop for a. in (cddr a) do
-                             (push a. ia))
-                        (unless (null (cdddr e))
-                          (loop for e. in (cddr e) do
-                               (when (numberp e.)
-                                 (push e. ie))))
-                        (if ie
-                            (push (list (first s) (second s) (aref PE i) (nreverse ia) (nreverse ie)) model-spec)
-                            (push (list (first s) (second s) (aref PE i) (nreverse ia)) model-spec)))
-                   (nreverse model-spec)))))
+                 (loop
+                    for i = 0 then (1+ i)
+                    for s in states
+                    for a in trans
+                    for e in emis
+                    for ia = nil then nil
+                    for ie = nil then nil do
+                      (loop for a. in (cddr a) do
+                           (push a. ia))
+                      (unless (null (cdddr e))
+                        (loop for e. in (cddr e) do
+                             (when (numberp e.)
+                               (push e. ie))))
+                      (if ie
+                          (push (list (first s) (second s) (aref PE i) (nreverse ia) (nreverse ie)) model-spec)
+                          (push (list (first s) (second s) (aref PE i) (nreverse ia)) model-spec)))
+                 (nreverse model-spec)))))
 
     (unless (typep hmm 'hmm)
       (error "The object is not a valid hmm"))
