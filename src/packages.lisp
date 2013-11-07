@@ -19,6 +19,7 @@
    :cbook-encode
    :cbook-decode
    :!hmm-noisify
+   :hmm-save
 
    ;;;hmm-simple
    :hmm-simple
@@ -96,5 +97,4 @@
    :*arn-code*
 
    ;;hmm-files
-   :hmm-save
    :hmm-open))
