@@ -220,7 +220,7 @@
 (defmethod hmm-correctp ((hmm phmm))
   (warn "TODO, Not fully implemented")
   (let ((buffer (make-array +stream-correctness-size+ :element-type 'character :adjustable t :fill-pointer 0))
-        (correct true))
+        (correct t))
 
     (labels ((existsNegative (matrix)
                (dotimes (i (array-total-size matrix) nil)
