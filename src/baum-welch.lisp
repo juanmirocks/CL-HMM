@@ -449,6 +449,9 @@
            (when verbose
              (format t "~%"))
 
+           (multiple-value-bind (correct details) (hmm-correctp hmm)
+             (unless correct (error "(itr: ~d) The model is incorrect. Output of hmm-correct-p:~2%~a~%" iteration details)))
+
          until (or (= iteration max-times)
                    (and
                     (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
@@ -456,6 +459,4 @@
                    (zerop cur-loglikelihood)) ;perfect model to the training data
 
          finally
-           (multiple-value-bind (correct details) (hmm-correctp hmm)
-             (unless correct (warn "The output model is incorrect. Output of hmm-correct-p:~2%~a~%" details)))
            (return (values hmm cur-loglikelihood iteration))))))
