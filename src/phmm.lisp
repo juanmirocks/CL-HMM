@@ -450,9 +450,9 @@
                                (prob
                                 (loop for j in (aref iA-from i) sum
                                      (* (aref A i j)
-                                        (+ (* (arefmat beta j (1+ l) (1+ r)) (aref B j (elt1 x (1+ l)) (elt1 y (1+ r))))
-                                           (* (arefmat beta j (1+ l) r) (aref B j (elt1 x (1+ l)) +epsilon-cbook-index+))
-                                           (* (arefmat beta j l (1+ r)) (aref B j +epsilon-cbook-index+ (elt1 y (1+ r))))))))))))))
+                                        (+ (* (arefmat beta j (1+ l) (1+ r)) (aref B j (elt1 x (1+ l))       (elt1 y (1+ r))))
+                                           (* (arefmat beta j (1+ l) r     ) (aref B j (elt1 x (1+ l))       +epsilon-cbook-index+))
+                                           (* (arefmat beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ (elt1 y (1+ r))))))))))))))
 
       beta)))
 
