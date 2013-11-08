@@ -384,7 +384,7 @@
               for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
               do
                 (if (zerop o_likelihood)
-                    (warn "0 probability for input pair ~d: ~2%~%" k)
+                    (warn "0 probability for input pair: ~d" k)
                     (progn
                       (when verbose (format t "~d " k))
                       (incf cur-loglikelihood (log o_likelihood))
