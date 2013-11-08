@@ -382,6 +382,8 @@
               for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
               for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
               for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
+              for gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
+              for xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
               do
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~d" k)
@@ -405,40 +407,32 @@
 
                                                   (+ diag l-1 r-1)))
 
-                                          ;; add to gamma
-                                          (incf (aref gamma i l r) (aref xi i j l r))))))
+                                          ;; calculate others
+                                          (incf (aref gamma i l r) (aref xi i j l r))
+                                          (incf (aref gamma_notime i) (aref xi i j l r))
+                                          (incf (aref xi_notime i j) (aref xi i j l r))))))
 
-                      ;;TODO calculate together with xi
-                      (let ((gamma_notime (make-typed-array (list N) 'prob-float +0-prob+))
-                            (xi_notime (make-typed-array (list N N) 'prob-float +0-prob+)))
-                        (loop for i below N do
-                             (loop for l to size_x do
-                                  (loop for r to size_y do
-                                       (incf (aref gamma_notime i) (aref gamma i l r))
-                                       (loop for j below N do
-                                            (incf (aref xi_notime i j) (aref xi i j l r))))))
+                      ;; newPE
+                      (loop for j below N do
+                           (incf (aref newPE j)
+                                 (let* ((gammaj10 (/ (* (aref alpha j 1 0) (aref beta j 1 0)) o_likelihood))
+                                        (gammaj01 (/ (* (aref alpha j 0 1) (aref beta j 0 1)) o_likelihood))
+                                        (gammaj11 (/ (* (aref alpha j 1 1) (aref beta j 1 1)) o_likelihood))
+                                        ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
+                                        )
 
-                        ;; newPE
-                        (loop for j below N do
-                             (incf (aref newPE j)
-                                   (let* ((gammaj10 (/ (* (aref alpha j 1 0) (aref beta j 1 0)) o_likelihood))
-                                          (gammaj01 (/ (* (aref alpha j 0 1) (aref beta j 0 1)) o_likelihood))
-                                          (gammaj11 (/ (* (aref alpha j 1 1) (aref beta j 1 1)) o_likelihood))
-                                          ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
-                                          )
+                                   (+ gammaj10 gammaj01 gammaj11))))
 
-                                     (+ gammaj10 gammaj01 gammaj11))))
+                      ;; newA
+                      (loop for i below N do
+                           (loop for j below N sum
+                                (incf (aref newA i j) (/ (aref xi_notime i j) (aref gamma_notime i)))))
 
-                        ;; newA
-                        (loop for i below N do
-                             (loop for j below N sum
-                                  (incf (aref newA i j) (/ (aref xi_notime i j) (aref gamma_notime i)))))
-
-                        ;; newB
-                        (loop for i below N do
-                             (loop for xl to L-size do
-                                  (loop for yr to R-size do
-                                       (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
+                      ;; newB
+                      (loop for i below N do
+                           (loop for xl to L-size do
+                                (loop for yr to R-size do
+                                     (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))))))))
 
            #+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
