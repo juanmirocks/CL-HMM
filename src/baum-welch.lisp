@@ -48,7 +48,7 @@
   (defconstant +es-model-confidence+ (prob 0.7)) ;after estimation
   (defconstant +es-iterations+ 10)
 
-  (defconstant +bw-default-min-pseudocount+ (prob 1d-4)))
+  (defconstant +bw-default-min-pseudocount+ (prob 1d-50)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
