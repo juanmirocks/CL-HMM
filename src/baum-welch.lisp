@@ -384,7 +384,7 @@
               for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
               do
                 (if (zerop o_likelihood)
-                    (warn "0 probability for input pair ~d: ~2%~a~%" k o)
+                    (warn "0 probability for input pair ~d: ~2%~%" k)
                     (progn
                       (when verbose (format t "~d " k))
                       (incf cur-loglikelihood (log o_likelihood))
@@ -451,10 +451,11 @@
            (!hmm-noisify hmm noise)
 
            (when verbose
-             (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start))
-             (when (< cur-loglikelihood last-loglikelihood)
-               (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
-             (fresh-line)
+             (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start)))
+           (when (and (< cur-loglikelihood last-loglikelihood) (or verbose (zerop noise)))
+             (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
+           (fresh-line)
+           (when verbose
              (format t "~%"))
 
          until (or (= iteration max-times)
