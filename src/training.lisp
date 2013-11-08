@@ -59,7 +59,7 @@
               "~2%@@@ Estimate the HMM using Baum-Welch scaled @@@  - i: ~a, c: ~3$, s:~3$, m: ~a, t:~3$~%"
               iterations confidence starting-noise max-times threshold))
     (when (or (< init-model-noise 0) (> init-model-noise 1)) (error "model confidence must be within [0, 1]"))
-    (dotimes (i iterations (list best-model best-loglikelihood (nreverse logs)))
+    (dotimes (i iterations (values best-model best-loglikelihood (nreverse logs)))
       (when verbose-estimation
         (format t "~2%*** iter: # ~a~%" i)
         (format t "---------------------------------------------------------------------------------------------------~%"))
