@@ -288,19 +288,6 @@
          (y (second observation)))
     (list (cbook-encode-left hmm x) (cbook-encode-right hmm y))))
 
-(defun cbelt1 (seq i)
-  "1-indexed cbook-encoded input sequence. If 0, return epsilon's index"
-  (declare (inline cbelt1))
-  (if (= i 0)
-      +epsilon-cbook-index+
-      (elt seq (1- i))))
-
-(defmacro arefalpha (matrix dim1 dim2 dim3)
-  "Alpha matrix accessor"
-  `(if (or (< ,dim2 0) (< ,dim3 0))
-       +0-prob+
-       (aref ,matrix ,dim1 ,dim2 ,dim3)))
-
 (defmethod cbook-decode ((hmm phmm) observation)
   "cbook-encode pair observation"
   (declare (optimize (speed 3) (safety 0)))
@@ -318,6 +305,19 @@
            (setf (aref out_x i) (aref L (1- (aref in_x i))))) ;-1 since in L&R epsilon is not accounted for
          (dotimes (i size_y out_y)
            (setf (aref out_y i) (aref R (1- (aref in_y i))))))))))
+
+(defun cbelt1 (seq i)
+  "1-indexed cbook-encoded input sequence. If 0, return epsilon's index"
+  (declare (inline cbelt1))
+  (if (= i 0)
+      +epsilon-cbook-index+
+      (elt seq (1- i))))
+
+(defmacro arefalpha (matrix dim1 dim2 dim3)
+  "Alpha matrix accessor"
+  `(if (or (< ,dim2 0) (< ,dim3 0))
+       +0-prob+
+       (aref ,matrix ,dim1 ,dim2 ,dim3)))
 
 (defmethod !hmm-noisify ((hmm phmm) noise)
   (unless (zerop noise)
