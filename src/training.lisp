@@ -45,7 +45,7 @@
      &key (confidence +es-model-confidence+) (iterations +es-iterations+) (verbose-estimation t)
      obss-l (starting-noise +bw-noise-start+)
      (max-times +bw-max-times+) (threshold +bw-threshold+)
-     ri ra rb (verbose-bws nil))
+     (ri nil ri-p) (ra nil ra-p) (rb nil rb-p) (verbose-bws nil))
   (let ((best-model)
         (cur-model)
         (best-loglikelihood +most-negative-prob-float+)
@@ -67,10 +67,11 @@
       (!hmm-noisify hmm init-model-noise)
       (setq time0 (get-internal-real-time))
       (multiple-value-setq (cur-model cur-loglikelihood bws-iter)
-        (funcall (if (eql (type-of hmm) 'phmm) #'baum-welch #'baum-welch-scl) ;trick for now for phmm until -scl is implemented
-                 cur-model obss-c :obss-l obss-l
-                 :starting-noise starting-noise :max-times max-times :threshold threshold
-                 :ri ri :ra ra :rb rb :verbose verbose-bws))
+        (apply (if (eql (type-of hmm) 'phmm) #'baum-welch #'baum-welch-scl) ;trick for now for phmm until -scl is implemented
+               cur-model obss-c :obss-l obss-l
+               :starting-noise starting-noise :max-times max-times :threshold threshold
+               :verbose verbose-bws
+               (append (if ri-p (list :ri ri) nil) (if ra-p (list :ra ra) nil) (if rb-p (list :rb rb) nil))))
       (when verbose-estimation (format t "~% ->loglikelihood: ~a, no-itr: ~a, time: ~a s~%"
                                        cur-loglikelihood bws-iter (time-elapsed time0)))
       (push cur-loglikelihood logs)
