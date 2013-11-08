@@ -36,7 +36,7 @@
 
       @return (1) estimated model
       @return (2) loglikelihood of the estimated model
-      @return (3) list of the observations' loglikelihoods for the estimated model"))
+      @return (3) list final estimated models' loglikelihoods"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
