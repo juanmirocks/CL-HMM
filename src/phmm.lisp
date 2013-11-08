@@ -288,23 +288,32 @@
          (y (second observation)))
     (list (cbook-encode-left hmm x) (cbook-encode-right hmm y))))
 
-(defmethod cbook-decode ((hmm phmm) observation)
-  "cbook-encode pair observation"
-  (declare (optimize (speed 3) (safety 0)))
-  (let* ((in_x (first observation))
-         (in_y (second observation))
-         (size_x (the fixnum (length in_x)))
-         (size_y (the fixnum (length in_y))))
-    (declare (cbook-alphabet in_x in_y))
-    (phmm-slots (L R) hmm
-      (let ((out_x (make-array size_x :element-type (array-element-type L)))
-            (out_y (make-array size_y :element-type (array-element-type R))))
-
-        (list
+(defmethod cbook-decode-left ((hmm phmm) x)
+  "cbook-decode left string"
+  (declare (optimize (speed 3) (safety 0))
+           (cbook-alphabet x))
+  (let* ((size_x (length x)))
+    (phmm-slots (L) hmm
+      (let ((out_x (make-array size_x :element-type (array-element-type L))))
          (dotimes (i size_x out_x)
-           (setf (aref out_x i) (aref L (1- (aref in_x i))))) ;-1 since in L&R epsilon is not accounted for
+           (setf (aref out_x i) (aref L (1- (aref x i))))))))) ;-1 since in L&R epsilon is not accounted for
+
+(defmethod cbook-decode-right ((hmm phmm) y)
+  "cbook-decode right string"
+  (declare (optimize (speed 3) (safety 0))
+           (cbook-alphabet y))
+  (let* ((size_y (length y)))
+    (phmm-slots (R) hmm
+      (let ((out_y (make-array size_y :element-type (array-element-type R))))
          (dotimes (i size_y out_y)
-           (setf (aref out_y i) (aref R (1- (aref in_y i))))))))))
+           (setf (aref out_y i) (aref R (1- (aref y i))))))))) ;-1 since in L&R epsilon is not accounted for
+
+(defmethod cbook-decode ((hmm phmm) observation)
+  "cbook-decode pair observation"
+  (declare (optimize (speed 3) (safety 0)))
+  (let* ((x (first observation))
+         (y (second observation)))
+    (list (cbook-decode-left hmm x) (cbook-decode-right hmm y))))
 
 (defun cbelt1 (seq i)
   "1-indexed cbook-encoded input sequence. If 0, return epsilon's index"
