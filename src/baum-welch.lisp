@@ -384,7 +384,7 @@
               for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
               do
                 (if (zerop o_likelihood)
-                    (warn "0 probability for input pair: ~2%~a~%" o)
+                    (warn "0 probability for input pair ~d: ~2%~a~%" k o)
                     (progn
                       (when verbose (format t "~d " k))
                       (incf cur-loglikelihood (log o_likelihood))
@@ -439,6 +439,8 @@
                              (loop for xl to L-size do
                                   (loop for yr to R-size do
                                        (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
+
+           #+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
          ;; Set model with new parameters
            (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
