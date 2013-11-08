@@ -1,9 +1,6 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Author: Juan Miguel Cejuela
 ;; Created: Wed Jul  9 19:08:32 2008 (CEST)
-;; Last-Updated: 2011-08-11
-;;           By: Juan Miguel Cejuela
-;;     Update #: 75
-;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Description:
@@ -407,7 +404,7 @@
 
                                                   (+ diag l-1 r-1)))
 
-                                          ;; calculate others
+                                        ;; calculate others
                                           (incf (aref gamma i l r) (aref xi i j l r))
                                           (incf (aref gamma_notime i) (aref xi i j l r))
                                           (incf (aref xi_notime i j) (aref xi i j l r))))))
