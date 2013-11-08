@@ -446,8 +446,6 @@
            (when (and (< cur-loglikelihood last-loglikelihood) (or verbose (zerop noise)))
              (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
            (fresh-line)
-           (when verbose
-             (format t "~%"))
 
            (multiple-value-bind (correct details) (hmm-correctp hmm)
              (unless correct (error "(itr: ~d) The model is incorrect. Output of hmm-correct-p:~2%~a~%" iteration details)))
