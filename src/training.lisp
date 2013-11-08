@@ -1,8 +1,8 @@
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Author: Juan Miguel Cejuela
 ;; Created: Fri Jul 11 23:01:55 2008 (CEST)
-;; Last-Updated: 2011-08-11
-;;           By: Juan Miguel Cejuela
-;;     Update #: 25
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (in-package :cl-hmm)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -17,22 +17,22 @@
          &key confidence iterations verbose-estimation
          obss-l starting-noise max-times threshold ri ra rb verbose-bws)
   (:documentation
-   "Estimate the model using BaumWelch-scaled with the given model parameters and learning observations.
-      Repeat the estimation algorithm .iteration. times starting from a mixture of a random model and the one given. The proportion is balanced with .confidence. (range 0 to 1)
+   "Estimate the model using BaumWelch(-scaled) with the given model parameters and learning observations.
+      Repeat the estimation algorithm `iteration`-times starting from a mixture of a random model and the one given (the proportion is balanced with `confidence`).
       hmm: model
       obss-c: list of cbook-encoded observations to train with
       confidence: float in [0, 1], confidence in the given model parameters. 0 to start with a total random model
       iterations: number of iterations
       verbose-estimation:
       obss-l: (optional) list of labeled observations
-      starting-noise: initial noise to play with in Baum-Welch;(0 to 1)
-      max-times: max number of iterations for Baum-Welch scl
+      starting-noise: float in [0, 1], initial noise for Baum-Welch
+      max-times: max number of iterations for Baum-Welch
       threshold: minimum difference with the last loglikelihood to stop the process
       ri: initial probs pseudoconts (vector)
       ra: transition pseudoconts (array)
       rb: emission pseudoconts (array) (If the pseudoconts are not given, these are set to a minimum value not to
       lose any parameter. Set to nil if you do not want this behavior)
-      verbose:
+      verbose-bws:
 
       @return (1) estimated model
       @return (2) loglikelihood of the estimated model
