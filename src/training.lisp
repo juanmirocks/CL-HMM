@@ -41,7 +41,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod hmm-estimate-bws
-    ((hmm hmm-simple) obss-c
+    ((hmm hmm) obss-c
      &key (confidence +es-model-confidence+) (iterations +es-iterations+) (verbose-estimation t)
      obss-l (starting-noise +bw-noise-start+)
      (max-times +bw-max-times+) (threshold +bw-threshold+)
@@ -56,7 +56,7 @@
         (time0 0))
     (when verbose-estimation
       (format t
-              "~2%@@@ Estimate the HMM using BaumWelch scaled @@@  - i: ~a, c: ~3$, s:~3$, m: ~a, t:~3$~%"
+              "~2%@@@ Estimate the HMM using Baum-Welch scaled @@@  - i: ~a, c: ~3$, s:~3$, m: ~a, t:~3$~%"
               iterations confidence starting-noise max-times threshold))
     (when (or (< init-model-noise 0) (> init-model-noise 1)) (error "model confidence must be within [0, 1]"))
     (dotimes (i iterations (list best-model best-loglikelihood (nreverse logs)))
@@ -67,9 +67,10 @@
       (!hmm-noisify hmm init-model-noise)
       (setq time0 (get-internal-real-time))
       (multiple-value-setq (cur-model cur-loglikelihood bws-iter)
-        (baum-welch-scl cur-model obss-c :obss-l obss-l
-                        :starting-noise starting-noise :max-times max-times :threshold threshold
-                        :ri ri :ra ra :rb rb :verbose verbose-bws))
+        (funcall (if (eql (type-of hmm) 'phmm) #'baum-welch #'baum-welch-scl) ;trick for now for phmm until -scl is implemented
+                 cur-model obss-c :obss-l obss-l
+                 :starting-noise starting-noise :max-times max-times :threshold threshold
+                 :ri ri :ra ra :rb rb :verbose verbose-bws))
       (when verbose-estimation (format t "~% ->loglikelihood: ~a, no-itr: ~a, time: ~a s~%"
                                        cur-loglikelihood bws-iter (time-elapsed time0)))
       (push cur-loglikelihood logs)
