@@ -218,25 +218,28 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod hmm-correctp ((hmm phmm))
-  (warn "TODO, Not fully implemented")
   (let ((buffer (make-array +stream-correctness-size+ :element-type 'character :adjustable t :fill-pointer 0))
         (correct t))
 
     (labels ((existsNegative (matrix)
                (dotimes (i (array-total-size matrix) nil)
                  (if (< (row-major-aref matrix i) 0) (return t))))
-             (assume (condition errorMsg)
-               (unless condition (setq correct nil) (format buffer errorMsg))))
+             (=p (expected actual &optional (accepted-error-range 1d-5))
+               (< (- expected accepted-error-range) actual (+ expected accepted-error-range))))
+      (macrolet ((assume (condition &rest errorMsgArguments)
+                   `(unless ,condition (setq correct nil)
+                            (format buffer ,@(cons (concatenate 'string (car errorMsgArguments) "~%") (cdr errorMsgArguments))))))
 
+        (phmm-slots (N PE A B) hmm
+          (assume (not (existsNegative PE)) "Negative value in PE")
+          (assume (=p 1 (areduce #'+ PE)) "PE is not a valid probability distribution, total value: ~f" (areduce #'+ PE))
+          (assume (not (existsNegative A)) "Negative value in A")
+          (assume (=p N (areduce #'+ A)) "A is not a valid probability distribution, total value: ~f" (areduce #'+ A))
+          (assume (not (existsNegative B)) "Negative value in B")
+          (assume (=p N (areduce #'+ B)) "B is not a valid probability distribution, total value: ~f" (areduce #'+ B))
+          (loop for i below N do (assume (zerop (aref B i 0 0)) "Non-zero! b_~d(epsilon, epsilon) = ~f" i (aref B i 0 0)))))
 
-      (phmm-slots (N PE A B) hmm
-        (assume (not (existsNegative PE)) "Negative value in PE")
-        (assume (not (existsNegative A)) "Negative value in A")
-        (assume (not (existsNegative B)) "Negative value in B")
-        (loop for i below N do
-             (assume (zerop (aref B i 0 0)) "Non-zero! b_~i(epsilon, epsilon)"))))
-
-    (values correct buffer)))
+      (values correct buffer))))
 
 (defmethod hmm-copy ((hmm phmm))
   (phmm-slots (S N L L-size R R-size) hmm
