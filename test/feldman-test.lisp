@@ -13,5 +13,12 @@
                 (multiple-value-bind (best loglikelihood)
                     (hmm-estimate-bws phmm training-data :threshold 0.1 :verbose-bws nil :starting-noise 0 :max-times max-times :iterations em-num-iterations :confidence 0)
                   (with-open-file (stream (format nil "~a/model_~d_~f.txt" results-folder num-states loglikelihood) :direction :output :if-exists :supersede)
-                    (loop for obs in test-data do
-                         (format stream "~a~%" (list (first obs) (hmm-translate phmm (first obs)))))))))))
+                    (loop for obs in test-data
+                       for x-encoded = (first obs)
+                       for x = (cbook-decode-left best x-encoded)
+                       for y = (cbook-decode-right best (hmm-translate best x-encoded))
+                       do
+                         (loop for i below (1- (length x)) do (format stream "~d_" (elt x i))) (format stream "~d" (elt x (1- (length x))))
+                         (format stream " ")
+                         (loop for i below (1- (length y)) do (format stream "~d_" (elt y i))) (format stream "~d" (elt y (1- (length y))))
+                         (format stream "~%"))))))))
