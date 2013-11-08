@@ -363,7 +363,7 @@
 @return (1) probability of observation pair given hmm model
 @return (2) generated alpha 3d matrix
 "
-  ;;(declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 0)))
   (phmm-slots (N PE A B iA-to) hmm
     (let* ((x (first obs-c))
            (y (second obs-c))
@@ -415,7 +415,7 @@
 
 @return generated beta 3d matrix
 "
-  ;;(declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 0)))
   (phmm-slots (N A B iA-from) hmm
     (let* ((x (first obs-c))
            (y (second obs-c))
