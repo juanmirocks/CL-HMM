@@ -9,7 +9,7 @@
 (defsystem cl-hmm
     :name "cl-hmm"
     :author "Juan Miguel Cejuela"
-    :version "0.2"
+    :version "0.2.1"
     :maintainer "Juan Miguel Cejuela"
     :licence "LGPL 3"
     :description "Simple HMM library for Common Lisp"
