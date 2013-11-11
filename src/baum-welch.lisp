@@ -426,14 +426,16 @@
 
                       ;; newA
                       (loop for i below N do
-                           (loop for j below N sum
-                                (incf (aref newA i j) (/ (aref xi_notime i j) (aref gamma_notime i)))))
+                           (unless (zerop (aref gamma_notime i))
+                             (loop for j below N do
+                                  (incf (aref newA i j) (/ (aref xi_notime i j) (aref gamma_notime i))))))
 
                       ;; newB
                       (loop for i below N do
-                           (loop for xl to L-size do
-                                (loop for yr to R-size do
-                                     (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))))))))
+                           (unless (zerop (aref gamma_notime i))
+                             (loop for xl to L-size do
+                                  (loop for yr to R-size do
+                                       (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
 
            #+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
