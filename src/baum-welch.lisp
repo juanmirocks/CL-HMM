@@ -437,7 +437,7 @@
                                   (loop for yr to R-size do
                                        (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
 
-           #+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
+           ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
          ;; Set model with new parameters
            (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
