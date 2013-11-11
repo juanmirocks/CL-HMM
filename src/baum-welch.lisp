@@ -391,23 +391,27 @@
                            (loop for j below N do
                                 (loop for l to size_x do
                                      (loop for r to size_y do
-                                        ;; xi
-                                          (setf (aref xi i j l r)
-                                                (let* ((base (/ (* (aref A i j) (aref beta j l r)) o_likelihood))
-                                                       (diag (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r))))
-                                                       (l-1  (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0)))
-                                                       (r-1  (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbelt1 y r)))))
+                                          (when (< 0 (max l r))
+                                            ;; xi
+                                            (setf (aref xi i j l r)
+                                                  (let* ((base (* (aref A i j) (aref beta j l r)))
+                                                         (diag (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
+                                                                  o_likelihood))
+                                                         (l-1  (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0          ))
+                                                                  o_likelihood))
+                                                         (r-1  (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbelt1 y r)))
+                                                                  o_likelihood)))
 
-                                                  (incf (aref tempB j (cbelt1 x l) (cbelt1 y r)) diag)
-                                                  (incf (aref tempB j (cbelt1 x l) 0           ) l-1)
-                                                  (incf (aref tempB j 0            (cbelt1 y r)) r-1)
+                                                    (incf (aref tempB j (cbelt1 x l) (cbelt1 y r)) diag)
+                                                    (incf (aref tempB j (cbelt1 x l) 0           ) l-1)
+                                                    (incf (aref tempB j 0            (cbelt1 y r)) r-1)
 
-                                                  (+ diag l-1 r-1)))
+                                                    (+ diag l-1 r-1)))
 
-                                        ;; calculate others
-                                          (incf (aref gamma i l r) (aref xi i j l r))
-                                          (incf (aref gamma_notime i) (aref xi i j l r))
-                                          (incf (aref xi_notime i j) (aref xi i j l r))))))
+                                            ;; calculate others
+                                            (incf (aref gamma i l r) (aref xi i j l r))
+                                            (incf (aref gamma_notime i) (aref xi i j l r))
+                                            (incf (aref xi_notime i j) (aref xi i j l r)))))))
 
                       ;; newPE
                       (loop for j below N do
