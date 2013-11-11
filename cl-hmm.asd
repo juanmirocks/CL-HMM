@@ -1,8 +1,5 @@
 ;; Author: Juan Miguel Cejuela
 ;; Created: Wed Jul  9 19:20:39 2008 (CEST)
-;; Last-Updated: 2011-08-11
-;;           By: Juan Miguel Cejuela
-;;     Update #: 37
 
 (defpackage :net.ashrentum.cl-hmm-system (:use :asdf :cl))
 (in-package :net.ashrentum.cl-hmm-system)
@@ -28,7 +25,6 @@
 
        (:file "hmm-simple"
         :depends-on ("packages" "cl-hmm" "utilities"))
-
        (:file "phmm"
          :depends-on ("packages" "cl-hmm" "utilities"))
 
