@@ -1,19 +1,17 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Author: Juan Miguel Cejuela
 ;; Created: Wed Jul  9 19:08:32 2008 (CEST)
-;; Last-Updated: 2011-08-11
-;;           By: Juan Miguel Cejuela
-;;     Update #: 75
-;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Description:
 ;;
-;; Baum-Welch algorithm in the scaled and original versions. By now only for
-;; the class hmm inifinite (see hmm-simple). Possible training with labeled
+;; Baum-Welch algorithm in the 1) scaled and 2) original versions. By now only
+;; for the class hmm inifinite (see hmm-simple). Possible training with labeled
 ;; sequences. Optional initial noise, with diminishing normalized to the model
 ;;
-;; The code is divided in macros and functions in order to take advantage that both algorithms are pretty
-;; similar, having a common skeleton for both
+;; The code is divided in macros and functions in order to take advantage that
+;; both version algorithms are pretty similar, having a common skeleton for
+;; both.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -21,7 +19,7 @@
 ;; 12-Jul-2008    Ashrentum
 ;;    Last-Updated: Sat Jul 12 11:09:03 2008 (CEST) #60 (Ashrentum)
 ;;    Fixed sbcl operation (gc) not compliant with ANSI Common Lisp.
-;;    Init Pseudoconts for all parameters no to lost them due to
+;;    Init Pseudocounts for all parameters no to lost them due to
 ;;      insufficient training data
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -39,22 +37,24 @@
   (defconstant +bw-threshold+ (prob 0.01))
 
   ;;noise amplitude, A = S - (i / (log_B C))
-  ;;	A, amplitude
-  ;;	S, Starting noise
-  ;;	i, iteration
-  ;;	C, model Complexity
-  ;;	B, noise Base (to adjust)
+  ;;      A, Amplitude
+  ;;      S, Starting noise
+  ;;      i, iteration
+  ;;      C, model Complexity
+  ;;      B, noise log Base (to adjust)
   (defconstant +bw-noise-base+ (prob 1.04))
   (defconstant +bw-noise-start+ (prob 0.4))
 
   (defconstant +es-model-confidence+ (prob 0.7)) ;after estimation
-  (defconstant +es-iterations+ 10))
+  (defconstant +es-iterations+ 10)
+
+  (defconstant +bw-default-min-pseudocount+ (prob 1d-50)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Baum-Welch, simple&scaled
+;; Baum-Welch, pure&scaled
 ;;
 ;; By now only version for HMM infinite are avalaible
 ;;
@@ -63,39 +63,27 @@
 (defgeneric baum-welch
     (hmm obss-c &key obss-l starting-noise max-times threshold ri ra rb verbose)
   (:documentation "Train the hmm using the pure Baum-Welch algorithm
-	hmm: hmm to train
-	obss-c: observation index-coded to train with (see cbook or cbook-list)
-	obss-l: labeled observation if is desired a labeled training
-	starting-noise: initial noise to play with (0 to 1)
-	max-times: max-times to run the alg.
-	threshold: minimum difference change between 2 hmms to accept it and stop
-	ri: initial probs pseudoconts (vector)
-	ra: transition pseudoconts (array)
-	rb: emission pseudoconts (array)
-	(If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
-	verbose: prints detailed information about what is happening"))
+      hmm: hmm to train
+      obss-c: list of cbook-encoded observations to train with
+      obss-l: (optional) list of labeled observations
+      starting-noise: initial noise to play with (0 to 1)
+      max-times: max-times to run the alg.
+      threshold: minimum difference change between 2 hmms to accept it and stop
+      ri: initial probs pseudocounts (vector)
+      ra: transition pseudocounts (array)
+      rb: emission pseudocounts (array) (If the pseudocounts are not given, these are set to a minimum value not to
+      lose any parameter. Set to nil if you do not want this behavior)
+      verbose: prints detailed information about what is happening"))
 
 (defgeneric baum-welch-scl
     (hmm obss-c &key obss-l starting-noise max-times threshold ri ra rb verbose)
-  (:documentation "Train the hmm using the pure Baum-Welch algorithm
-	hmm: hmm to train
-	obss-c: observation index-coded to train with (see cbook or cbook-list)
-	obss-l: labeled observation if is desired a labeled
-	never-erase-transitions: if T, doesn't erase no given transitions in the training
-	starting-noise: initial noise to play with (0 to 1)
-	max-times: max-times to run the alg.
-	threshold: minimum difference change between 2 hmms to accept it and stop
-	ri: initial probs pseudoconts (vector)
-	ra: transition pseudoconts (array)
-	rb: emission pseudoconts (array)
-	(If pseudoconts not given, are set to a minimum value to don't lost any parameter. Set to nil if you don't want this)
-	verbose: prints detailed information about what is happening"))
+  (:documentation "Scaled version of the Baum-Welch algorithm (see baum-welch)"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;
-;;;; let's divide the code in parts to don't write that much
-;;;; basically everything is made to distinguish between the log version and the original one
+;;;; The code is divided into common parts to be reused for both the original
+;;;; and the scaled versions of the Baum-Welch algorithm
 ;;;;
 
 ;;;;variable definition (not very functional indeed)
@@ -107,44 +95,39 @@
            (Arow (make-typed-array N 'prob-float +0-prob+))
            (nB (make-typed-array (list N M) 'prob-float +0-prob+))
            (Brow (make-typed-array N 'prob-float +0-prob+))
-           ;;some other needed binds throught the alg.
            (last-loglikelihood +most-negative-prob-float+)
            (cur-loglikelihood +most-negative-prob-float+)
-           (last-state (1- N))
-           (last-emis (1- M))
-           (x^j_leng-1 0)
-           ;;pseudoconts. If not given, set them an uniform value to don't lost any parameter due to insufficient training
+           (x^k_size 0)
+           ;;pseudocounts. If not given, set them an uniform value not to lose any parameter due to insufficient training
            (ri (cond
                  (ri ri)
                  ((and (not ri) rip) nil)
-                 (t (make-typed-array N 'prob-float (prob 1d-4)))))
+                 (t (make-typed-array N 'prob-float +bw-default-min-pseudocount+))))
            (ra (cond
                  (ra ra)
                  ((and (not ra) rap) nil)
-                 (t (make-typed-array (list N N)'prob-float (prob 1d-4)))))
+                 (t (make-typed-array (list N N) 'prob-float +bw-default-min-pseudocount+))))
            (rb (cond
                  (rb rb)
                  ((and (not rb) rbp) nil)
-                 (t (make-typed-array (list N M) 'prob-float (prob 1d-4)))))
-           ;;measuring
-           (time0 0)
-           ;;noise amplitude
-           (noise-amp (prob starting-noise))
+                 (t (make-typed-array (list N M) 'prob-float +bw-default-min-pseudocount+))))
+           (time0 0) ; to measure the algorithm's running time
+           (noise-amp (prob starting-noise)) ;noise amplitude
            (noise +0-prob+)
            (noise-decrease (prob (/ (log (hmm-complexity hmm) +bw-noise-base+))))
-           ,@(if scaled `((scale (make-typed-array '(0) 'prob-float +0-prob+)) (P{x^j} +0-prob+)) `((1/P{x^j} +0-prob+))))
+           ,@(if scaled `((scale (make-typed-array '(0) 'prob-float +0-prob+)) (P{x^k} +0-prob+)) `((1/P{x^k} +0-prob+))))
        (declare ((prob-array (*)) nPE Arow Brow)
                 ((prob-array (* *)) nA nB)
                 (prob-float PErow last-loglikelihood cur-loglikelihood noise-amp noise-decrease)
-                (fixnum last-state last-emis x^j_leng-1 time0))
-       (declare ,@(if scaled `(((prob-array (*)) scale) (prob-float P{x^j})) `((prob-float 1/P{x^j}))))
+                (fixnum x^k_size time0))
+       (declare ,@(if scaled `(((prob-array (*)) scale) (prob-float P{x^k})) `((prob-float 1/P{x^k}))))
        ,@body)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-;;; Add the pseudocounts if are not nil
-  (defun hmm-simple-pseudoconts ()
+;;; Add the pseudocounts if not nil
+  (defun hmm-simple-pseudocounts ()
     `((when ri (dotimes (i N)
                  (setf (aref (the PE-vec nPE) i) (aref ri i))
                  (incf PErow (aref ri i))))
@@ -157,8 +140,8 @@
                    (setf (aref nB i b) (aref rb i b))
                    (incf (aref Brow i) (aref rb i b)))))))
 
-;;; Group the emisions probabilities
-  (defun group-emisions (N M no-groups state-groups nB Brow)
+;;; Group the emissions probabilities
+  (defun group-emissions (N M no-groups state-groups nB Brow)
     (declare (cbook-state N M no-groups) (B-array nB) ((prob-array (*)) Brow))
     (let* ((nB-grouped (make-typed-array (list no-groups M) 'prob-float +0-prob+))
            (Brow-grouped (make-typed-array no-groups 'prob-float +0-prob+)))
@@ -170,75 +153,83 @@
           (incf (aref Brow-grouped group-i) (aref Brow i))))
       (values nB-grouped Brow-grouped)))
 
-;;; Actualize parameters
-(defun hmm-simple-actualize ()
-  `(multiple-value-bind (nB-grouped Brow-grouped)
-       (group-emisions N M no-groups state-groups nB Brow)
-     (do* ((i 0 (1+ i))
-           (pArow (aref Arow i) (aref Arow i))
-           (gi (aref state-groups i) (aref state-groups i))
-           (pBrow-grouped (aref Brow-grouped gi) (aref Brow-grouped gi)))
-         ((= i N) nil)
-       (declare (cbook-state i) (prob-float pArow pBrow-grouped))
-       ;;init
-       (if (= +0-prob+ PErow) (error "No info for init probabilities!")
-           (setf (aref PE i) (/ (aref nPE i) PErow)
-                 (aref nPE i) +0-prob+)) ;reset
-       ;;transitions
-       (if (= +0-prob+ pArow) (error "No info for trans probability in state number: ~a" i)
-           (dolist-itrans (j (aref iA-from i))
-             (setf (aref A i j) (/ (aref nA i j) pArow)
-                   (aref nA i j) +0-prob+))) ;reset
-       ;;emisions GROUPED
-       (if (= +0-prob+ pBrow-grouped) (error "No info for emis probability in state number: ~a" i)
-           (dotimes (s M)
-             (setf (aref B i s) (/ (aref nB-grouped gi s) pBrow-grouped)
-                   (aref nB i s) +0-prob+))) ;reset
-       ;;reset
-       (setf (aref Arow i) +0-prob+)
-       (setf (aref Brow i) +0-prob+))
-     (setf PErow +0-prob+))))
+;;; Update parameters
+  (defun hmm-simple-update ()
+    `(multiple-value-bind (nB-grouped Brow-grouped)
+         (group-emissions N M no-groups state-groups nB Brow)
+       (do* ((i 0 (1+ i))
+             (pArow (aref Arow i) (aref Arow i))
+             (gi (aref state-groups i) (aref state-groups i))
+             (pBrow-grouped (aref Brow-grouped gi) (aref Brow-grouped gi)))
+            ((= i N) nil)
+         (declare (cbook-state i) (prob-float pArow pBrow-grouped))
+         ;;init
+         (if (= +0-prob+ PErow) (error "No info for init probabilities!")
+             (setf (aref PE i) (/ (aref nPE i) PErow)
+                   (aref nPE i) +0-prob+)) ;reset
+         ;;transitions
+         (if (= +0-prob+ pArow) (error "No info for trans probability in state number: ~a" i)
+             (dolist-itrans (j (aref iA-from i))
+               (setf (aref A i j) (/ (aref nA i j) pArow)
+                     (aref nA i j) +0-prob+))) ;reset
+         ;;emissions GROUPED
+         (if (= +0-prob+ pBrow-grouped) (error "No info for emis probability in state number: ~a" i)
+             (dotimes (s M)
+               (setf (aref B i s) (/ (aref nB-grouped gi s) pBrow-grouped)
+                     (aref nB i s) +0-prob+))) ;reset
+         ;;reset
+         (setf (aref Arow i) +0-prob+)
+         (setf (aref Brow i) +0-prob+))
+       (setf PErow +0-prob+))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Define a Baum-Welch method
 (defmacro def-baum-welch (name specializer-hmm scaled &body algorithm)
   `(defmethod ,name
-       ((hmm ,specializer-hmm) obss-c &key obss-l
-        (starting-noise +bw-noise-start+) (max-times +bw-max-times+) (threshold +bw-threshold+)
-        (ri nil rip) (ra nil rap) (rb nil rbp) (verbose nil))
-     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+       ((hmm ,specializer-hmm)
+        obss-c
+        &key
+          obss-l
+          (starting-noise +bw-noise-start+)
+          (max-times +bw-max-times+) (threshold +bw-threshold+)
+          (ri nil rip) (ra nil rap) (rb nil rbp)
+          (verbose nil))
+
      (declare (optimize (speed 3) (safety 0)) (fixnum max-times) (float threshold) (list obss-c))
      (restart-case (hmm-incorrect-signal hmm)
        (continue-anyway () nil))
-     (setf hmm (hmm-copy hmm)) ;;we don't overwrite the given hmm
+     (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
      (hmm-simple-vars ,scaled
+
        ;;Recurrence. Termination when max-times or likelihood is less than the threshold
        (loop for z fixnum from 1 to max-times do
             (setq time0 (get-internal-real-time))
             (setq last-loglikelihood cur-loglikelihood
                   cur-loglikelihood +0-prob+)
 
-            ,@(hmm-simple-pseudoconts) ;constant pseudoconts
+            ,@(hmm-simple-pseudocounts)
 
             (do ((obss obss-c (cdr obss))
-                 (x^j (make-typed-array 0 'cbook-symbol 0))
+                 (x^k (make-typed-array 0 'cbook-symbol 0))
                  (obssl obss-l (cdr obssl))
-                 (x^j-labels (make-typed-array 0 'state-label +label-wildcard+)))
+                 (x^k-labels (make-typed-array 0 'state-label +label-wildcard+)))
                 ((null obss) nil)
-              (declare (cbook-alphabet x^j))
-              (setf x^j (car obss)
-                    x^j_leng-1 (1- (length x^j))
-                    x^j-labels (car obssl))
-              ,@algorithm ;;here comes the sun
-              #+sbcl (sb-ext:gc :gen 1 :full t) ;;free memory
-              )
+              (declare (cbook-alphabet x^k))
+              (setf x^k (car obss)
+                    x^k_size (length x^k)
+                    x^k-labels (car obssl))
 
-            ,(hmm-simple-actualize) ;actualize parameters
+              ;; ----------------------------------------------------------------------
+              ,@algorithm
+              ;; ----------------------------------------------------------------------
+              #+sbcl (sb-ext:gc :gen 1 :full t)) ;free memory on sbcl
 
-            ;;about the noise
+            ,(hmm-simple-update) ;update parameters
+
+          ;; Apply noise
             (setf noise (* (random +1-prob+) noise-amp))
-            (hmm-simple-alter-model N M PE A B (- 1 noise)) ;;add noise
+            (!hmm-noisify hmm noise)
             (decf noise-amp noise-decrease)
             (when (< noise-amp 0) (setf noise-amp +0-prob+))
 
@@ -254,6 +245,7 @@
                       (> cur-loglikelihood last-loglikelihood)
                       (zerop noise-amp))
                  (zerop cur-loglikelihood))
+
           finally
             (multiple-value-bind (correct details) (hmm-correctp hmm)
               (unless correct
@@ -262,17 +254,17 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; the actual core of the algorithm (2 versions, log and normal)
+;;; the actual core of the algorithm (2 versions, pure & scaled)
 (defmacro hmm-infinite-algorithm-core (&key (scaled nil))
-  ;;for all the statess
-  `(loop for i of-type cbook-state from 0 to last-state do
+  ;;for all the states
+  `(loop for i of-type cbook-state from 0 below N do
       ;;init distribution
         (let ((pPErow (* (aref alphas 0 i) (aref betas 0 i))))
           ,(if scaled
                `(if (/= +0-prob+ (aref scale 0))
                     (setq pPErow (/ pPErow (aref scale 0)))
                     (error "Error, value for scale 0 is 0. Check the model or the labels"))
-               `(*= pPErow 1/P{x^j}))
+               `(*= pPErow 1/P{x^k}))
           (incf (aref nPE i) pPErow)
           (incf PErow pPErow))
       ;;transitions
@@ -281,21 +273,21 @@
               (incf (aref nA i (car (aref iA-from i))) +1-prob+) ;;the probability is fixed, it's always 1
               (incf (aref Arow i) +1-prob+))
             (dolist-itrans (j (aref iA-from i))
-              (loop for t0 = 0 then t+1 for t+1 from 1 to x^j_leng-1
+              (loop for t0 = 0 then t+1 for t+1 from 1 below x^k_size
                  sum (* (aref alphas t0 i)
-                        (aref B j (aref x^j t+1))
+                        (aref B j (aref x^k t+1))
                         (aref betas t+1 j)) into pArow of-type prob-float
                  finally
                    ,(if scaled
                         `(*= pArow (aref A i j))
-                        `(*= pArow (* (aref A i j) 1/P{x^j})))
+                        `(*= pArow (* (aref A i j) 1/P{x^k})))
                    (incf (aref nA i j) pArow)
                    (incf (aref Arow i) pArow))))
-      ;;emisions
-        (loop for s of-type cbook-state from 0 to last-emis for emis of-type prob-float = (aref B i s) then (aref B i s) do
+      ;;emissions
+        (loop for s of-type cbook-state from 0 below M for emis of-type prob-float = (aref B i s) then (aref B i s) do
              (unless (zerop emis)
-               (loop for t0 from 0 to x^j_leng-1 with pBrow of-type prob-float = +0-prob+ do
-                    (when (= s (aref x^j t0))
+               (loop for t0 from 0 below x^k_size with pBrow of-type prob-float = +0-prob+ do
+                    (when (= s (aref x^k t0))
                       ,(if scaled
                            `(if (/= +0-prob+ (aref scale t0))
                                 (incf pBrow (/ (* (aref alphas t0 i) (aref betas t0 i)) (aref scale t0)))
@@ -304,7 +296,7 @@
                   finally
                     ,@(if scaled
                           `((incf (aref nB i s) pBrow))
-                          `((*= pBrow 1/P{x^j})
+                          `((*= pBrow 1/P{x^k})
                             (incf (aref nB i s) pBrow)))
                     (incf (aref bRow i) pBrow))))))
 
@@ -315,11 +307,11 @@
   (let ((alphas (make-typed-array '(0 0) 'prob-float +0-prob+))
         (betas (make-typed-array '(0 0) 'prob-float +0-prob+)))
     (declare ((prob-array (* *)) alphas betas)) ;we declare here the alphas and betas for memory issues
-    (multiple-value-setq (1/P{x^j} alphas) (forward hmm x^j))
-    (setf betas (backward hmm x^j))
-    (unless (zerop 1/P{x^j})
-      (incf cur-loglikelihood (the prob-float (log 1/P{x^j})))
-      (setf 1/P{x^j} (/ 1/P{x^j})) ;now yes, it's the inverse
+    (multiple-value-setq (1/P{x^k} alphas) (forward hmm x^k))
+    (setf betas (backward hmm x^k))
+    (unless (zerop 1/P{x^k})
+      (incf cur-loglikelihood (the prob-float (log 1/P{x^k})))
+      (setf 1/P{x^k} (/ 1/P{x^k})) ;now yes, it's the inverse
       (hmm-infinite-algorithm-core :scaled nil))))
 
 ;;baum-welch scaled :: hmm-infinite
@@ -327,7 +319,148 @@
   (let ((alphas (make-typed-array '(0 0) 'prob-float +0-prob+))
         (betas (make-typed-array '(0 0) 'prob-float +0-prob+)))
     (declare ((prob-array (* *)) alphas betas))
-    (multiple-value-setq (P{x^j} alphas scale) (forward-scl hmm x^j x^j-labels))
-    (setf betas (backward-scl hmm x^j scale x^j-labels))
-    (incf cur-loglikelihood P{x^j})
+    (multiple-value-setq (P{x^k} alphas scale) (forward-scl hmm x^k x^k-labels))
+    (setf betas (backward-scl hmm x^k scale x^k-labels))
+    (incf cur-loglikelihood P{x^k})
     (hmm-infinite-algorithm-core :scaled t)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun default-pseudocounts (size)
+  (make-typed-array size 'prob-float +bw-default-min-pseudocount+))
+
+(defmethod baum-welch
+    ((hmm phmm)
+     obss-c
+     &key
+       obss-l
+       (starting-noise +bw-noise-start+)
+       (max-times +bw-max-times+)
+       (threshold +bw-threshold+)
+       (ri (default-pseudocounts (array-dimensions (hmm-init hmm))))
+       (ra (default-pseudocounts (array-dimensions (hmm-trans hmm))))
+       (rb (default-pseudocounts (array-dimensions (hmm-emis hmm))))
+       (verbose nil))
+
+  (declare (optimize (speed 3) (safety 0)))
+  ;;(declare (optimize (safety 3) (debug 3)))
+  (when (and verbose obss-l) (warn "obss-l is NOT used"))
+  (when rb
+    (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
+
+  (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
+
+  (phmm-slots (N PE A B L-size R-size) hmm
+    (let ((newPE (make-typed-array (array-dimensions PE) 'prob-float +0-prob+))
+          (newA (make-typed-array (array-dimensions A) 'prob-float +0-prob+))
+          (newB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
+
+      (loop for iteration from 1
+         for itr-time-start = (get-internal-real-time)
+         for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
+         for cur-loglikelihood = +0-prob+
+         for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
+         for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
+         do
+
+         ;; Init new parameters with pseudocounts if given or 0 otherwise
+           (if ri (array-set newPE ri) (array-reset newPE +0-prob+))
+           (if ra (array-set newA ra) (array-reset newA +0-prob+))
+           (if rb (array-set newB rb) (array-reset newB +0-prob+))
+
+           (loop for o in obss-c
+              for k = 0 then (1+ k)
+              for x = (first o)
+              for y = (second o)
+              for size_x fixnum = (length x)
+              for size_y fixnum = (length y)
+              for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
+              for beta = (backward hmm o)
+              for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+              for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+              for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
+              for gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
+              for xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
+              do
+                (if (zerop o_likelihood)
+                    (warn "0 probability for input pair: ~d" k)
+                    (progn
+                      ;;(when verbose (format t "~d " k))
+                      (incf cur-loglikelihood (log o_likelihood))
+                      (loop for i below N do
+                           (loop for j below N do
+                                (loop for l to size_x do
+                                     (loop for r to size_y do
+                                          (when (< 0 (max l r))
+                                            ;; xi
+                                            (setf (aref xi i j l r)
+                                                  (let* ((base (* (aref A i j) (aref beta j l r)))
+                                                         (diag (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
+                                                                  o_likelihood))
+                                                         (l-1  (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0          ))
+                                                                  o_likelihood))
+                                                         (r-1  (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbelt1 y r)))
+                                                                  o_likelihood)))
+
+                                                    (incf (aref tempB j (cbelt1 x l) (cbelt1 y r)) diag)
+                                                    (incf (aref tempB j (cbelt1 x l) 0           ) l-1)
+                                                    (incf (aref tempB j 0            (cbelt1 y r)) r-1)
+
+                                                    (+ diag l-1 r-1)))
+
+                                            ;; calculate others
+                                            (incf (aref gamma i l r) (aref xi i j l r))
+                                            (incf (aref gamma_notime i) (aref xi i j l r))
+                                            (incf (aref xi_notime i j) (aref xi i j l r)))))))
+
+                      ;; newPE
+                      (loop for j below N do
+                           (incf (aref newPE j)
+                                 (let* ((gammaj10 (/ (* (aref alpha j 1 0) (aref beta j 1 0)) o_likelihood))
+                                        (gammaj01 (/ (* (aref alpha j 0 1) (aref beta j 0 1)) o_likelihood))
+                                        (gammaj11 (/ (* (aref alpha j 1 1) (aref beta j 1 1)) o_likelihood))
+                                        ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
+                                        )
+
+                                   (+ gammaj10 gammaj01 gammaj11))))
+
+                      ;; newA
+                      (loop for i below N do
+                           (unless (zerop (aref gamma_notime i))
+                             (loop for j below N do
+                                  (incf (aref newA i j) (/ (aref xi_notime i j) (aref gamma_notime i))))))
+
+                      ;; newB
+                      (loop for i below N do
+                           (unless (zerop (aref gamma_notime i))
+                             (loop for xl to L-size do
+                                  (loop for yr to R-size do
+                                       (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
+
+           ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
+
+         ;; Set model with new parameters
+           (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
+           (array-set PE newPE)
+           (array-set A newA)
+           (array-set B newB)
+         ;; & noisify
+           (!hmm-noisify hmm noise)
+
+           (when verbose
+             (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start)))
+           (when (and (< cur-loglikelihood last-loglikelihood) (or verbose (zerop noise)))
+             (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
+           (fresh-line)
+
+           (multiple-value-bind (correct details) (hmm-correctp hmm)
+             (unless correct (error "(itr: ~d) The model is incorrect. Output of hmm-correct-p:~2%~a~%" iteration details)))
+
+         until (or (= iteration max-times)
+                   (and
+                    (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
+                    (> cur-loglikelihood last-loglikelihood))
+                   (zerop cur-loglikelihood)) ;perfect model to the training data
+
+         finally
+           (return (values hmm cur-loglikelihood iteration))))))

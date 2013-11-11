@@ -16,6 +16,10 @@
    :hmm-correctp
    :hmm-compatiblep
    :hmm-run
+   :cbook-encode
+   :cbook-decode
+   :!hmm-noisify
+   :hmm-save
 
    ;;;hmm-simple
    :hmm-simple
@@ -26,7 +30,7 @@
 
    :hmm-name
    :hmm-no-states
-   :hmm-no-emisions
+   :hmm-no-emissions
    :hmm-alphabet
    :hmm-alphabet-hash
    :hmm-states
@@ -62,9 +66,10 @@
    :fixed-state-2p
    :fixed-state-p
 
-   :cbook
-   :cbook-indexes
-   :cbook-list
+   ;;;phmm
+   :phmm
+
+   :make-phmm
 
    ;;forward&backward
    :forward
@@ -92,5 +97,4 @@
    :*arn-code*
 
    ;;hmm-files
-   :hmm-save
    :hmm-open))

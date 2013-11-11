@@ -1,0 +1,383 @@
+\documentclass[a4paper,10pt]{article}
+
+\usepackage[utf8x]{inputenc}
+%\usepackage[top=2.35cm, bottom=2.35cm, left=2.60cm, right=2.60cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{hyperref} %hyperlinks for references
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{array}
+\usepackage{ctable}
+\usepackage{url}
+\usepackage{pgf}
+\usepackage{tikz}
+\usepackage{amsthm}
+\newtheorem{mydef}{Definition}
+\usepackage{tabulary}
+\usepackage[labelsep=period,bf]{caption}
+\usepackage{subfig}
+\usepackage{float}
+\usepackage{scalefnt}
+
+% \usepackage[ps2pdf,bookmarks=true,bookmarksnumbered=false,bookmarksopen=false,colorlinks=false,linkcolor=webred]{hyperref}
+
+% \definecolor{webgreen}{rgb}{0, 0.0, 0} % less intense green
+% \definecolor{webblue}{rgb}{0, 0, 0.0} % less intense blue
+% \definecolor{webred}{rgb}{0, 0, 0} % less intense red
+
+\floatstyle{plain}
+\newfloat{heq}{h}{equ}
+
+\usetikzlibrary{arrows,automata}
+\tikzstyle{every state}=[fill=white,draw=black,text=black]
+\tikzstyle{initial}=[very thick]
+\tikzstyle{accepting by double}=[double distance=1pt]
+
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\DeclareMathOperator*{\plusequal}{\text{+=}}
+\DeclareMathOperator{\val}{val}
+
+\SetKwInput{KwComplexityT}{Time Complexity}
+\SetKwInput{KwComplexityS}{Space Complexity}
+
+
+
+\begin{document}
+
+\section{Preliminaries}
+\label{sec:preliminaries}
+
+\begin{mydef}
+  A Pair Hidden Markov Model (PHMM) is a tuple $\langle N, S, L, R, A, B, \pi \rangle$ where:
+\end{mydef}
+
+\begin{description}
+\item $N$: number of states.
+\item $S$: finite set of states, $S = \{S_1, S_2, ... , S_N\}$.
+\item $L$: left stream's finite alphabet.
+\item $R$: right stream's finite alphabet.
+\item $A$: state transition probability distribution, $A = \{a_{ij}\}$,
+  $$a_{ij} = P(S_j | S_i), \quad 1 \leq i,j \leq N$$
+\item $B$: state pair observation probability distribution, $B = \{b_i(x, y)\}$,
+  \begin{flalign*}
+    b_i(x, y) = P(x, y | S_i),
+    & \quad 1 \leq i \leq N \\
+    & \quad x \in L \cup \{\epsilon\} \\
+    & \quad y \in R \cup \{\epsilon\} \\
+    & \quad b_i(\epsilon, \epsilon) = 0 \\
+    % we can put the extra limitation that b_i(x, y = 0 if x != y
+  \end{flalign*}
+
+\item $\pi$: the initial state distribution, $\pi = \{ \pi_i \}$,
+  $$ \pi_i = P(q_1 = S_i), \quad 1 \leq i \leq N$$
+\end{description}
+
+
+For convenience we denote a model's complete parameter set and by extension a model as:
+$$\lambda = \langle A, B, \pi \rangle$$
+
+\section{Forward \& Backward Algorithms for PHMMs}
+
+We adapt the classical \emph{forward} and \emph{backward} HMM algorithms to PHMM
+as follows. Considering a PHMM model $\lambda$ and an input observation pair
+$(\vec{x}, \vec{y}) \in (L, R)$ with lengths of $n$ and $m$, respectively, we
+define the alpha probability as:
+
+$$\alpha_i(l, r) = P((x_1 ...\, x_l, y_1 ...\, y_r), S_i|\lambda)$$
+
+i.e., the probability of starting from any state $S_{start}$, and emitting the
+symbols $x_1 ...\, x_l$ on the left stream and the symbols $y_1 ...\, y_r$ on
+the right stream and ending in the state $S_i$, for $1 \leq i, start \leq N$. We
+define the complimentary beta probability as:
+
+$$\beta_i(l, r) = P((x_{l+1} ...\, x_n, y_{r+1} ...\, y_m), S_i|\lambda)$$
+
+i.e., the probability of starting from the state $S_i$ and emitting the
+symbols $x_{l+1} ...\, x_n$ on the left stream and the symbols $y_{r+1} ...\,
+y_m$ on the right stream and ending in any state $S_{end}$, for $1 \leq i, end
+\leq N$.
+
+The forward algorithm is defined by induction on the alpha probabilities, see
+Algorithm \ref{fig:forward}, and analogously the backward algorithm is defined
+by induction on the beta probabilities, see Algorithm \ref{fig:backward}. Note
+that in HMMs the alpha and beta variables are categorized by a two-dimensional
+matrix, whereas in PHMMs they are three-dimensional matrices.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[]
+\caption{forward for PHMMs}
+  \DontPrintSemicolon
+\KwIn{$\lambda$: PHMM; $(\vec{x}, \vec{y})$: observation pair (of lengths $n$
+  and $m$)}
+\KwOut{$P((\vec{x}, \vec{y})|\lambda)$; $\alpha$ matrix}
+%\KwComplexityT{O(\#transitions T)}
+%\KwComplexityS{O(N T)}
+\BlankLine
+
+Initialization:
+\begin{flalign*}
+  & \alpha_j(1, 0) = \pi_j bj(x_1, \epsilon) \\
+  & \alpha_j(0, 1) = \pi_j bj(\epsilon, y_1) \\
+  & \alpha_j(1, 1) = \pi_j bj(x_1, y_1) + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(0, 1) \right] b_j(x_1, \epsilon)
+  + \left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(1, 0) \right] b_j(\epsilon, y_1) \\
+  & \alpha_j(0, 0) = \alpha_j(*, -1) = \alpha_j(-1, *) = 0, \\
+  & \qquad 1 \leq j \leq N
+\end{flalign*}\;
+
+Induction:
+\begin{flalign*}
+  \alpha_{j}(l, r) =
+  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l-1, r-1) \right] b_j(x_l, y_r) + \\
+  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l-1, r) \right] b_j(x_l, \epsilon) + \\
+  &\left[ \displaystyle\sum_{i=1}^N a_{ij} \, \alpha_i(l, r-1) \right] b_j(\epsilon, y_r), \\
+  & \qquad 1 \leq j \leq N \\
+  & \qquad 0 \leq l \leq n, \; 0 \leq r \leq m, \; 2 \leq max(l, r)
+\end{flalign*}\;
+
+Termination: \;
+$$P((\vec{x}, \vec{y})|\lambda) = \displaystyle\sum_{i=j}^N \alpha_j(n, m)$$\;
+\label{fig:forward}
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[H]
+\caption{backward for PHMMs}
+  \DontPrintSemicolon
+\KwIn{$\lambda$: PHMM; $(\vec{x}, \vec{y})$: observation pair (of lengths $n$
+  and $m$)}
+\KwOut{$\beta$ matrix}
+%\KwComplexityT{O(\#transitions T)}
+%\KwComplexityS{O(N T)}
+\BlankLine
+
+Initialization:
+\begin{flalign*}
+\beta_{i}(n, m) = 1, \quad  1 \leq i \leq N
+\end{flalign*}\;
+
+Induction:
+\begin{flalign*}
+  \beta_{i}(l, r) = \displaystyle\sum_{j=1}^N a_{ij} \Bigl[
+    &\beta_j(l+1, r+1) \; b_j(x_{l+1}, y_{r+1}) \; + \\
+    &\beta_j(l+1, r) \; b_j(x_{l+1}, \epsilon) \; + \\
+    &\beta_j(l, r+1) \; b_j(\epsilon, y_{r+1}) \Bigr] \\
+  &\qquad 1 \leq i \leq N \\
+  &\qquad n \geq l \geq 0, \; m \geq r \geq 0, \; 1 \leq max(l, r), \; not ( l
+  = n \, \& \, r = m)
+\end{flalign*}\;
+
+\label{fig:backward}
+\end{algorithm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Baum-Welch Algorithm for PHMMs}
+
+We define the variable:
+
+$$\xi_{ij}(l, r) = P(q_{(l, r) -1 } = S_i, q_{(l, r)} = S_j | (\vec{x}, \vec{y}), \lambda)$$
+
+i.e., the probability of transitioning from state $S_i$ at time $t-1$ to state
+$S_j$ at time $t$, more exactly time $(l, r)$. We can define $\xi$ in terms of
+alpha and beta:
+
+\begin{center}
+\begin{flalign*}
+  \xi_{ij}(l, r) & = \frac{a_{ij} \Bigl[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
+      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \Bigl] \beta_j(l, r)}{P((\vec{x}, \vec{y}) | \lambda)}\\\\
+  & = \frac{a_{ij} \Bigl[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
+      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \Bigl] \beta_j(l, r)}
+  {\displaystyle\sum_{i=1}^N \displaystyle\sum_{j=1}^N a_{ij} \Bigl[ \alpha_i(l-1, r-1) b_j(x_l, y_r) +
+      \alpha_i(l-1, r) b_j(x_l, \epsilon) + \alpha_i(l, r-1) b_j(\epsilon, y_r) \Bigl] \beta_j(l, r)}
+\end{flalign*}
+\end{center}
+
+
+We also define the variable:
+
+$$\gamma_i(l, r) = P(q_{(l, r)} = S_i | (\vec{x}, \vec{y}), \lambda) = \displaystyle\sum_{j=1}^N \xi_{ij}(l, r)$$
+
+i.e., the probability of being in state $S_i$ at time $t$, more exactly time
+$(l, r)$. We also relate $\gamma$ to alpha and beta:
+
+$$\gamma_i(l, r) = \frac{\alpha_i(l, r) \beta_i(l, r)}{P((\vec{x}, \vec{y}) |
+  \lambda)} = \frac{\alpha_i(l, r) \beta_i(l, r)}{\displaystyle\sum
+  _{i=1}^N \alpha_i(l, r) \beta_i(l, r)}$$
+
+If we sum these variables over time we have:
+
+$$\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \gamma_i(l, r) = \mbox{ expected number of transitions from $S_i$ }$$
+$$\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \xi_{ij}(l, r) = \mbox
+{ expected number of transitions from $S_i$ to $S_j$ }$$
+
+We use these variables to obtain the expected number of times each state
+transition and state symbol emission is taken, then normalize (maximize) to
+reestimate the $\lambda$ parameters:
+
+\begin{center}
+\begin{flalign}\label{eq:count_pi}
+\bar \pi_j =& \mbox{ expected number of times in state $S_j$ at time $(t=1)$ } = \notag\\
+&\gamma_j(1, 0) + \gamma_j(0, 1) + \left[\gamma_j(1, 1) - \sum_{i=1}^{N}
+  \xi_{ij}(1, 1)\right]
+\end{flalign}
+\end{center}
+
+\begin{center}
+\begin{flalign}\label{eq:count_a}
+\bar a_{ij} =& \frac{\mbox{ expected number of transitions from state $S_i$ to state $S_j$ }}{\mbox{ expected number of
+    transitions from state $S_i$ }} = \notag\\
+& \frac{\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \xi_{ij}(l, r)}{\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \gamma_i(l, r)}
+\end{flalign}
+\end{center}
+
+\begin{center}
+\begin{flalign}\label{eq:count_b}
+\bar b_i(x, y) =& \frac{\mbox{ expected number of times in state $S_i$ and
+    observing (x, y)}}{\mbox{ expected number
+    of times in state $S_i$ }} = \notag\\
+& \frac{\displaystyle\sum_{l=0}^{n}
+  \displaystyle\sum_{r=0}^{m} \gamma_i(l, r) \; \mbox{emitting} \, (x, y)}{\displaystyle\sum_{l=0}^{n} \displaystyle\sum_{r=0}^{m} \gamma_i(l, r)}
+\end{flalign}
+\end{center}
+
+Consequently, for a list of pair observations $O$, a model $\lambda$, and,
+optionally, prior counts for the transitions and observation emissions, we
+define the Baum-Welch algorithm for PHMMs in Algorithm \ref{alg:Baum-Welch}.
+
+\vspace{0.4cm}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{algorithm}[H]
+\caption{Baum-Welch for PHMMs}
+  \DontPrintSemicolon
+\KwIn{\\
+$\lambda: PHMM$; \\
+$O$: list of pair observations;\\
+(optionally) $\pi_0, A_0, B_0:$ prior counts}
+\BlankLine
+\KwOut{$\lambda^*$: trained PHMM}
+\BlankLine
+
+Initialization\;
+\BlankLine
+\Indp Pick arbitrary model parameters ($\bar \lambda = \lambda$)\;
+\BlankLine
+
+\Indm Recurrence\;\Indp
+\BlankLine
+Set $\bar \pi_i,\; \bar a_{ij},\; \bar b_i(l, r)$ to the prior counts if given,
+otherwise 0 matrices\;
+For each observation pair $(\vec{x}, \vec{y})$ in $O$:\;\Indp
+Calculate $\alpha(l,r)$, $\beta(l,r)$, $P(o | \bar\lambda)$ using the forward
+and backward algs.\;
+log\_likelihood += $\log P(o | \bar \lambda)$\;
+Using equations \ref{eq:count_pi}, \ref{eq:count_a}, and \ref{eq:count_b}, add
+expected counts to $\bar \pi_i,\; \bar a_{ij},\; \bar b_i(l, r)$.
+
+\BlankLine
+\Indm Normalize over all pair observations to obtain the new parameters:
+
+$$\bar \pi_i = \frac{\bar \pi_i}{\displaystyle\sum_{i=1}^N \bar \pi_i} \qquad
+\bar a_{ij} = \frac{\bar a_{ij}}{\displaystyle\sum_{i=1, j=1}^N \bar a_{ij}}
+\qquad \bar b_i(l,r) = \frac{\bar b_i(l,r)}{\displaystyle\sum_{l=1, r=1}^{|L|, |R|}
+  \bar b_i(l,r)}$$
+
+$$\bar \lambda = \langle \bar A, \bar B, \bar \pi \rangle$$
+
+\Indm Termination\;\Indp
+\BlankLine
+$\lambda^* = \bar\lambda$, stop if the change in log\_likelihood is less than some predefined threshold or a maximum number of iterations is
+exceeded.
+\BlankLine
+\label{alg:Baum-Welch}
+\end{algorithm}
+
+
+\nocite{Rabiner:HMMs}
+
+\section{Translations with PHMMs}
+
+The problem we look at is, given a model $\lambda$ and a left-stream input
+$\vec{x}$, generate in a meaningful way right-stream translation(s) $\vec{y}$.
+
+\subsection{Issues}
+
+\subsubsection{Infinite number of translations if epsilon on the left stream}
+
+Let's consider that we can obtain a translation $\vec{y}$ of size $m$. To
+generate this, the model follows a state path, $q_1 ... \; q_T$. Let $S_i$ at
+time $q_t$ be a state in the path that has an epsilon emission on the left
+stream, i.e., $\exists \; b_i(\epsilon, y) > 0$. We can always construct a
+longer translation $\vec{y}$ of size $m+1$ by emitting in $S_i$ $(\epsilon, y)$
+and then continue with the previous state path.
+
+\subsubsection{Exponential number of translations on $n$}
+
+The problem's upper bound happens with a $\lambda$ that is fully connected and
+has no 0 emission probabilities for any $(x, y)$ combination. Even without
+considering epsilon emissions, the number of possible translations is:
+${|R|}^n$.
+
+Note that the dynamic forward, backward, or viterbi algorithms do not compute
+all these paths/translations.
+
+\subsubsection{Preference for shorter translations}\label{sec:shorter_more}
+
+Consider a training data with an observation pair where $n = m$, and the rest of
+the observations, at least 2, are the same but with an extra symbol on
+$\vec{y}$, $m = n + 1$. Let's denote $q_t$ as the state that emits the extra
+symbol, i.e., $q_t$ emits ($\epsilon$, y). Therefore in the training data it's
+more probable for state $q_t$ to generate ($\epsilon$, y) rather than ($x,
+y$). Let's then consider a trained model that can generate translations
+$\vec{y_m}$ and $\vec{y_{m+1}}$ by following the same state path but in
+$q_t$. $P(\vec{y_m}|\lambda) > P(\vec{y_{m+1}}|\lambda)$ because the translation
+$\vec{y_m}$ incurs in a transition less, i.e., in a multiplication less of a
+probability within $(0, 1)$.
+
+\subsection{Possible Solutions}
+
+An exhaustive search of translations is impossible, therefore we look at
+solutions that generate a finite and limited number of translations. Due to
+issue \ref{sec:shorter_more}, it's not necessarily meaningful to obtain the
+translation with highest probability given the model.
+
+\subsubsection{With Backward}
+
+Reduce the PHMM $\lambda$ to a HMM $\lambda_{L}$ for the left stream by removing
+epsilon emissions on the left stream and setting $b_i(x) =
+\displaystyle\sum_{y=1}^{|R|} b_i(x, y)$. Let $q_1 ... \; q_T$ be the state path
+to generate the translation. Select state $S_i = q_1$ by the random distribution
+$\beta_i(1)$. Make state $S_i$ in the original PHMM emit an observation by the
+random distribution $b_i(x, y)$. If the emitted symbol on the left stream is not
+$\epsilon$, select $q_2$ as before, if $\epsilon$, repeat the emission until not
+$\epsilon$ (note that there cannot be a $b_i(\epsilon, y) = 1$ since the
+training data consists of finite sequences) . Repeat until emitting all symbols
+of $\vec{x}$.
+
+We can calculate the probability of the translation as:
+
+$$P(\vec{y}|\lambda, \vec{x}) = \frac{P((\vec{x},
+  \vec{y})|\lambda)}{P(\vec{y}|\lambda_L)}$$
+
+We can repeat this procedure to sample a finite number of translations.
+
+\subsubsection{With Viterbi}
+
+Same as before but this time select the path given by the viterbi algorithm on
+$\lambda_L$.
+
+% \section{Scaled Forward, Backward, \& Baum-Welch}
+
+% The previous algorithms multiply large sequences of probabilities, which end up
+% escaping a computer's float precision thus leading to underflow errors. To
+% overcome this problem, the computation of the alpha and beta variables can be
+% scaled as shown by Rabiner \cite{Rabiner:HMMs}. We adapt here the scaling
+% procedure for the forward and backward and consequently Baum-Welch algorithms to
+% PHMMs.
+
+\bibliographystyle{alpha}
+{\small
+\bibliography{simple}
+}
+
+\end{document}

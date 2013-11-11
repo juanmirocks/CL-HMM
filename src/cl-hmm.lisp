@@ -12,14 +12,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun pwd (&optional (subpath ""))
+    (asdf:system-relative-pathname 'cl-hmm subpath))
+
   (deftype cbook-state ()
-    "Codebook state type. Defines in practise the maximum number of states" ;important to save memory in viterbi
+    "Codebook state type. Defines in practice the maximum number of states" ;important to save memory in viterbi
     `(unsigned-byte 16))
   (deftype cbook-states ()
     "Vector of codebook states"
     `(simple-array cbook-state (*)))
   (deftype cbook-symbol ()
-    "Codebook symbol type. Defines in practise the maximum number of symbols, alphabet size"
+    "Codebook symbol type. Defines in practice the maximum number of symbols, alphabet size"
     `(unsigned-byte 8))
   (deftype cbook-alphabet ()
     "Vector of codebook symbols, alphabet codebook type"
@@ -45,6 +48,10 @@
   (defconstant +least-negative-prob-float+ (symbol-value (intern (format nil "LEAST-NEGATIVE-~a" *prob-float*))))
   (defconstant +least-positive-prob-float+ (symbol-value (intern (format nil "LEAST-POSITIVE-~a" *prob-float*))))
 
+  ;;; Empty emission epsilon symbol, ε
+  (defconstant +epsilon+ "")
+  (defconstant +epsilon-cbook-index+ 0)
+
   ;;other
   (defconstant +buffer-stream-size+ 1024) ;buffer size for output random generated seqs. see hmm-run
   (defconstant +stream-correctness-size+ 4096) ;;see hmm-correctp
@@ -64,12 +71,12 @@
 ;;;
 (defmacro def-hmm-type (name direct-superclasses slot-types-name multi-accessor-name direct-slots &rest options)
   "Define a HMM class type:
-	name: name of the HMM class
-	direct-superclasses: ordinary
-	slot-types-name: name for the proper list that will store the types for the HMM class, see with-typed-slot-values (jmc.cl.utils)
-	multi-accessor-name: name for the multi accessor macro, see with-typed-slot-values (jmc.cl.utils)
-	direct-slots: same definition as an ordinary DEFCLASS
-	options: ordinary options"
+  name: name of the HMM class
+  direct-superclasses: superclasses, same as in DEFCLASS
+  slot-types-name: name for the proper list that will store the types for the HMM class, see with-typed-slot-values (jmc.cl.utils)
+  multi-accessor-name: name for the multi accessor macro, see with-typed-slot-values (jmc.cl.utils)
+  direct-slots: slot definitions, same as in DEFCLASS
+  options: options, same as in DEFCLASS"
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (progn
        (defclass ,name ,direct-superclasses
@@ -89,10 +96,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;
-;;;; Rules to define a new hmm type *****
-;;;; 	Each new hmm or group of hmms must be declared in a new file called after it
-;;;; 	All hmm must be defined through the macro def-hmm-type
-;;;;	Order of specification: definition, initialization methods, specific procedures, common methods
+;;;; Rules to define a new hmm type
+;;;;   Each new hmm or group of hmms must be declared in a new file called after it
+;;;;   All hmm must be defined through the macro def-hmm-type
+;;;;   Order of specification: definition, initialization methods, common methods, specific methods
 ;;;;
 
 
@@ -101,16 +108,9 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; initializate-instance specification
-;; print-object specification
 ;; (defun make-hmm(-*) ()
-;; (defun make-neutral-hmm(-*) ()
-
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Specific procedures
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;...
+;; (defun make-random-hmm(-*) ()
+;; (defun make-uniform-hmm(-*) ()
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -119,14 +119,14 @@
 
 (defgeneric hmm-copy (hmm)
   (:documentation "Copy the hmm
-	hmm: hmm model
-	value: hmm model"))
+  hmm: hmm model
+  value: hmm model"))
 
 (defgeneric hmm-correctp (hmm)
   (:documentation "T if the hmm is a correct hmm for its type, NIL otherwise
-	hmm: hmm model
-	value1: boolean
-	value2: string / performed tests results"))
+  hmm: hmm model
+  value1: boolean
+  value2: string / performed tests results"))
 
 (define-condition hmm-incorrect (error)
   ((text :initarg :text :reader text)))
@@ -135,25 +135,47 @@
 
 (defgeneric hmm-compatiblep (hmm1 hmm2)
   (:documentation "T if the hmms could transform into the other because share the same characteristics. If NIL prints the reasons
-	hmm: hmm model
-	value: boolean"))
+  hmm: hmm model
+  value: boolean"))
 
 (defgeneric hmm-run (hmm &optional max-length)
   (:documentation "Run the hmm, ie, generate a random sequence
-	hmm: hmm model
-	max-length: integer / max length for the generated sequence
-	verbose: boolean / if T outputs the state-pathway"))
+  hmm: hmm model
+  max-length: integer / max length for the generated sequence
+  verbose: boolean / if T outputs the state-pathway"))
 
 (defgeneric hmm-no-transitions (hmm)
   (:documentation "Number of transitions
-	hmm: hmm model
-	value: integer"))
+  hmm: hmm model
+  value: integer"))
 
 (defgeneric hmm-complexity (hmm)
   (:documentation "Model complexity relative to the hmm model type
-	hmm: hmm model
-	value: integer"))
+  hmm: hmm model
+  value: integer"))
 
+(defgeneric cbook-encode (hmm observation)
+  (:documentation "cbook-encode observation sequence of symbols to sequence of cbook-indexes"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; cl-hmm.lisp ends here
+(defgeneric cbook-decode (hmm observation)
+  (:documentation "cbook-decode observation sequence of cbook-indexes to sequence of symbols"))
+
+(defgeneric !hmm-noisify (hmm noise)
+  (:documentation "(DESTRUCTIVE) Randomly add noise to the model parameters
+  @param noise: float in [0, 1]; 0 to not change the model, 1 for completely random model"))
+
+(defgeneric hmm-save (hmm filename &optional model-spec)
+  (:documentation
+   "Save hmm to file
+
+    @param hmm: hmm to save
+    @param filename: filename to save the hmm to
+    @param model-spec (optional): [complete|relevant] specification-way to save the model
+
+    @return nil"))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Specific methods
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;...

@@ -16,26 +16,26 @@
 
 (defgeneric forward (hmm obs-c)
   (:documentation
-   "Forward algorithm to the observation
-	hmm
-	obs-c: observation index-coded (see cbook)
-	value1: probability
-	value2: alphas matrix"))
+   "Run forward algorithm for the cbook-encoded observation
+      hmm
+      obs-c: observation index-coded (see cbook)
+      value1: probability
+      value2: alphas matrix"))
 
 ;;simple wrapper by now. Possible to don't calculate all alpha values to get this value faster
 (defgeneric likelihood (hmm obs-c)
   (:documentation
    "Likelihood to the observation
-	hmm:
-	obs-c: observation index-coded
-	value: likehihood"))
+      hmm:
+      obs-c: cbook-encoded observation
+      value: likehihood"))
 
 (defgeneric backward (hmm obs-c)
   (:documentation
-   "Backward algorithm to the observation
-	hmm: model
-	obs-c: observation index-coded (see cbook)
-	value: betas matrix"))
+   "Run backward algorithm for the cbook-encoded observation
+      hmm: model
+      obs-c: cbook-encoded observation
+      value: betas matrix"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -129,37 +129,37 @@
 ;;
 ;; Forward and Backward (scaled)
 ;;
-;; for this moment are only written the infinite versions
+;; For the moment, only the hmm-infinite versions are written
 ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defgeneric forward-scl (hmm obs-c &optional obs-l)
   (:documentation
    "Apply the forward scaled algorithm to the given observation
-	hmm: model
-	obs-c: observation index-coded (see cbook)
-	obs-l: labeled observation
-	value1: log probability
-	value2: alpha matrix
-	value3: scale"))
+      hmm: model
+      obs-c: observation index-coded (see cbook)
+      obs-l: labeled observation
+      value1: log probability
+      value2: alpha matrix
+      value3: scale"))
 
 ;;simple wrapper by now. Possible to don't calculate all alpha values to get this value faster
 (defgeneric loglikelihood (hmm obs-c)
   (:documentation
    "Loglikelihood of the observation for the given model
-	hmm: model
-	obs-c: observation index-coded
-	obs-l: labeled observation
-	value: loglikehihood"))
+      hmm: model
+      obs-c: observation index-coded
+      obs-l: labeled observation
+      value: loglikehihood"))
 
 (defgeneric backward-scl (hmm obs-c scale &optional obs-l)
   (:documentation
    "Apply the forward scaled algorithm to the given observation
-	hmm: model
-	obs-c: observation index-coded (see cbook)
-	scale: outputed by the forward-sc
-	obs-l: labeled observation
-	value: beta matrix"))
+      hmm: model
+      obs-c: observation index-coded (see cbook)
+      scale: outputed by the forward-sc
+      obs-l: labeled observation
+      value: beta matrix"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -294,11 +294,3 @@
                       from l)))
             (setf (aref path t0) (aref group-labels from)))))
      (values group-labels probs-label-grouped path loglikelihood))))
-
-
-
-
-
-
-
-

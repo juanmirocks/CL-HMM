@@ -1,34 +1,37 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Author: Juan Miguel Cejuela
 ;; Created: Wed Jul  9 19:05:15 2008 (CEST)
-;; Version:
-;; Last-Updated: 2011-08-11
-;;           By: Juan Miguel Cejuela
-;;     Update #: 85
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Description:
 ;;
 ;; This file defines the basic HMM type, the hmm-simple class. This is divided
-;; in the infinite and finite classes, which are almost the same but differ in last
-;; steps of viterbi/forward/backward. The model characteristics are well commented
-;; in the main class definition.
+;; into the infinite and finite classes. They are almost the same and only
+;; differ in the last steps of viterbi/forward/backward. The model
+;; characteristics are well docummented in the main class definition.
 ;;
 ;; Every state keeps a bit-properties vector, namely:
-;; begin-state (true if its init prob is non zero) | end | silent | invalid (no transitions) |
-;; tied emissions | fixed (the probs don't change, though not implemented by now)
+;; * begin-state (true if its init prob is non zero)
+;; * end
+;; * silent
+;; * invalid (no transitions)
+;; * tied emissions
+;; * fixed (the probabilities don't change, though not implemented by now)
 ;;
-;; Every state can be named either by an atom or a list of an atom and an index. When the latter
-;; the atom represents the name of the group that the state belongs to. Thus, the emissions are tied
-;; automatically by their name or group-name. At the same time a state can has a label identifier
-;; that represents its meaning of the context. Here is the structure of a state:
+;; Every state can be identified by either an atom or a list containing an atom
+;; and an index. In the latter, the atom represents the name of the group that
+;; the state belongs to. Probability emissions are tied automatically by their
+;; name or group-name. At the same time a state can has a label identifier that
+;; represents its meaning of the context. Here is the structure of a state:
 ;;
 ;; (bit-vector (or nil atom (list atom integer)) (or nil or character))
 ;; (properties   state-name (group-name&index)           label
 ;;
-;; The probabilities are saved in arrays. In order to save calculations when the model is linear,
-;; are kept 2 lists that express the transition conexions between the states. These are, the conexions
-;; from the state x, and the conexions to the state x (used this in viterbi and forward)
+;; The probabilities are saved in arrays. In order to save calculations when the
+;; model is linear, two lists expressing the transition connections between the
+;; states are kept. These are, the connections from state x, and the connections
+;; to state x (used this in viterbi and forward).
 ;;
 
 (in-package :net.ashrentum.cl-hmm)
@@ -68,8 +71,8 @@
   (defun state-p (a)
     (and (listp a)
          (typep (first a) 'state-properties)
-         (typep (second a) 'state-name))
-    (typep (third a) 'state-label))
+         (typep (second a) 'state-name)
+         (typep (third a) 'state-label)))
 
   (deftype state () ;;****
     "State constituent"
@@ -83,13 +86,14 @@
     "Properties of the state"
     (declare (inline state-properties))
     (first state))
+
   (defun state-name (state)
     "Name of the state"
     (declare (inline state-name))
     (second state))
 
   (defun print-pretty-state-name (state-name)
-    "Given the name of a state -the group and the index- concatenate that information"
+    "Given the name of a state (the group and the index) concatenate that information"
     (cond
       ((null state-name) nil)
       ((listp state-name)
@@ -101,7 +105,7 @@
              (write-to-string state-name)))))
 
   (defun state-group (state)
-    "Group for the state is a member"
+    "Give state's group name, if any"
     (declare (inline state-group))
     (let ((sn (state-name state)))
       (cond
@@ -164,12 +168,12 @@
 ;; Alphabet
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (deftype emision-symbol ()
-    "Emission symbol type"
+  (deftype emission-symbol ()
+    "Emission symbol type. Accepts any type."
     t)
 
   (deftype alphabet ()
-    `(simple-array));; emision-symbol)) let it to be specialized
+    `(simple-array));; emission-symbol)) let it to be specialized
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Model properties
@@ -194,6 +198,7 @@
     "Vector of list of connected states"
     `(simple-array itrans-list (*)))
 
+  ;;; TODO DEPRECATED & DELETE, same behavior can be achieved with loop
   (defmacro dolist-itrans ((var list &optional result) &body body)
     "Transverse a itrans-list"
     (let ((l (gensym)))
@@ -205,7 +210,7 @@
          ,@body)))
 
   (defun trans-array->itrans (A &optional (transpose nil))
-    ;;notice that when A is transposed the result is the info of the states that connect to
+    ;;notice that when A is transposed, the result is the info of the states that connect to
     (let* ((A. (if transpose (transpose A) A))
            (N (array-dimension A. 0))
            (itrans (make-typed-array N 'itrans-list nil))
@@ -277,7 +282,7 @@
        emis)
       (t ses))))
 
-(defmacro ses->contribute-emis (ses state-index B) ;ses, after state emision specification
+(defmacro ses->contribute-emis (ses state-index B) ;ses, after state emission specification
   (let ((s (gensym)) (p (gensym)) (l (gensym)))
   `(do ((,s 0 (1+ ,s))
         (,p (first ,ses) (first ,l))
@@ -332,16 +337,16 @@
         (symbol)
         (name)
         (group)
-        (emisions)
-        (groups-emisions (make-hash-table :test 'equalp)))
+        (emissions)
+        (groups-emissions (make-hash-table :test 'equalp)))
     (declare (fixnum N M) (fixnum counter))
     (dotimes (i N (nreverse out))
       (setq group (state-group (aref S i)))
-      (if (and (tied-state-3p i S) (setq emisions (gethash group groups-emisions)))
+      (if (and (tied-state-3p i S) (setq emissions (gethash group groups-emissions)))
           (push (list (if real-name
                           (state-name (aref S i))
                           (print-pretty-state-name (state-name (aref S i))))
-                      (second emisions) (first emisions)) out)
+                      (second emissions) (first emissions)) out)
           (progn
             (setq indv-out nil
                   counter 0)
@@ -356,7 +361,7 @@
             (unless name (setf name i))
             (setq indv-out (cons name (cons counter (nreverse indv-out))))
             (push indv-out out)
-            (when (tied-state-3p i S) (setf (gethash group groups-emisions) indv-out)))))))
+            (when (tied-state-3p i S) (setf (gethash group groups-emissions) indv-out)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -372,16 +377,16 @@
    (N ;number of states
     :initarg :N :type cbook-state :accessor hmm-no-states)
    (M ;discrete alphabet size
-    :initarg :M :type cbook-symbol :accessor hmm-no-emisions)
+    :initarg :M :type cbook-symbol :accessor hmm-no-emissions)
    (V ;individual observation symbols, alphabet
-    :initarg :V :type alphabet :initform (error "Must set the alphabet")  :accessor hmm-alphabet)
+    :initarg :V :type alphabet :initform (error "Must set the alphabet") :accessor hmm-alphabet)
    (V-hash ;observation symbols -> index
     :initarg :V-hash :type hash-table :accessor hmm-alphabet-hash)
    (S ;individual states
     :initarg :S :type vector-states :initform nil :accessor hmm-states)
    (S-hash ;state symbols -> index
     :initarg :S-hash :type hash-table :accessor hmm-states-hash)
-   (no-groups ;groups are the states which emision probs are tied
+   (no-groups ;groups are the states which emission probs are tied
     :type cbook-state :initform 0 :accessor hmm-no-groups)
    (groups ;group names
     :type vector-state-groups :accessor hmm-groups)
@@ -396,17 +401,16 @@
    (iA-to ;transitions to states from states list
     :type itrans :accessor hmm-itrans-to)
    (B ;observation symbol probability distribution
-    :initarg :B :type B-array :initform (error "Must set the emision probabilities") :accessor hmm-emis)))
+    :initarg :B :type B-array :initform (error "Must set the emission probabilities") :accessor hmm-emis)))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Finite and Infinite HMMs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;Change slightly the forward/backward/viterbi algs
 
 (def-hmm-type hmm-infinite (hmm-simple) nil nil nil)
 
-(def-hmm-type hmm-finite (hmm-simple) nil nil nil) ;downgrade, currently only infinite are fully implemented
+(def-hmm-type hmm-finite (hmm-simple) nil nil nil) ;TODO, currently only infinite is fully implemented
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -428,24 +432,24 @@
     (setf (hmm-itrans-to hmm) (trans-array->itrans A t))
     (hmm-state-properties-set hmm)))
 
-(defun make-hmm-simple (no-states no-emisions alphabet model &key name (alphabet-type T) (model-spec :relevant))
+(defun make-hmm-simple (no-states no-emissions alphabet model &key name (alphabet-type T) (model-spec :relevant))
   "Make an hmm-simple. Two ways to specify the model parameters as follows:
-	no-states:
-	no-emisions:
-	alphabet: list of emisions symbols (eg, '(A C G T))
-	model: depending on model-spec this list has 2 different forms
-	model1: (model-spec = :complete)
-		states: state names and labels
-		init: initial probs
-		trans: trans probs
-		emis: trans probs
-		example: '(((:fair #\F) (:biased #\B)) (1 0) ((.95 .05) (.15 .85)) ((1/6 ...) (1/2 1/10 ...)))
+  no-states:
+  no-emissions:
+  alphabet: list of emissions symbols (eg, '(A C G T))
+  model: depending on model-spec this, list has 2 different forms
+  model form 1: (model-spec = :complete)
+    states: state names and labels
+    init: initial probs
+    trans: trans probs
+    emis: trans probs
+    example: '(((:fair #\F) (:biased #\B)) (1 0) ((.95 .05) (.15 .85)) ((1/6 ...) (1/2 1/10 ...)))
 
-	model2: (model-spec = :relevant)
-	every list represent the information of an individual state, format: state-name state-label init trans emis
-		example: ((:fair 0) #\F 0.95 (:fair .95 :biased .05) (1/6 1/6 1/6 1/6 1/6 1/6))"
+  model form 2: (model-spec = :relevant)
+  every list represent the information of an individual state, format: state-name state-label init trans emis
+    example: ((:fair 0) #\F 0.95 (:fair .95 :biased .05) (1/6 1/6 1/6 1/6 1/6 1/6))"
   (let* ((N no-states)
-         (M no-emisions)
+         (M no-emissions)
          (states)
          (V (make-array M :element-type alphabet-type))
          (V-hash)
@@ -456,7 +460,7 @@
          (B (make-typed-array (list N M) 'prob-float +0-prob+))
          (groups-emis-hash (make-hash-table :test 'equal))
          (type))
-;;;what is different according to the way of giving the model specification
+;;;depends on model specification
     (ecase model-spec
       (:complete
        (setf states (first model))
@@ -481,46 +485,44 @@
            (push (list name (second l)) states)
            (sms-contribute-model i PE A B (third l) (fourth l) emis S-hash groups-emis-hash)))
          (setf states (nreverse states))))
-;;;what is the same
+;;;same for all model specifications
     (dolist-index (symbol alphabet i) ;alphabet
       (setf (aref V i) symbol))
     (setf V-hash (make-hash-table-with-list alphabet))
     (dolist-index (e states i) ;the states
       (setf (aref S i) (cons (make-typed-array 8 'bit 0) (if (listp e) e (list e +label-null+)))))
     (!normalize-vector PE) ;normalize probs
-    (!normalize-matrix A)
-    (!normalize-matrix B)
+    (!normalize-2dmatrix-by-row A)
+    (!normalize-2dmatrix-by-row B)
 
-    (setf type 'hmm-infinite) ;;downgrade. Currently only infinite is supported
+    (setf type 'hmm-infinite) ;;TODO downgrade. Currently only infinite is supported
     (make-instance type :name name :N N :M M :V V :V-hash V-hash :S S :S-hash S-hash :PE PE :A A :B B)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun make-random-hmm-simple
-    (no-states no-emisions &key (eccentricity 2) states alphabet name (alphabet-type T))
+    (no-states no-emissions &key (eccentricity 2) (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
   "Make a hmm-simple with no biased info
-	no-states
-	no-emisions
-	eccentricity: real / random eccentricity. The bigger, the more dispair. If 0, all the prob are equal
-	states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
-	alphabet: list / optional alphabet (eg, '(A C G T))
-	name: optional name
-	alphabet-type: type of the symbols"
-  (make-hmm-simple no-states no-emisions
-                   (if alphabet
-                       alphabet
-                       (do ((a) (i 0 (1+ i)))
-                           ((= i no-emisions) (nreverse a))
-                         (push i a)))
+  no-states
+  no-emissions
+  eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
+  states: list / optional list of states info (eg, ((:fair #\F) (:biased #\B)))
+  alphabet: list / optional alphabet (eg, '(A C G T))
+  name: optional name
+  alphabet-type: type of the symbols"
+  (make-hmm-simple no-states no-emissions
+                   alphabet
                    (list
-                    (if states
-                        states
-                        (do ((a) (i 0 (1+ i)))
-                            ((= i no-states) (nreverse a)) (push i a)))
+                    states
                     (make-list-meval no-states (expt (random 1.0) eccentricity))
                     (make-list-meval no-states (make-list-meval no-states (expt (random 1.0) eccentricity)))
-                    (make-list-meval no-states (make-list-meval no-emisions (expt (random 1.0) eccentricity))))
+                    (make-list-meval no-states (make-list-meval no-emissions (expt (random 1.0) eccentricity))))
                    :name name :alphabet-type alphabet-type :model-spec :complete))
+
+(defun make-uniform-hmm-simple
+    (no-states no-emissions &key (states (range no-states)) (alphabet (range no-emissions)) name (alphabet-type T))
+  "Same as make-random-hmm-simple but with an uniform distribution for all probabilities, eccentricity 0"
+  (make-random-hmm-simple no-states no-emissions :eccentricity 0 :states states :alphabet alphabet :name name :alphabet-type alphabet-type))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -554,40 +556,8 @@
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Specific Procedures
+;; Specific Methods
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;; codebook, translation between alphabet symbols and their index
-(macrolet ((operation (source)
-             `(dotimes (i len output)
-                (setf (aref output i) ,source)))
-
-           (with- ((&rest slots) output-type &body body)
-             `(hmm-simple-slots ,slots hmm
-                (let* ((len (the fixnum (length sequence)))
-                       (output (make-array len :element-type ,output-type)))
-                  (declare ((simple-array) output) (fixnum len))
-                  ,@body))))
-
-  (defun cbook (hmm sequence)
-    "Codebook, from an observation of symbols to their indexes"
-    (declare (optimize (speed 3) (safety 0)) ((vector) sequence))
-    (with- (V-hash) 'cbook-symbol
-           (operation (gethash (aref sequence i) V-hash))))
-
-  (defun cbook-indexes (hmm sequence)
-    "Codebook, from an observation of the indexes to their symbols"
-    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet sequence))
-    (with- (V) (array-element-type V)
-           (operation (aref V (aref sequence i))))))
-
-(defun cbook-list (hmm sequences)
-  "Translate the list of sequences in a list of sequences index-coded"
-  (labels ((aux (hmm sequences cbooks)
-             (cond
-               ((null sequences) (nreverse cbooks))
-                (t (aux hmm (cdr sequences) (cons (cbook hmm (car sequences)) cbooks))))))
-    (aux hmm sequences nil)))
 
 (defun hmm-state-labels (hmm) ;review if make it common for all
   "Create a vector with the state's labels"
@@ -595,21 +565,6 @@
     (let ((out (make-typed-array N 'state-label +label-null+)))
       (dotimes (i N out)
         (setf (aref out i) (state-label (aref S i)))))))
-
-;;; not quite nice form
-(defmacro hmm-simple-alter-model (N M PE A B alpha)
-  "Alter, add noise, randomly the model
-	alpha: confidence in the current model (0 to 1) 1 to don't change the model"
-  `(unless (= +1-prob+ ,alpha)
-     (!normalize-vector
-      (!combine-float-vectors
-       ,PE (!normalize-vector (make-random-vector ,N +1-prob+ 'prob-float)) ,alpha 'prob-float t))
-     (!normalize-matrix
-      (!combine-float-matrices
-       ,A (!normalize-matrix (make-random-matrix (list ,N ,N) +1-prob+ 'prob-float)) ,alpha 'prob-float t))
-     (!normalize-matrix
-      (!combine-float-matrices
-       ,B (!normalize-matrix (make-random-matrix (list ,N ,M) +1-prob+ 'prob-float)) ,alpha 'prob-float t))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; State properties
@@ -657,7 +612,9 @@
   (declare (inline state-property-set))
   (setf (bit (state-properties (aref states stateindex)) flag) 1))
 
-(defun hmm-state-properties-set (hmm) ;initialize the properties
+(defgeneric hmm-state-properties-set (hmm))
+
+(defmethod hmm-state-properties-set ((hmm hmm-simple)) ;initialize the properties
   (macrolet ((seter (flag)
                `(state-property-set S i ,(symbol-value flag))))
     (hmm-simple-slots (N S PE A B) hmm
@@ -723,7 +680,7 @@
 
 (defmethod hmm-copy ((hmm hmm-simple))
   (let ((N (hmm-no-states hmm))
-        (M (hmm-no-emisions hmm)))
+        (M (hmm-no-emissions hmm)))
     (make-instance (type-of hmm)
                    :N N
                    :M M
@@ -758,7 +715,7 @@
                           (push (print-verdict nil (format nil "     ~d" ,index) nil) wrong)))
                       (print-verdict buffer ,prefix (not wrong))
                       (print-list (nreverse wrong)))))
-        (let ((N (hmm-no-states hmm)) (M (hmm-no-emisions hmm))
+        (let ((N (hmm-no-states hmm)) (M (hmm-no-emissions hmm))
               (aPE (accum-array (hmm-init hmm) 1 prob-float))
               (aA (accum-array (hmm-trans hmm) 2 prob-float))
               (aB (accum-array (hmm-emis hmm) 2 prob-float))
@@ -820,3 +777,88 @@
   (declare (inline hmm-complexity))
   (hmm-simple-slots (M) hmm
     (* M (hmm-no-transitions hmm))))
+
+(macrolet ((with- ((&rest slots) output-type &body body)
+             `(hmm-simple-slots ,slots hmm
+                (let* ((len (the fixnum (length observation)))
+                       (output (make-array len :element-type ,output-type)))
+                  (declare ((simple-array) output) (fixnum len))
+                  ,@body)))
+
+           (forall (source)
+             `(dotimes (i len output)
+                (setf (aref output i) ,source))))
+
+  (defmethod cbook-encode ((hmm hmm-simple) observation)
+    (declare (optimize (speed 3) (safety 0)) ((vector) observation))
+    (with- (V-hash) 'cbook-symbol
+           (forall (gethash (aref observation i) V-hash))))
+
+  (defmethod cbook-decode ((hmm hmm-simple) observation)
+    (declare (optimize (speed 3) (safety 0)) (cbook-alphabet observation))
+    (with- (V) (array-element-type V)
+           (forall (aref V (aref observation i))))))
+
+;;;The normalization is applied twice. Internally to make sure that both arrays have the same numerical total range
+(defmethod !hmm-noisify ((hmm hmm-simple) noise)
+  (unless (= +0-prob+ noise)
+    (let ((confidence (- 1 noise)))
+      (hmm-simple-slots (N M PE A B) hmm
+        (!normalize-vector
+         (!combine-float-vectors PE (!normalize-vector (make-random-vector N +1-prob+ 'prob-float)) confidence 'prob-float t))
+        (!normalize-2dmatrix-by-row
+         (!combine-float-matrices A (!normalize-2dmatrix-by-row (make-random-matrix (list N N) +1-prob+ 'prob-float)) confidence 'prob-float t))
+        (!normalize-2dmatrix-by-row
+         (!combine-float-matrices B (!normalize-2dmatrix-by-row (make-random-matrix (list N M) +1-prob+ 'prob-float)) confidence 'prob-float t)))))
+    hmm)
+
+(defmethod hmm-save ((hmm hmm-simple) filename &optional (model-spec :relevant))
+  (labels ((model-spec-relevant (hmm states)
+             (hmm-simple-slots (V S PE A B) hmm
+               (let ((trans (multiple-value-bind (a b) (trans-stats A S nil t) a b))
+                     (emis (emis-stats B V S t))
+                     (model-spec))
+                 (loop
+                    for i = 0 then (1+ i)
+                    for s in states
+                    for a in trans
+                    for e in emis
+                    for ia = nil then nil
+                    for ie = nil then nil do
+                      (loop for a. in (cddr a) do
+                           (push a. ia))
+                      (unless (null (cdddr e))
+                        (loop for e. in (cddr e) do
+                             (when (numberp e.)
+                               (push e. ie))))
+                      (if ie
+                          (push (list (first s) (second s) (aref PE i) (nreverse ia) (nreverse ie)) model-spec)
+                          (push (list (first s) (second s) (aref PE i) (nreverse ia)) model-spec)))
+                 (nreverse model-spec)))))
+
+    (with-open-file (stream filename :direction :output :if-does-not-exist :create :if-exists :rename)
+      (prin1
+       (ecase (type-of hmm)
+         ((hmm-infinite hmm-finite hmm-simple)
+          (hmm-simple-slots (S PE A B) hmm
+            (let ((states))
+              (dotimes (i (hmm-no-states hmm) (setq states (nreverse states)))
+                (push (list (state-name (aref S i)) (state-label (aref S i))) states))
+
+              `(make-hmm-simple
+                ,(hmm-no-states hmm)
+                ,(hmm-no-emissions hmm)
+
+                ',(sequence->list (hmm-alphabet hmm))
+                ,(ecase model-spec
+                        (:complete
+                         `'(,states
+                            ,(sequence->list PE)
+                            ,(matrix->list A)
+                            ,(matrix->list B)))
+                        (:relevant `',(model-spec-relevant hmm states)))
+
+                :name ,(hmm-name hmm)
+                :alphabet-type ',(array-element-type (hmm-alphabet hmm))
+                :model-spec ,model-spec)))))
+       stream)) T))
