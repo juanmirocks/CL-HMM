@@ -12,6 +12,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun pwd (&optional (subpath ""))
+    (asdf:system-relative-pathname 'cl-hmm subpath))
+
   (deftype cbook-state ()
     "Codebook state type. Defines in practice the maximum number of states" ;important to save memory in viterbi
     `(unsigned-byte 16))

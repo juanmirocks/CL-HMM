@@ -1,7 +1,7 @@
 (in-package :cl-hmm)
 
 (defun protocol-experiment (results-folder &key (states-power 5) (em-num-iterations 6) (max-times 300) (verbose-bws nil))
-       (multiple-value-bind (in L-size R-size) (read-pair-observations-file "../test/resources/sample_feldman.txt")
+       (multiple-value-bind (in L-size R-size) (read-pair-observations-file (pwd "test/resources/sample_feldman.txt"))
          (loop
             for power from 0 to states-power
             for num-states = (expt 2 power)
@@ -9,9 +9,10 @@
               (format t "~3%### Model with num states: ~d~3%" num-states)
               (let* ((phmm (make-random-phmm num-states L-size R-size))
                      (training-data (subseq (mapcar #'(lambda (o) (cbook-encode phmm o)) in) 0 100))
-                     (test-data (mapcar #'(lambda (o) (cbook-encode phmm o)) (read-pair-observations-file "../test/resources/test_feldman.txt"))))
+                     (test-data (mapcar #'(lambda (o) (cbook-encode phmm o)) (read-pair-observations-file (pwd "test/resources/test_feldman.txt")))))
                 (multiple-value-bind (best loglikelihood)
                     (hmm-estimate-bws phmm training-data :threshold 0.05 :verbose-bws verbose-bws :starting-noise 0 :max-times max-times :iterations em-num-iterations :confidence 0)
+                  (hmm-save best (format nil "~a/model_~d_~f.lisp" results-folder num-states loglikelihood) :complete)
                   (with-open-file (stream (format nil "~a/model_~d_~f.txt" results-folder num-states loglikelihood) :direction :output :if-exists :supersede)
                     (loop for obs in test-data
                        for x-encoded = (first obs)
