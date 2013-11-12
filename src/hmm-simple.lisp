@@ -736,7 +736,7 @@
           (if (= (slot-value hmm1 'M) (slot-value hmm2 'M))
               T
               (prog1 nil (princ "Incompatible alphabet sizes")))
-          (prog1 nil (princ "Incompatible nº states")))
+          (prog1 nil (princ "Incompatible num. states")))
       (prog1 nil (princ "Incompatible type of hmms"))))
 
 (defmethod hmm-run ((hmm hmm-simple) &optional (max-length +buffer-stream-size+))
