@@ -26,7 +26,7 @@
     `(unsigned-byte 8))
   (deftype cbook-alphabet ()
     "Vector of codebook symbols, alphabet codebook type"
-    `(simple-array cbook-symbol (*)))
+    `(simple-array cbook-symbol (*))) ;TODO study to make it a simple-vector
 
   (defparameter *prob-float*
     'double-float
