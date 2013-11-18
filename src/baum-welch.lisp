@@ -370,8 +370,8 @@
 
            (loop for o in obss-c
               for k = 0 then (1+ k)
-              for x = (first o)
-              for y = (second o)
+              for x simple-vector = (first o)
+              for y simple-vector = (second o)
               for size_x fixnum = (length x)
               for size_y fixnum = (length y)
               for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
