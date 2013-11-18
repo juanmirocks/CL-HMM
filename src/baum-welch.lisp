@@ -435,7 +435,9 @@
                            (unless (zerop (aref gamma_notime i))
                              (loop for xl to L-size do
                                   (loop for yr to R-size do
-                                       (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i))))))))))
+                                       (handler-case
+                                           (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))
+                                         (arithmetic-error () +0-prob+)))))))))
 
            ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
