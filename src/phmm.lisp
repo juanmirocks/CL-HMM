@@ -486,7 +486,7 @@
 
 @return(0) Y: a translation of X, cbook-encoded right-stream input sequence"
 
-  (declare (cbook-alphabet X))
+  (declare (simple-vector X))
 
   (phmm-slots (PE A B) phmm
     (let ((size_x (length X))
@@ -496,7 +496,7 @@
       (labels ((zerop-emission-prob (state l) (not (select-random accumB :indices-1 (list state l))))
                (rec (l state Y)
                  (if (= l size_x)
-                     (make-array (length Y) :element-type 'cbook-symbol :initial-contents (reverse Y))
+                     (make-array (length Y) :fill-pointer nil :initial-contents (reverse Y))
                      (if (zerop-emission-prob state (elt X l))
                          (progn (warn "dead end") (rec size_x -1 Y))
                          (let ((next_state (select-random accumA :indices-1 (list state)))
