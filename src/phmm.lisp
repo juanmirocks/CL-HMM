@@ -268,21 +268,21 @@
 
 (defmethod cbook-encode-left ((hmm phmm) x)
   "cbook-encode left string, that is, the input of a pair observation"
-  (declare (optimize (speed 3)) ((vector) x))
+  (declare (optimize (speed 3)) (simple-vector x))
   (let* ((size_x (the fixnum (length x)))
-         (out_x (make-array size_x :element-type 'cbook-symbol)))
+         (out_x (make-svector size_x)))
     (phmm-slots (L-hash) hmm
       (dotimes (i size_x out_x)
-        (setf (aref out_x i) (gethash (aref x i) L-hash))))))
+        (setf (svref out_x i) (gethash (svref x i) L-hash))))))
 
 (defmethod cbook-encode-right ((hmm phmm) y)
   "cbook-encode right string, that is, the output of a pair observation"
-  (declare (optimize (speed 3)) ((vector) y))
+  (declare (optimize (speed 3)) (simple-vector y))
   (let* ((size_y (the fixnum (length y)))
-         (out_y (make-array size_y :element-type 'cbook-symbol)))
+         (out_y (make-svector size_y)))
     (phmm-slots (R-hash) hmm
       (dotimes (i size_y out_y)
-        (setf (aref out_y i) (gethash (aref y i) R-hash))))))
+        (setf (svref out_y i) (gethash (aref y i) R-hash))))))
 
 (defmethod cbook-encode ((hmm phmm) observation)
   "cbook-encode pair observation"
@@ -297,7 +297,7 @@
            (cbook-alphabet x))
   (let* ((size_x (length x)))
     (phmm-slots (L) hmm
-      (let ((out_x (make-array size_x :element-type (array-element-type L))))
+      (let ((out_x (make-array size_x :element-type (array-element-type L) :fill-pointer nil)))
          (dotimes (i size_x out_x)
            (setf (aref out_x i) (aref L (1- (aref x i))))))))) ;-1 since in L&R epsilon is not accounted for
 
@@ -307,7 +307,7 @@
            (cbook-alphabet y))
   (let* ((size_y (length y)))
     (phmm-slots (R) hmm
-      (let ((out_y (make-array size_y :element-type (array-element-type R))))
+      (let ((out_y (make-array size_y :element-type (array-element-type R) :fill-pointer nil)))
          (dotimes (i size_y out_y)
            (setf (aref out_y i) (aref R (1- (aref y i))))))))) ;-1 since in L&R epsilon is not accounted for
 
@@ -320,10 +320,10 @@
 
 (defun cbelt1 (seq i)
   "1-indexed cbook-encoded input sequence. If 0, return epsilon's index"
-  (declare (inline cbelt1))
-  (if (= i 0)
+  (declare (optimize (speed 3) (safety 0)) (inline cbelt1) (simple-vector seq) (fixnum i))
+  (if (zerop i)
       +epsilon-cbook-index+
-      (elt seq (1- i))))
+      (svref seq (1- i))))
 
 (defmacro arefalpha (matrix dim1 dim2 dim3)
   "Alpha matrix accessor"
@@ -383,7 +383,7 @@
            (size_y (length y))
            (alpha (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float +0-prob+)))
       (declare (fixnum size_x size_y)
-               (cbook-alphabet x y))
+               (simple-vector x y))
 
       ;; Initialization
       ;; -------------------------------------------------------------------------
@@ -435,7 +435,7 @@
            (size_y (length y))
            (beta (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float +0-prob+)))
       (declare (fixnum size_x size_y)
-               (cbook-alphabet x y))
+               (simple-vector x y))
 
       (labels ((arefmat (matrix dim1 dim2 dim3)
                  (if (or (> dim2 size_x) (> dim3 size_y))
@@ -445,7 +445,7 @@
                  "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index"
                  (if (> i (length seq))
                      +epsilon-cbook-index+
-                     (elt seq (1- i)))))
+                     (svref seq (1- i)))))
 
         ;;Initialization
         ;; -------------------------------------------------------------------------
