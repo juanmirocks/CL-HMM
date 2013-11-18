@@ -395,16 +395,16 @@
                                             ;; xi
                                             (setf (aref xi i j l r)
                                                   (let* ((base (* (aref A i j) (aref beta j l r)))
-                                                         (diag (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbelt1 x l) (cbelt1 y r)))
+                                                         (diag (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
                                                                   o_likelihood))
-                                                         (l-1  (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbelt1 x l) 0          ))
+                                                         (l-1  (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
                                                                   o_likelihood))
-                                                         (r-1  (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbelt1 y r)))
+                                                         (r-1  (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbref1 y r)))
                                                                   o_likelihood)))
 
-                                                    (incf (aref tempB j (cbelt1 x l) (cbelt1 y r)) diag)
-                                                    (incf (aref tempB j (cbelt1 x l) 0           ) l-1)
-                                                    (incf (aref tempB j 0            (cbelt1 y r)) r-1)
+                                                    (incf (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
+                                                    (incf (aref tempB j (cbref1 x l) 0           ) l-1)
+                                                    (incf (aref tempB j 0            (cbref1 y r)) r-1)
 
                                                     (+ diag l-1 r-1)))
 
