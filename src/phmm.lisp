@@ -406,11 +406,10 @@
                 (when (<= 2 (max l r))
                   (loop for j below N do
                        (setf (aref alpha j l r)
-                             (prob
-                              (+
-                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) (1- r)))) (aref B j (cbref1 x l) (cbref1 y r)))
-                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) r))) (aref B j (cbref1 x l) +epsilon-cbook-index+))
-                               (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
+                             (+
+                              (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) (1- r)))) (aref B j (cbref1 x l) (cbref1 y r)))
+                              (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) r))) (aref B j (cbref1 x l) +epsilon-cbook-index+))
+                              (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (cbref1 y r)))))))))
 
 
       ;; Termination
