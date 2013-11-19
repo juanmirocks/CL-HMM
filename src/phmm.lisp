@@ -437,11 +437,11 @@
       (declare (fixnum size_x size_y)
                (simple-vector x y))
 
-      (labels ((arefmat (matrix dim1 dim2 dim3)
+      (labels ((arefbeta (matrix dim1 dim2 dim3)
                  (if (or (> dim2 size_x) (> dim3 size_y))
                      0
                      (aref matrix dim1 dim2 dim3)))
-               (elt1 (seq i)
+               ([]1 (seq i)
                  "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index"
                  (if (> i (length seq))
                      +epsilon-cbook-index+
@@ -462,9 +462,9 @@
                                (prob
                                 (loop for j in (aref iA-from i) sum
                                      (* (aref A i j)
-                                        (+ (* (arefmat beta j (1+ l) (1+ r)) (aref B j (elt1 x (1+ l))       (elt1 y (1+ r))))
-                                           (* (arefmat beta j (1+ l) r     ) (aref B j (elt1 x (1+ l))       +epsilon-cbook-index+))
-                                           (* (arefmat beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ (elt1 y (1+ r))))))))))))))
+                                        (+ (* (arefbeta beta j (1+ l) (1+ r)) (aref B j ([]1 x (1+ l))       ([]1 y (1+ r))))
+                                           (* (arefbeta beta j (1+ l) r     ) (aref B j ([]1 x (1+ l))       +epsilon-cbook-index+))
+                                           (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y (1+ r))))))))))))))
 
       beta)))
 
