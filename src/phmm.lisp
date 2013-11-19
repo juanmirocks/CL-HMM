@@ -417,8 +417,8 @@
                           finally
                             (setf (aref alpha j l r)
                                   (+
-                                   (* diag (aref B j (cbref1 x l) (cbref1 y r)))
-                                   (* l-1  (aref B j (cbref1 x l) +epsilon-cbook-index+))
+                                   (* diag (aref B j (cbref1 x l)          (cbref1 y r)))
+                                   (* l-1  (aref B j (cbref1 x l)          +epsilon-cbook-index+))
                                    (* r-1  (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
 
 
@@ -446,16 +446,16 @@
       (declare (fixnum size_x size_y)
                (simple-vector x y))
 
-      (labels ((arefbeta (matrix dim1 dim2 dim3)
-                 (if (or (> dim2 size_x) (> dim3 size_y))
-                     0
-                     (aref matrix dim1 dim2 dim3)))
-               ([]1 (seq i)
-                 "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
+      (macrolet ((arefbeta (matrix dim1 dim2 dim3)
+                   `(if (or (> ,dim2 size_x) (> ,dim3 size_y))
+                        +0-prob+
+                        (aref ,matrix ,dim1 ,dim2 ,dim3)))
+                 ([]1 (seq i)
+                   "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
                   Note: we don't index by (1-) since the function is already called here with the index - 1 (for efficiency)"
-                 (if (= i (length seq))
-                     +epsilon-cbook-index+
-                     (svref seq i))))
+                   `(if (= ,i (length ,seq))
+                        +epsilon-cbook-index+
+                        (svref ,seq ,i))))
 
         ;;Initialization
         ;; -------------------------------------------------------------------------
@@ -469,11 +469,15 @@
                   (when (and (<= 1 (max l r)) (not (and (= l size_x) (= r size_y))))
                     (loop for i below N do
                          (setf (aref beta i l r)
-                               (loop for j in (aref iA-from i) sum
-                                    (* (aref A i j)
-                                       (+ (* (arefbeta beta j (1+ l) (1+ r)) (aref B j ([]1 x l)             ([]1 y r)))
-                                          (* (arefbeta beta j (1+ l) r     ) (aref B j ([]1 x l)             +epsilon-cbook-index+))
-                                          (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r))))))))))))
+                               (loop for j in (aref iA-from i)
+                                    with accum = +0-prob+ ;;use of accum variable in replacement of a loop-sum (a bit faster)
+                                    do
+                                    (incf accum
+                                          (* (aref A i j)
+                                             (+ (* (arefbeta beta j (1+ l) (1+ r)) (aref B j ([]1 x l)             ([]1 y r)))
+                                                (* (arefbeta beta j (1+ l) r     ) (aref B j ([]1 x l)             +epsilon-cbook-index+))
+                                                (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r))))))
+                                  finally (return accum))))))))
 
       beta)))
 
