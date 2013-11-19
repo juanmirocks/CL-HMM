@@ -388,14 +388,14 @@
       ;; Initialization
       ;; -------------------------------------------------------------------------
       (loop for j below N do
-           (when (> size_x 0) (setf (aref alpha j 1 0) (prob (* (aref PE j) (aref B j (cbref1 x 1) +epsilon-cbook-index+)))))
-           (when (> size_y 0) (setf (aref alpha j 0 1) (prob (* (aref PE j) (aref B j +epsilon-cbook-index+ (cbref1 y 1))))))
+           (when (> size_x 0) (setf (aref alpha j 1 0) (* (aref PE j) (aref B j (cbref1 x 1) +epsilon-cbook-index+))))
+           (when (> size_y 0) (setf (aref alpha j 0 1) (* (aref PE j) (aref B j +epsilon-cbook-index+ (cbref1 y 1)))))
            (when (and (> size_x 0) (> size_y 0))
              (setf (aref alpha j 1 1)
-                   (prob (+
-                          (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
-                          (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (cbref1 x 1) +epsilon-cbook-index+))
-                          (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (cbref1 y 1))))))))
+                   (+
+                    (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
+                    (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (cbref1 x 1) +epsilon-cbook-index+))
+                    (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (cbref1 y 1)))))))
 
 
       ;; Induction
