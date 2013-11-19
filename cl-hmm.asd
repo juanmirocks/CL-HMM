@@ -40,7 +40,13 @@
        (:file "alphabets"
         :depends-on ("packages"))
        (:file "hmm-files"
-        :depends-on ("packages" "cl-hmm" "hmm-simple" "alphabets")))))
+        :depends-on ("packages" "cl-hmm" "hmm-simple" "alphabets"))))
+
+     (:module
+      "test"
+      :depends-on ("src")
+      :components
+      ((:file "feldman-test"))))
 
     :depends-on
     (:jmc.cl.utils))
