@@ -2,13 +2,14 @@
 
 (defun levenshtein (str1 str2)
   "Calculates the Levenshtein distance between str1 and str2, returns an editing distance (int)."
+  (declare (optimize (speed 3) (safety 0)))
   (let ((n (length str1))
         (m (length str2)))
     ;; Check trivial cases
     (cond ((= 0 n) (return-from levenshtein m))
           ((= 0 m) (return-from levenshtein n)))
-    (let ((col (make-array (1+ m) :element-type 'integer))
-          (prev-col (make-array (1+ m) :element-type 'integer)))
+    (let ((col (make-svector (1+ m)))
+          (prev-col (make-svector (1+ m))))
       ;; We need to store only two columns---the current one that
       ;; is being built and the previous one
       (dotimes (i (1+ m))
@@ -21,9 +22,9 @@
                 (min (1+ (svref col j))
                      (1+ (svref prev-col (1+ j)))
                      (+ (svref prev-col j)
-                        (if (equal (aref str1 i) (aref str2 j)) 0 1)))))
+                        (if (eq (aref str1 i) (aref str2 j)) 0 1)))))
         (rotatef col prev-col))
-      (svref prev-col m))))
+      (the fixnum (svref prev-col m)))))
 
 ;; A few simple test-cases
 (assert (zerop (levenshtein "kitten" "kitten")))
@@ -34,6 +35,7 @@
 (assert (= (levenshtein "a" "") 1))
 
 (defun wer (reference recognized)
+  (declare (optimize (speed 3) (safety 0)) (inline wer))
   (min 1.0 (coerce (/ (levenshtein reference recognized) (length reference)) 'float)))
 
 (defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (states-power 5) (em-num-iterations 6) (max-times 300) (verbose-bws nil))

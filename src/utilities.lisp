@@ -22,17 +22,29 @@
              (relative-index (if found-total-index (- found-total-index start) nil)))
         relative-index))))
 
-;;; functions to create the log versions of an array or a vector. Specialized for prob-float. Suitable to be a general utility
-(defun log-vector (array)
-  (declare ((prob-array (*)) array))
-  (let ((out (make-array (array-dimensions array) :element-type 'prob-float)) (v +0-prob+))
-    (declare ((prob-array (*)) out) (prob-float v))
-    (dotimes (i (array-dimension array 0) out)
-      (setf (aref out i) (progn (setq v (aref array i))
-                                (if (zerop v) +very-negative-prob-float+ (the prob-float (log v))))))))
-(defun log-array (array)
+(defun array-map (array f)
+  (declare (optimize (speed 3) (safety 0)) (inline array-map))
+  (let ((out (make-array (array-dimensions array) :element-type (array-element-type array))))
+    (dotimes (i (array-total-size array) out)
+      (setf (row-major-aref out i) (funcall f (row-major-aref array i))))))
+
+;;For maximum speed, create array-typed-mappers
+(defmacro array-typed-map-create (final-fun-name array-type f)
+  `(defun ,final-fun-name (array)
+     (declare (optimize (speed 3) (safety 0)) (,array-type array))
+     (let ((out (the ,array-type (make-array (array-dimensions array) :element-type (array-element-type array)))))
+       (dotimes (i (array-total-size array) out)
+         (setf (row-major-aref out i) (funcall ,f (row-major-aref array i)))))))
+
+(array-typed-map-create log-array (simple-array prob-float) #'(lambda (x) (if (zerop x) +very-negative-prob-float+ (log x))))
+(array-typed-map-create log-vector (simple-array prob-float (*)) #'(lambda (x) (if (zerop x) +very-negative-prob-float+ (log x))))
+(array-typed-map-create exp-array (simple-array prob-float) #'(lambda (x) (exp x)))
+
+;;Kept for historical reasons and because it's still faster
+(defun log-array-old (array)
   (declare ((prob-array (* *)) array))
-  (let ((out (make-array (array-dimensions array) :element-type 'prob-float)) (v +0-prob+))
+  (let ((out (make-array (array-dimensions array) :element-type 'prob-float))
+        (v +0-prob+))
     (declare ((prob-array (* *)) array) (prob-float v))
     (dotimes (i (array-dimension array 0) out)
       (dotimes (j (array-dimension array 1))

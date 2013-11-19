@@ -425,8 +425,8 @@
       ;; Termination
       ;; -------------------------------------------------------------------------
       (values
-       (loop for j below N sum (aref alpha j size_x size_y))
-       alpha))))
+       (the prob-float (loop for j below N sum (aref alpha j size_x size_y)))
+       (the (prob-array (* * *)) alpha)))))
 
 
 (defmethod backward ((hmm phmm) obs-c)
@@ -479,7 +479,7 @@
                                                 (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r))))))
                                   finally (return accum))))))))
 
-      beta)))
+      (the (prob-array (* * *)) beta))))
 
 
 
@@ -497,7 +497,7 @@
   @param phmm: model with probability distributions to use for translation
   @param X: cbook-encoded left-stream input sequence
 
-@return(0) Y: a translation of X, cbook-encoded right-stream input sequence"
+@return(0) Y: a translation of X, cbook-encoded right-stream output sequence"
 
   (declare (optimize (speed 3) (safety 0)) (simple-vector X))
 

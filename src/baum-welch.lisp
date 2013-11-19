@@ -359,8 +359,18 @@
          for itr-time-start = (get-internal-real-time)
          for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
          for cur-loglikelihood = +0-prob+
+         with best-model = hmm
+         with best-loglikehood = +very-negative-prob-float+
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
          for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
+
+         ;; These must be reset to 0 for every observation pair. Written here to avoid creating matrices
+         ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+         ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+         with tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
+         with gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
+         with xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
+
          do
 
          ;; Init new parameters with pseudocounts if given or 0 otherwise
@@ -374,18 +384,12 @@
               for y simple-vector = (second o)
               for size_x fixnum = (length x)
               for size_y fixnum = (length y)
-              for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
-              for beta = (backward hmm o)
-              for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-              for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-              for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
-              for gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
-              for xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
+              for (o_likelihood alpha) :of-type (prob-float (prob-array (* * *))) = (multiple-value-list (forward hmm o))
+              for beta :of-type (prob-array (* * *)) = (backward hmm o)
               do
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~d" k)
                     (progn
-                      ;;(when verbose (format t "~d " k))
                       (incf cur-loglikelihood (log o_likelihood))
                       (loop for i below N do
                            (loop for j below N do
@@ -393,25 +397,25 @@
                                      (loop for r to size_y do
                                           (when (< 0 (max l r))
                                             ;; xi
-                                            (setf (aref xi i j l r)
-                                                  (let* ((base (* (aref A i j) (aref beta j l r)))
-                                                         (diag (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
-                                                                  o_likelihood))
-                                                         (l-1  (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
-                                                                  o_likelihood))
-                                                         (r-1  (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbref1 y r)))
-                                                                  o_likelihood)))
+                                            (let ((xi_i_j_l_r
+                                                   (let* ((base (the prob-float (* (aref A i j) (aref beta j l r))))
+                                                          (diag (the prob-float (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
+                                                                   o_likelihood)))
+                                                          (l-1  (the prob-float (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
+                                                                   o_likelihood)))
+                                                          (r-1  (the prob-float (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbref1 y r)))
+                                                                   o_likelihood))))
 
-                                                    (incf (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
-                                                    (incf (aref tempB j (cbref1 x l) 0           ) l-1)
-                                                    (incf (aref tempB j 0            (cbref1 y r)) r-1)
+                                                     (incf (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
+                                                     (incf (aref tempB j (cbref1 x l) 0           ) l-1)
+                                                     (incf (aref tempB j 0            (cbref1 y r)) r-1)
 
-                                                    (+ diag l-1 r-1)))
+                                                     (the prob-float (+ diag l-1 r-1)))))
 
-                                            ;; calculate others
-                                            (incf (aref gamma i l r) (aref xi i j l r))
-                                            (incf (aref gamma_notime i) (aref xi i j l r))
-                                            (incf (aref xi_notime i j) (aref xi i j l r)))))))
+                                              ;; calculate others
+                                              ;;(incf (aref gamma i l r) xi_i_j_l_r)
+                                              (incf (aref gamma_notime i) xi_i_j_l_r)
+                                              (incf (aref xi_notime i j) xi_i_j_l_r)))))))
 
                       ;; newPE
                       (loop for j below N do
@@ -421,7 +425,6 @@
                                         (gammaj11 (/ (* (aref alpha j 1 1) (aref beta j 1 1)) o_likelihood))
                                         ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
                                         )
-
                                    (+ gammaj10 gammaj01 gammaj11))))
 
                       ;; newA
@@ -435,11 +438,16 @@
                            (unless (zerop (aref gamma_notime i))
                              (loop for xl to L-size do
                                   (loop for yr to R-size do
-                                       (handler-case
-                                           (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))
-                                         (arithmetic-error () +0-prob+)))))))))
+                                       (let ((diff (- (aref tempB i xl yr) (aref gamma_notime i))))
+                                         (if (= diff (aref tempB i xl yr))
+                                             (setf (aref newB i xl yr) +most-positive-prob-float+)
+                                             (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))))))))
 
-           ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
+                      ;; reset
+                      (array-reset tempB +0-prob+) (array-reset gamma_notime +0-prob+) (array-reset xi_notime +0-prob+)
+                      )))
+
+         ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
          ;; Set model with new parameters
            (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
@@ -455,6 +463,10 @@
              (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
            (fresh-line)
 
+           (when (> cur-loglikelihood best-loglikehood)
+             (setq best-model (hmm-copy hmm))
+             (setq best-loglikehood cur-loglikelihood))
+
            (multiple-value-bind (correct details) (hmm-correctp hmm)
              (unless correct (error "(itr: ~d) The model is incorrect. Output of hmm-correct-p:~2%~a~%" iteration details)))
 
@@ -465,4 +477,5 @@
                    (zerop cur-loglikelihood)) ;perfect model to the training data
 
          finally
-           (return (values hmm cur-loglikelihood iteration))))))
+           (print cur-loglikelihood)
+           (return (values best-model best-loglikehood iteration))))))
