@@ -446,16 +446,16 @@
       (declare (fixnum size_x size_y)
                (simple-vector x y))
 
-      (labels ((arefbeta (matrix dim1 dim2 dim3)
-                 (if (or (> dim2 size_x) (> dim3 size_y))
-                     0
-                     (aref matrix dim1 dim2 dim3)))
-               ([]1 (seq i)
-                 "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
+      (macrolet ((arefbeta (matrix dim1 dim2 dim3)
+                   `(if (or (> ,dim2 size_x) (> ,dim3 size_y))
+                        0
+                        (aref ,matrix ,dim1 ,dim2 ,dim3)))
+                 ([]1 (seq i)
+                   "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
                   Note: we don't index by (1-) since the function is already called here with the index - 1 (for efficiency)"
-                 (if (= i (length seq))
-                     +epsilon-cbook-index+
-                     (svref seq i))))
+                   `(if (= ,i (length ,seq))
+                        +epsilon-cbook-index+
+                        (svref ,seq ,i))))
 
         ;;Initialization
         ;; -------------------------------------------------------------------------
