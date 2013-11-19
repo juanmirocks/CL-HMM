@@ -497,7 +497,7 @@
   @param phmm: model with probability distributions to use for translation
   @param X: cbook-encoded left-stream input sequence
 
-@return(0) Y: a translation of X, cbook-encoded right-stream input sequence"
+@return(0) Y: a translation of X, cbook-encoded right-stream output sequence"
 
   (declare (optimize (speed 3) (safety 0)) (simple-vector X))
 
