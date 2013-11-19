@@ -459,12 +459,11 @@
                   (when (and (<= 1 (max l r)) (not (and (= l size_x) (= r size_y))))
                     (loop for i below N do
                          (setf (aref beta i l r)
-                               (prob
-                                (loop for j in (aref iA-from i) sum
-                                     (* (aref A i j)
-                                        (+ (* (arefbeta beta j (1+ l) (1+ r)) (aref B j ([]1 x l)             ([]1 y r)))
-                                           (* (arefbeta beta j (1+ l) r     ) (aref B j ([]1 x l)             +epsilon-cbook-index+))
-                                           (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r)))))))))))))
+                               (loop for j in (aref iA-from i) sum
+                                    (* (aref A i j)
+                                       (+ (* (arefbeta beta j (1+ l) (1+ r)) (aref B j ([]1 x l)             ([]1 y r)))
+                                          (* (arefbeta beta j (1+ l) r     ) (aref B j ([]1 x l)             +epsilon-cbook-index+))
+                                          (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r))))))))))))
 
       beta)))
 
