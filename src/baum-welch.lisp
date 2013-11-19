@@ -437,10 +437,10 @@
                            (unless (zerop (aref gamma_notime i))
                              (loop for xl to L-size do
                                   (loop for yr to R-size do
-                                       (handler-case
-                                           (incf (aref newB i xl yr) (the prob-float (/ (aref tempB i xl yr) (aref gamma_notime i))))
-                                         (arithmetic-error () +0-prob+))
-                                         ))))
+                                       (let ((diff (- (aref tempB i xl yr) (aref gamma_notime i))))
+                                         (if (= diff (aref tempB i xl yr))
+                                             (setf (aref newB i xl yr) +most-positive-prob-float+)
+                                             (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))))))))
 
                       ;; reset
                       (array-reset tempB +0-prob+) (array-reset gamma_notime +0-prob+) (array-reset xi_notime +0-prob+)
