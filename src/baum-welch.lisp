@@ -385,7 +385,6 @@
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~d" k)
                     (progn
-                      ;;(when verbose (format t "~d " k))
                       (incf cur-loglikelihood (log o_likelihood))
                       (loop for i below N do
                            (loop for j below N do
