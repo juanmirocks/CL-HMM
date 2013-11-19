@@ -38,7 +38,7 @@
 
 (array-typed-map-create log-array (simple-array prob-float) #'(lambda (x) (if (zerop x) +very-negative-prob-float+ (log x))))
 (array-typed-map-create log-vector (simple-array prob-float (*)) #'(lambda (x) (if (zerop x) +very-negative-prob-float+ (log x))))
-(array-typed-map-create log-exp (simple-array prob-float) #'(lambda (x) (exp x)))
+(array-typed-map-create exp-array (simple-array prob-float) #'(lambda (x) (exp x)))
 
 ;;Kept for historical reasons and because it's still faster
 (defun log-array-old (array)
