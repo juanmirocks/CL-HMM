@@ -359,6 +359,8 @@
          for itr-time-start = (get-internal-real-time)
          for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
          for cur-loglikelihood = +0-prob+
+         with best-model = hmm
+         with best-loglikehood = +very-negative-prob-float+
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
          for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
 
@@ -461,6 +463,10 @@
              (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
            (fresh-line)
 
+           (when (> cur-loglikelihood best-loglikehood)
+             (setq best-model (hmm-copy hmm))
+             (setq best-loglikehood cur-loglikelihood))
+
            (multiple-value-bind (correct details) (hmm-correctp hmm)
              (unless correct (error "(itr: ~d) The model is incorrect. Output of hmm-correct-p:~2%~a~%" iteration details)))
 
@@ -471,4 +477,5 @@
                    (zerop cur-loglikelihood)) ;perfect model to the training data
 
          finally
-           (return (values hmm cur-loglikelihood iteration))))))
+           (print cur-loglikelihood)
+           (return (values best-model best-loglikehood iteration))))))
