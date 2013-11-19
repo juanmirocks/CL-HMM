@@ -12,9 +12,9 @@
 (def-lin-search array-search prob-float (simple-array prob-float) >=)
 
 (defun select-random (accum-array &key (indices-1 nil) (fixed-max nil) (fixed-pick nil))
+  "Assumed but not checked that (= (length dims) (1+ (length indices-1)))"
   (declare (optimize (speed 3) (safety 0)))
   (let ((dims (array-dimensions accum-array)))
-    (unless (= (length dims) (1+ (length indices-1))) (error "The size of indices-1 must be exactly array's dimensions - 1"))
     (labels ((fstart (indices-1 dims-1 accum)
                (if (null indices-1)
                    accum
