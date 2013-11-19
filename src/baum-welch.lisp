@@ -382,8 +382,8 @@
               for y simple-vector = (second o)
               for size_x fixnum = (length x)
               for size_y fixnum = (length y)
-              for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
-              for beta = (backward hmm o)
+              for (o_likelihood alpha) :of-type (prob-float (prob-array (* * *))) = (multiple-value-list (forward hmm o))
+              for beta :of-type (prob-array (* * *)) = (backward hmm o)
               do
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~d" k)
