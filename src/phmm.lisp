@@ -460,7 +460,7 @@
         ;;Initialization
         ;; -------------------------------------------------------------------------
         (loop for i below N do
-             (setf (aref beta i size_x size_y) (prob 1)))
+             (setf (aref beta i size_x size_y) +1-prob+))
 
         ;;Induction
         ;; -------------------------------------------------------------------------
