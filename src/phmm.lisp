@@ -400,16 +400,26 @@
 
       ;; Induction
       ;; -------------------------------------------------------------------------
-      ;; TODO gain speed by checking whether 0 == b_j(x_l, y_r)
       (loop for l from 0 to size_x do
            (loop for r from 0 to size_y do
                 (when (<= 2 (max l r))
                   (loop for j below N do
-                       (setf (aref alpha j l r)
-                             (+
-                              (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) (1- r)))) (aref B j (cbref1 x l) (cbref1 y r)))
-                              (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i (1- l) r))) (aref B j (cbref1 x l) +epsilon-cbook-index+))
-                              (* (loop for i in (aref iA-to j) sum (* (aref A i j) (arefalpha alpha i l (1- r)))) (aref B j +epsilon-cbook-index+ (cbref1 y r)))))))))
+                       ;in contrast with the semicode, traverse iA-to at the upper level and only once since this operation is costly
+                       (loop for i in (aref iA-to j)
+                          with diag = +0-prob+
+                          with l-1  = +0-prob+
+                          with r-1  = +0-prob+
+                          do
+                            (incf diag (* (aref A i j) (arefalpha alpha i (1- l) (1- r))))
+                            (incf l-1  (* (aref A i j) (arefalpha alpha i (1- l) r    )))
+                            (incf r-1  (* (aref A i j) (arefalpha alpha i l      (1- r))))
+
+                          finally
+                            (setf (aref alpha j l r)
+                                  (+
+                                   (* diag (aref B j (cbref1 x l) (cbref1 y r)))
+                                   (* l-1  (aref B j (cbref1 x l) +epsilon-cbook-index+))
+                                   (* r-1  (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
 
 
       ;; Termination
