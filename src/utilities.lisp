@@ -27,17 +27,6 @@
              (relative-index (if found-total-index (- found-total-index start) nil)))
         relative-index))))
 
-;;; DEPRECATED, see +very-negative-prob-float+
-;; (defmacro +small (arg1 arg2)
-;;   `(handler-case (+ ,arg1 ,arg2)
-;;      (floating-point-overflow () +most-negative-prob-float+)))
-;; (defun +neg (arg1 arg2) ;sum of very small numbers to avoid underflows and signal errors that are time consuming
-;;   (declare (optimize (speed 3) (safety 0)) (prob-float arg1 arg2))
-;;   (if (and (< arg1 +very-negative-prob-float+) (< arg2 +very-negative-prob-float+))
-;;       +most-negative-prob-float+
-;;       (+ arg1 arg2)))
-
-
 ;;; functions to create the log versions of an array or a vector. Specialized for prob-float. Suitable to be a general utility
 (defun log-vector (array)
   (declare ((prob-array (*)) array))
