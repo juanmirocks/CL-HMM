@@ -377,7 +377,7 @@
               for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
               for beta = (backward hmm o)
               ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-              for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+              ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
               for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
               for gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
               for xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
@@ -408,7 +408,7 @@
                                                     (+ diag l-1 r-1))))
 
                                             ;; calculate others
-                                            (incf (aref gamma i l r) xi_i_j_l_r)
+                                            ;;(incf (aref gamma i l r) xi_i_j_l_r)
                                             (incf (aref gamma_notime i) xi_i_j_l_r)
                                             (incf (aref xi_notime i j) xi_i_j_l_r)))))))
 
