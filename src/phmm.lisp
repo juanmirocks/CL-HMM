@@ -425,8 +425,8 @@
       ;; Termination
       ;; -------------------------------------------------------------------------
       (values
-       (loop for j below N sum (aref alpha j size_x size_y))
-       alpha))))
+       (the prob-float (loop for j below N sum (aref alpha j size_x size_y)))
+       (the (prob-array (* * *)) alpha)))))
 
 
 (defmethod backward ((hmm phmm) obs-c)
@@ -479,7 +479,7 @@
                                                 (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r))))))
                                   finally (return accum))))))))
 
-      beta)))
+      (the (prob-array (* * *)) beta))))
 
 
 
