@@ -423,7 +423,6 @@
                                         (gammaj11 (/ (* (aref alpha j 1 1) (aref beta j 1 1)) o_likelihood))
                                         ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
                                         )
-
                                    (+ gammaj10 gammaj01 gammaj11))))
 
                       ;; newA
