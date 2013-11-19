@@ -442,10 +442,11 @@
                      0
                      (aref matrix dim1 dim2 dim3)))
                ([]1 (seq i)
-                 "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index"
-                 (if (> i (length seq))
+                 "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
+                  Note: we don't index by (1-) since the function is already called here with the index - 1 (for efficiency)"
+                 (if (= i (length seq))
                      +epsilon-cbook-index+
-                     (svref seq (1- i)))))
+                     (svref seq i))))
 
         ;;Initialization
         ;; -------------------------------------------------------------------------
@@ -462,9 +463,9 @@
                                (prob
                                 (loop for j in (aref iA-from i) sum
                                      (* (aref A i j)
-                                        (+ (* (arefbeta beta j (1+ l) (1+ r)) (aref B j ([]1 x (1+ l))       ([]1 y (1+ r))))
-                                           (* (arefbeta beta j (1+ l) r     ) (aref B j ([]1 x (1+ l))       +epsilon-cbook-index+))
-                                           (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y (1+ r))))))))))))))
+                                        (+ (* (arefbeta beta j (1+ l) (1+ r)) (aref B j ([]1 x l)             ([]1 y r)))
+                                           (* (arefbeta beta j (1+ l) r     ) (aref B j ([]1 x l)             +epsilon-cbook-index+))
+                                           (* (arefbeta beta j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r)))))))))))))
 
       beta)))
 
