@@ -396,19 +396,19 @@
                                           (when (< 0 (max l r))
                                             ;; xi
                                             (let ((xi_i_j_l_r
-                                                   (let* ((base (* (aref A i j) (aref beta j l r)))
-                                                          (diag (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
-                                                                   o_likelihood))
-                                                          (l-1  (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
-                                                                   o_likelihood))
-                                                          (r-1  (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbref1 y r)))
+                                                   (let* ((base (the prob-float (* (aref A i j) (aref beta j l r))))
+                                                          (diag (the prob-float (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
                                                                    o_likelihood)))
+                                                          (l-1  (the prob-float (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
+                                                                   o_likelihood)))
+                                                          (r-1  (the prob-float (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbref1 y r)))
+                                                                   o_likelihood))))
 
                                                      (incf (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
                                                      (incf (aref tempB j (cbref1 x l) 0           ) l-1)
                                                      (incf (aref tempB j 0            (cbref1 y r)) r-1)
 
-                                                     (+ diag l-1 r-1))))
+                                                     (the prob-float (+ diag l-1 r-1)))))
 
                                               ;; calculate others
                                               ;;(incf (aref gamma i l r) xi_i_j_l_r)
@@ -438,8 +438,11 @@
                              (loop for xl to L-size do
                                   (loop for yr to R-size do
                                        (handler-case
-                                           (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))
-                                         (arithmetic-error () +0-prob+))))))
+                                           (incf (aref newB i xl yr) (the prob-float (/ (aref tempB i xl yr) (aref gamma_notime i))))
+                                         (arithmetic-error ()
+                                           (error "inestability: ~a ~a~%" (aref tempB i xl yr) (aref gamma_notime i))
+                                           +0-prob+))
+                                         ))))
 
                       ;; reset
                       (array-reset tempB +0-prob+) (array-reset gamma_notime +0-prob+) (array-reset xi_notime +0-prob+)
