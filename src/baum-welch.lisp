@@ -361,6 +361,14 @@
          for cur-loglikelihood = +0-prob+
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
          for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
+
+         ;; These must be reset to 0 for every observation pair. Written here to avoid creating matrices
+         ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+         ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
+         with tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
+         with gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
+         with xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
+
          do
 
          ;; Init new parameters with pseudocounts if given or 0 otherwise
@@ -376,11 +384,6 @@
               for size_y fixnum = (length y)
               for (o_likelihood alpha) = (multiple-value-list (forward hmm o))
               for beta = (backward hmm o)
-              ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-              ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-              for tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
-              for gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
-              for xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
               do
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~d" k)
@@ -436,7 +439,11 @@
                                   (loop for yr to R-size do
                                        (handler-case
                                            (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))
-                                         (arithmetic-error () +0-prob+)))))))))
+                                         (arithmetic-error () +0-prob+))))))
+
+                      ;; reset
+                      (array-reset tempB +0-prob+) (array-reset gamma_notime +0-prob+) (array-reset xi_notime +0-prob+)
+                      )))
 
            ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
