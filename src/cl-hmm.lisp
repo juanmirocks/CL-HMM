@@ -47,7 +47,6 @@
   (defconstant +least-positive-prob-float+ (symbol-value (intern (format nil "LEAST-POSITIVE-~a" *prob-float*))))
 
   ;;; Empty emission epsilon symbol, ε
-  (defconstant +epsilon+ "")
   (defconstant +epsilon-cbook-index+ 0)
 
   ;;other
