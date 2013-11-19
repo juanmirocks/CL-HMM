@@ -439,9 +439,7 @@
                                   (loop for yr to R-size do
                                        (handler-case
                                            (incf (aref newB i xl yr) (the prob-float (/ (aref tempB i xl yr) (aref gamma_notime i))))
-                                         (arithmetic-error ()
-                                           (error "inestability: ~a ~a~%" (aref tempB i xl yr) (aref gamma_notime i))
-                                           +0-prob+))
+                                         (arithmetic-error () +0-prob+))
                                          ))))
 
                       ;; reset
