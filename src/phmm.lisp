@@ -448,7 +448,7 @@
 
       (macrolet ((arefbeta (matrix dim1 dim2 dim3)
                    `(if (or (> ,dim2 size_x) (> ,dim3 size_y))
-                        0
+                        +0-prob+
                         (aref ,matrix ,dim1 ,dim2 ,dim3)))
                  ([]1 (seq i)
                    "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
