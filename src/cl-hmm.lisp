@@ -1,8 +1,5 @@
 ;; Author: Juan Miguel Cejuela
 ;; Created: Wed Jul  9 18:09:49 2008 (CEST)
-;; Last-Updated: 2011-08-11
-;;           By: Juan Miguel Cejuela
-;;     Update #: 39
 
 (in-package :cl-hmm)
 
