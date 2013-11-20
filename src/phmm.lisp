@@ -510,13 +510,13 @@
                (rec (l state Y)
                  (if (= l size_x)
                      (make-array (length Y) :fill-pointer nil :initial-contents (reverse Y))
-                     (if (zerop-emission-prob state (elt X l))
+                     (if (zerop-emission-prob state (svref X l))
                          (progn (warn "dead end") (rec size_x -1 Y))
                          (let ((next_state (select-random accumA :indices-1 (list state)))
                                (Yr (select-random accumB :indices-1 (list state 0) :fixed-max +1-prob+)))
                            (if Yr
                                (rec l next_state (cons Yr Y)) ;epsilon on X
-                               (let ((Yr (select-random accumB :indices-1 (list state (elt X l)))))
+                               (let ((Yr (select-random accumB :indices-1 (list state (svref X l)))))
                                  (rec (1+ l) next_state (if (= Yr +epsilon-cbook-index+)
                                                             Y ;epsilon on Y
                                                             (cons Yr Y))))))))))
