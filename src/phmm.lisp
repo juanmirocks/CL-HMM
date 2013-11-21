@@ -522,6 +522,30 @@
                                                             (cons Yr Y))))))))))
         (rec 0 init_state nil)))))
 
+(defmethod hmm-translate-viterbi ((phmm phmm) X &optional (hmm-left (hmm-left phmm)))
+  (let ((viterbi-path (viterbi-log hmm-left X)))
+    (format t "path: ~a~%" viterbi-path)
+    (phmm-slots (B) phmm
+      (let ((size_x (length X))
+            (accumB (accum-array B 3 prob-float)))
+        (labels ((zerop-emission-prob (state l) (not (select-random accumB :indices-1 (list state l))))
+                 (rec (l states-path Y)
+                   (if (= l size_x)
+                       (make-array (length Y) :fill-pointer nil :initial-contents (reverse Y))
+                       (let ((state (aref states-path l)))
+                         (if (zerop-emission-prob state (svref X l))
+                             (progn (warn "dead end") (rec size_x -1 Y))
+                             (let ((Yr (select-random accumB :indices-1 (list state +epsilon-cbook-index+) :fixed-max +1-prob+)))
+                               (if Yr
+                                   ;;As it is now, with epsilon on X, the transition is forced to
+                                   ;;state in the same state which may be illegal if P(aii) == 0
+                                   (rec l states-path (cons Yr Y)) ;epsilon on X
+                                   (let ((Yr (select-random accumB :indices-1 (list state (svref X l)))))
+                                     (rec (1+ l) states-path (if (= Yr +epsilon-cbook-index+)
+                                                                 Y ;epsilon on Y
+                                                                 (cons Yr Y)))))))))))
+          (rec 0 viterbi-path nil))))))
+
 (defmethod hmm-left ((phmm phmm))
   (phmm-slots (N S L L-size R-size name PE A B) phmm
     (let ((states (loop for i below N collect (list (state-name (aref S i)) (state-label (aref S i)))))
