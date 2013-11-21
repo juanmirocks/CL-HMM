@@ -38,6 +38,23 @@
   (declare (optimize (speed 3) (safety 0)) (inline wer))
   (min 1.0 (coerce (/ (levenshtein reference recognized) (length reference)) 'float)))
 
+(defun wer-phmm (phmm test-data num-translations)
+  (let ((hmm-left (hmm-left phmm)))
+    (loop for obs in test-data
+       with wer = 0.0
+       with test-size = (length test-data)
+       do
+         (loop repeat num-translations
+            with o_wer = 0.0
+            for x = (first obs)
+            for y = (second obs)
+            for y-translation = (hmm-translate-phmm x)
+            do
+              (incf o_wer (wer y y-translation))
+            finally
+              (incf wer (/ o_wer num-translations)))
+       finally (return  (/ wer test-size)))))
+
 (defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (states-power 5) (em-num-iterations 6) (max-times 300) (verbose-bws nil))
        (multiple-value-bind (in L-size R-size) (read-pair-observations-file (pwd "test/resources/sample_feldman.txt"))
          (loop
@@ -47,23 +64,9 @@
               (format t "~3%### Model with num states: ~d~3%" num-states)
               (let* ((phmm (make-random-phmm num-states L-size R-size))
                      (training-data (subseq (mapcar #'(lambda (o) (cbook-encode phmm o)) in) 0 training-size))
-                     (test-data (mapcar #'(lambda (o) (cbook-encode phmm o)) (read-pair-observations-file (pwd "test/resources/test_feldman.txt"))))
-                     (test-size (length test-data)))
+                     (test-data (mapcar #'(lambda (o) (cbook-encode phmm o)) (read-pair-observations-file (pwd "test/resources/test_feldman.txt")))))
                 (multiple-value-bind (best loglikelihood)
                     (hmm-estimate-bws phmm training-data :threshold 0.05 :verbose-bws verbose-bws :starting-noise 0 :max-times max-times :iterations em-num-iterations :confidence 0)
                   (hmm-save best (format nil "~a/model_~d_~d_~f.lisp" results-folder num-states training-size loglikelihood) :complete)
                   (with-open-file (stream (format nil "~a/wer_~d_~d_~f.txt" results-folder num-states training-size loglikelihood) :direction :output :if-exists :supersede)
-                    (loop for obs in test-data
-                       with wer = 0.0
-                       do
-                         (loop repeat num-translations
-                            with o_wer = 0.0
-                            for x = (first obs)
-                            for y = (second obs)
-                            for y-translation = (hmm-translate best x)
-                            do
-                              (incf o_wer (wer y y-translation))
-                            finally
-                              (incf wer (/ o_wer num-translations)))
-                       finally
-                         (format stream "~f~%" (/ wer test-size)))))))))
+                    (format stream "~f~%" (wer-phmm best test-data num-translations))))))))
