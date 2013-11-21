@@ -521,3 +521,17 @@
                                                             Y ;epsilon on Y
                                                             (cons Yr Y))))))))))
         (rec 0 init_state nil)))))
+
+(defmethod hmm-left ((phmm phmm))
+  (phmm-slots (N S L L-size R-size name PE A B) phmm
+    (let ((states (loop for i below N collect (list (state-name (aref S i)) (state-label (aref S i)))))
+          (newB (make-typed-array (list N L-size) 'prob-float +0-prob+)))
+      (loop for i below N do
+           (loop for l from 1 to L-size do
+                (setf (aref newB i (1- l)) (loop for r from 0 to R-size sum (aref B i l r)))))
+      (make-hmm-simple N L-size (array->list L)
+                       `(,states
+                         ,(array->list PE)
+                         ,(array->list A)
+                         ,(array->list newB))
+                       :name name :model-spec :complete))))
