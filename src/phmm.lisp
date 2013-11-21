@@ -293,23 +293,21 @@
 
 (defmethod cbook-decode-left ((hmm phmm) x)
   "cbook-decode left string"
-  (declare (optimize (speed 3) (safety 0))
-           (cbook-alphabet x))
+  (declare (optimize (speed 3) (safety 3)) (simple-vector x))
   (let* ((size_x (length x)))
     (phmm-slots (L) hmm
       (let ((out_x (make-array size_x :element-type (array-element-type L) :fill-pointer nil)))
          (dotimes (i size_x out_x)
-           (setf (aref out_x i) (aref L (1- (aref x i))))))))) ;-1 since in L&R epsilon is not accounted for
+           (setf (aref out_x i) (aref L (1- (svref x i))))))))) ;-1 since in L&R epsilon is not accounted for
 
 (defmethod cbook-decode-right ((hmm phmm) y)
   "cbook-decode right string"
-  (declare (optimize (speed 3) (safety 0))
-           (cbook-alphabet y))
+  (declare (optimize (speed 3) (safety 3)) (simple-vector y))
   (let* ((size_y (length y)))
     (phmm-slots (R) hmm
       (let ((out_y (make-array size_y :element-type (array-element-type R) :fill-pointer nil)))
          (dotimes (i size_y out_y)
-           (setf (aref out_y i) (aref R (1- (aref y i))))))))) ;-1 since in L&R epsilon is not accounted for
+           (setf (aref out_y i) (aref R (1- (svref y i))))))))) ;-1 since in L&R epsilon is not accounted for
 
 (defmethod cbook-decode ((hmm phmm) observation)
   "cbook-decode pair observation"
@@ -375,7 +373,7 @@
 @return (1) probability of observation pair given hmm model
 @return (2) generated alpha 3d matrix
 "
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 3)))
   (phmm-slots (N PE A B iA-to) hmm
     (let* ((x (first obs-c))
            (y (second obs-c))
