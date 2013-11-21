@@ -123,4 +123,9 @@ stopped."
          (loop for r in y do
               (setf (gethash r right-alphabet) nil))
        collecting (list (make-array (length x) :initial-contents x) (make-array (length y) :initial-contents y)) into observations
-       finally (return (values observations (hash-table-count left-alphabet) (hash-table-count right-alphabet))))))
+       finally
+         (return (values
+                  observations
+                  (sort (loop for key being the hash-keys of left-alphabet collect key) #'<)
+                  (sort (loop for key being the hash-keys of right-alphabet collect key) #'<)
+                  (hash-table-count right-alphabet))))))

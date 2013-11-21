@@ -49,19 +49,20 @@
           for y = (second obs)
           for y-translation = (hmm-translate phmm x)
           do
+            ;;(format t "i: ~a~%o: ~a~%t: ~a~%p: ~a~%" x y y-translation (list (cbook-decode-right phmm y) (cbook-decode-right phmm y-translation)))
             (incf o_wer (wer y y-translation))
           finally
             (incf wer (/ o_wer num-translations)))
      finally (return  (/ wer test-size))))
 
 (defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (states-power 5) (em-num-iterations 6) (max-times 300) (verbose-bws nil))
-       (multiple-value-bind (in L-size R-size) (read-pair-observations-file (pwd "test/resources/sample_feldman.txt"))
+       (multiple-value-bind (in L R) (read-pair-observations-file (pwd "test/resources/sample_feldman.txt"))
          (loop
             for power from 0 to states-power
             for num-states = (expt 2 power)
             do
               (format t "~3%### Model with num states: ~d~3%" num-states)
-              (let* ((phmm (make-random-phmm num-states L-size R-size))
+              (let* ((phmm (make-random-phmm num-states (length L) (length R) :L-list L :R-list R))
                      (training-data (subseq (mapcar #'(lambda (o) (cbook-encode phmm o)) in) 0 training-size))
                      (test-data (mapcar #'(lambda (o) (cbook-encode phmm o)) (read-pair-observations-file (pwd "test/resources/test_feldman.txt")))))
                 (multiple-value-bind (best loglikelihood)
