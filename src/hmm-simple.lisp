@@ -448,6 +448,8 @@
   model form 2: (model-spec = :relevant)
   every list represent the information of an individual state, format: state-name state-label init trans emis
     example: ((:fair 0) #\F 0.95 (:fair .95 :biased .05) (1/6 1/6 1/6 1/6 1/6 1/6))"
+  (declare (optimize (safety 3) (debug 3)))
+
   (let* ((N no-states)
          (M no-emissions)
          (states)
