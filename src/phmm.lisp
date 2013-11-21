@@ -513,7 +513,7 @@
                      (if (zerop-emission-prob state (svref X l))
                          (progn (warn "dead end") (rec size_x -1 Y))
                          (let ((next_state (select-random accumA :indices-1 (list state)))
-                               (Yr (select-random accumB :indices-1 (list state 0) :fixed-max +1-prob+)))
+                               (Yr (select-random accumB :indices-1 (list state +epsilon-cbook-index+) :fixed-max +1-prob+)))
                            (if Yr
                                (rec l next_state (cons Yr Y)) ;epsilon on X
                                (let ((Yr (select-random accumB :indices-1 (list state (svref X l)))))
