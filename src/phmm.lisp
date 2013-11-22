@@ -367,12 +367,14 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro semiring (space &body body)
-  ;;We're essentially defining a semiring
   `(let ((ZERO    (if (eq ,space :log) +LOGZERO+      +0-prob+))
          (SUM     (if (eq ,space :log) 'log+          '+))
          ;;TODO log* could be replaced perhaps for simple + and just check underflow-sensitive places
          (MUL     (if (eq ,space :log) 'log*          '*))
-         (ONE     (if (eq ,space :log) +0-prob+       +1-prob+)))
+         (ONE     (if (eq ,space :log) +0-prob+       +1-prob+))
+         ;;TODO this is more than a semiring, change the name
+         (DIV     (if (eq ,space :log) '-             '/)))
+     `(when ,ONE (,DIV ,ONE ,ONE)) ;ignore unused
      ,@body))
 
 (defmacro alpha[] (space dim1 dim2 dim3)
@@ -389,7 +391,7 @@
        (svref ,seq (1- ,i))))
 
 (defmacro define-forward (space)
-  (semiring space (when ONE) ;ignore unused
+  (semiring space
     `(defmethod ,(if (eq space :log) 'forward-log 'forward) ((hmm phmm) obs-c)
        ,(format nil "
 Forward algorithm in ~a space.
