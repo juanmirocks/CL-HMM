@@ -385,67 +385,6 @@
        +LOGZERO+
        (aref ,matrix ,dim1 ,dim2 ,dim3)))
 
-(defmethod forward ((hmm phmm) obs-c)
-  "
-@param hmm: pair hidden markov model
-@param obs-c: cbook-encoded pair observation, list of 2 elements
-
-@return (1) probability of observation pair given hmm model
-@return (2) generated alpha 3d matrix
-"
-  (declare (optimize (speed 3) (safety 0)))
-  (phmm-slots (N PE A B iA-to) hmm
-    (let* ((x (first obs-c))
-           (y (second obs-c))
-           (size_x (length x))
-           (size_y (length y))
-           (alpha (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float +0-prob+)))
-      (declare (fixnum size_x size_y)
-               (simple-vector x y))
-
-      ;; Initialization
-      ;; -------------------------------------------------------------------------
-      (loop for j below N do
-           (when (> size_x 0) (setf (aref alpha j 1 0) (* (aref PE j) (aref B j (cbref1 x 1) +epsilon-cbook-index+))))
-           (when (> size_y 0) (setf (aref alpha j 0 1) (* (aref PE j) (aref B j +epsilon-cbook-index+ (cbref1 y 1)))))
-           (when (and (> size_x 0) (> size_y 0))
-             (setf (aref alpha j 1 1)
-                   (+
-                    (* (aref PE j) (aref B j (aref x 0) (aref y 0)))
-                    (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 0 1))) (aref B j (cbref1 x 1) +epsilon-cbook-index+))
-                    (* (loop for i in (aref iA-to j) sum (* (aref A i j) (aref alpha i 1 0))) (aref B j +epsilon-cbook-index+ (cbref1 y 1)))))))
-
-
-      ;; Induction
-      ;; -------------------------------------------------------------------------
-      (loop for l from 0 to size_x do
-           (loop for r from 0 to size_y do
-                (when (<= 2 (max l r))
-                  (loop for j below N do
-                       ;in contrast with the semicode, traverse iA-to at the upper level and only once since this operation is costly
-                       (loop for i in (aref iA-to j)
-                          with diag = +0-prob+
-                          with l-1  = +0-prob+
-                          with r-1  = +0-prob+
-                          do
-                            (incf diag (* (aref A i j) (arefalpha alpha i (1- l) (1- r))))
-                            (incf l-1  (* (aref A i j) (arefalpha alpha i (1- l) r    )))
-                            (incf r-1  (* (aref A i j) (arefalpha alpha i l      (1- r))))
-
-                          finally
-                            (setf (aref alpha j l r)
-                                  (+
-                                   (* diag (aref B j (cbref1 x l)          (cbref1 y r)))
-                                   (* l-1  (aref B j (cbref1 x l)          +epsilon-cbook-index+))
-                                   (* r-1  (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
-
-
-      ;; Termination
-      ;; -------------------------------------------------------------------------
-      (values
-       (the prob-float (loop for j below N sum (aref alpha j size_x size_y)))
-       (the (prob-array (* * *)) alpha)))))
-
 (defmacro define-forward (v) ;v == version
   ;;We're essentially defining a semiring
   (let ((ZERO    (if (eq v :log) +LOGZERO+ +0-prob+))
@@ -453,8 +392,8 @@
         (MUL     (if (eq v :log) '+        '*))
         (alpha[] (if (eq v :log) 'arefalpha-log 'arefalpha)))
 
-    `(defmethod ,(if (eq v :log) 'forward-log 'forward-orig) ((hmm phmm) obs-c)
-       "
+    `(defmethod ,(if (eq v :log) 'forward-log 'forward) ((hmm phmm) obs-c)
+,(format nil "
 @param hmm: pair hidden markov model
 @param obs-c: cbook-encoded pair observation, list of 2 elements
 
