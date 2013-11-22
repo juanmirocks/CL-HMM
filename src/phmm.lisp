@@ -490,7 +490,7 @@
                                    (log+
                                     (+ diag (aref B j (cbref1 x l)          (cbref1 y r)))
                                     (+ l-1  (aref B j (cbref1 x l)          +epsilon-cbook-index+)))
-                                   (+ r-1  (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
+                                   (+  r-1  (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
 
 
       ;; Termination
