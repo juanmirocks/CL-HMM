@@ -480,7 +480,7 @@
                           with l-1  = +LOGZERO+
                           with r-1  = +LOGZERO+
                           do
-                            (setf diag (log+ diag
+                            (setf diag (log+ diag (+ (aref A i j) (arefalpha-log alpha i (1- l) (1- r)))))
                             (setf l-1  (log+ l-1  (+ (aref A i j) (arefalpha-log alpha i (1- l) r    ))))
                             (setf r-1  (log+ r-1  (+ (aref A i j) (arefalpha-log alpha i l      (1- r)))))
 
