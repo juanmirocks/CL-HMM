@@ -462,10 +462,10 @@
 @return (2) generated alpha 3d matrix
 "
        (declare (optimize (speed 3) (safety 0)))
-       (phmm-slots (N iA-to PE A B) hmm
-         (let* (;; (PE (the PE-vec           (slot-value hmm ,(if (eq v :log) ''logPE ''PE))))
-                ;; (A  (the A-array          (slot-value hmm ,(if (eq v :log) ''logA  ''A))))
-                ;; (B  (the B-2streams-array (slot-value hmm ,(if (eq v :log) ''logB  ''B))))
+       (phmm-slots (N iA-to) hmm
+         (let* ((PE (the PE-vec           (slot-value hmm ,(if (eq v :log) ''logPE ''PE))))
+                (A  (the A-array          (slot-value hmm ,(if (eq v :log) ''logA  ''A))))
+                (B  (the B-2streams-array (slot-value hmm ,(if (eq v :log) ''logB  ''B))))
                 (x (first obs-c))
                 (y (second obs-c))
                 (size_x (length x))
