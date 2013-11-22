@@ -446,7 +446,7 @@
        (the prob-float (loop for j below N sum (aref alpha j size_x size_y)))
        (the (prob-array (* * *)) alpha)))))
 
-(defmethod forward-log ((hmm phmm) obs-c PE A B)
+(defmethod forward-log ((hmm phmm) obs-c)
   "
 @param hmm: pair hidden markov model
 @param obs-c: cbook-encoded pair observation, list of 2 elements
@@ -454,15 +454,17 @@
 @return (1) probability of observation pair given hmm model
 @return (2) generated alpha 3d matrix
 "
-  (declare (optimize (speed 3) (safety 0)) ((prob-array (*)) PE) ((prob-array (* *)) A) ((prob-array (* * *)) B))
+  (declare (optimize (speed 3) (safety 0)))
   (phmm-slots (N iA-to) hmm
-    (let* ((x (first obs-c))
+    (let* ((PE (slot-value hmm 'logPE))
+           (A  (slot-value hmm 'logA))
+           (B  (slot-value hmm 'logB))
+           (x (first obs-c))
            (y (second obs-c))
            (size_x (length x))
            (size_y (length y))
            (alpha (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float +LOGZERO+)))
-      (declare (fixnum size_x size_y)
-               (simple-vector x y))
+      (declare (fixnum size_x size_y) (simple-vector x y))
 
       ;; Initialization
       ;; -------------------------------------------------------------------------
