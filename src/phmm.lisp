@@ -462,7 +462,7 @@
           ;; Termination
           ;; -------------------------------------------------------------------------
           (values
-           (the prob-float (loop for j below N with ret :of-type prob-float = ,ZERO do (setf ret (,SUM ret (aref alpha j size_x size_y))) finally (return ret)))
+           (loop for j below N with ret :of-type prob-float = ,ZERO do (setf ret (,SUM ret (aref alpha j size_x size_y))) finally (return ret))
            (the (prob-array (* * *)) alpha)))))))
 
 (define-forward :log)
