@@ -5,7 +5,7 @@
 
 ;;(declaim (optimize (speed 0) (safety 3) (compilation-speed 0) (debug 3)))
 (declaim (optimize (speed 3) (safety 0)))
-#+sbcl (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+;;#+sbcl (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -49,19 +49,28 @@
   (defconstant +MINUS-LOGTOLERANCE+ -30d0)
   (defconstant +LOGZERO+ +most-negative-prob-float+)
 
-  (defun log+ (logx logy)
-    (declare (optimize (speed 3) (safety 0) (debug 0)) (prob-float logx logy) (inline log+2))
-    (when (> logy logx)
-      (let ((temp logx))
-        (setq logx logy
-              logy temp)))
-    (let ((negDiff (the prob-float (- logy logx))))
-      (if (< negDiff +MINUS-LOGTOLERANCE+)
-          logx
-          (the prob-float (+ logx (log (+ 1d0 (exp negDiff))))))))
+  (defmacro log+ (logx logy)
+    (declare (optimize (speed 3) (safety 0) (debug 0)));; (prob-float logx logy));; (inline log+))
+    (let ((glogx (gensym))
+          (glogy (gensym))
+          (gnegDiff (gensym))
+          (gtemp (gensym)))
+      `(let ((,glogx ,logx)
+             (,glogy ,logy)
+             (,gnegDiff +0-prob+))
+            (declare (prob-float ,glogx ,glogy ,gnegDiff))
+            (when (> ,glogy ,glogx)
+              (let ((,gtemp ,glogx))
+                (declare (prob-float ,gtemp))
+                (setf ,glogx ,glogy
+                      ,glogy ,gtemp)))
+            (setf ,gnegDiff (- ,glogy ,glogx))
+            (if (< ,gnegDiff +MINUS-LOGTOLERANCE+)
+                ,glogx
+                (the prob-float (+ ,glogx (log (+ 1d0 (exp ,gnegDiff)))))))))
 
   ;;; Empty emission epsilon symbol, ε
-  (defconstant +epsilon-cbook-index+ 0)
+  (defconstant +epsilon-cbook-index+ (the fixnum 0))
 
   ;;other
   (defconstant +buffer-stream-size+ 1024) ;buffer size for output random generated seqs. see hmm-run
