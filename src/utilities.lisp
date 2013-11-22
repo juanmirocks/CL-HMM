@@ -19,8 +19,8 @@
              (max (if fixed-max fixed-max (row-major-aref accum-array (1- end))))
              (pick (if (zerop max) (return-from select-random nil) (if fixed-pick fixed-pick (random max))))
              (found-total-index (array-search pick accum-array start end))
-             (relative-index (if found-total-index (- found-total-index start) nil)))
-        relative-index))))
+             (relative-index (if found-total-index (- found-total-index start) -1)))
+        (the fixnum relative-index)))))
 
 (defun array-map (array f)
   (declare (optimize (speed 3) (safety 0)) (inline array-map))

@@ -1,11 +1,7 @@
 ;; Author: Juan Miguel Cejuela
 ;; Created: Wed Jul  9 19:07:47 2008 (CEST)
-;; Last-Updated: 2011-08-11
-;;           By: Juan Miguel Cejuela
-;;     Update #: 29
 
 (in-package :net.ashrentum.cl-hmm)
-(declaim (optimize (speed 3) (safety 0)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -111,5 +107,3 @@
 
 (def-hmm-simple-viterbi-log nil) ;original version
 (def-hmm-simple-viterbi-log t) ;log version
-
-

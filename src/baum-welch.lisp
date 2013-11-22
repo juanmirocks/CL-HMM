@@ -364,7 +364,7 @@
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
          for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
 
-         ;; These must be reset to 0 for every observation pair. Written here to avoid creating matrices
+         ;; These must be reset to 0 for every observation pair. Written here to avoid re-creating matrices
          ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
          ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
          with tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
@@ -399,11 +399,11 @@
                                             ;; xi
                                             (let ((xi_i_j_l_r
                                                    (let* ((base (the prob-float (* (aref A i j) (aref beta j l r))))
-                                                          (diag (the prob-float (/ (* base (arefalpha alpha i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
+                                                          (diag (the prob-float (/ (* base (alpha[] :orig i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
                                                                    o_likelihood)))
-                                                          (l-1  (the prob-float (/ (* base (arefalpha alpha i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
+                                                          (l-1  (the prob-float (/ (* base (alpha[] :orig i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
                                                                    o_likelihood)))
-                                                          (r-1  (the prob-float (/ (* base (arefalpha alpha i l      (1- r)) (aref B j 0            (cbref1 y r)))
+                                                          (r-1  (the prob-float (/ (* base (alpha[] :orig i l      (1- r)) (aref B j 0            (cbref1 y r)))
                                                                    o_likelihood))))
 
                                                      (incf (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
@@ -456,6 +456,7 @@
            (array-set B newB)
          ;; & noisify
            (!hmm-noisify hmm noise)
+           (reset-instance hmm)
 
            (when verbose
              (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start)))
