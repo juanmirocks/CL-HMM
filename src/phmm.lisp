@@ -366,19 +366,6 @@
 ;; Forward & Backward
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun cbref1 (seq i)
-  "1-indexed cbook-encoded input sequence. If 0, return epsilon's index"
-  (declare (optimize (speed 3) (safety 0)) (inline cbref1) (simple-vector seq) (fixnum i))
-  (if (zerop i)
-      +epsilon-cbook-index+
-      (svref seq (1- i))))
-
-(defmacro alpha[] (space dim1 dim2 dim3)
-  "Alpha matrix accessor. The matrix is assumed to be called exactly 'alpha'"
-  `(if (or (< ,dim2 0) (< ,dim3 0))
-       ,(if (eq space :log) +LOGZERO+ +0-prob+)
-       (aref alpha ,dim1 ,dim2 ,dim3)))
-
 (defmacro semiring (space &body body)
   ;;We're essentially defining a semiring
   `(let ((ZERO    (if (eq ,space :log) +LOGZERO+      +0-prob+))
@@ -386,6 +373,19 @@
          (MUL     (if (eq ,space :log) '+             '*))
          (ONE     (if (eq ,space :log) +0-prob+       +1-prob+)))
      ,@body))
+
+(defmacro alpha[] (space dim1 dim2 dim3)
+  "Alpha matrix accessor. The matrix is assumed to be called exactly 'alpha'"
+  `(if (or (< ,dim2 0) (< ,dim3 0))
+       ,(if (eq space :log) +LOGZERO+ +0-prob+)
+       (aref alpha ,dim1 ,dim2 ,dim3)))
+
+(defmacro cbref1 (seq i)
+  "1-indexed cbook-encoded input sequence. If 0, return epsilon's index"
+  (declare (optimize (speed 3) (safety 0)) (simple-vector seq) (fixnum i))
+  `(if (zerop ,i)
+       +epsilon-cbook-index+
+       (svref ,seq (1- ,i))))
 
 (defmacro define-forward (space)
   (semiring space (when ONE) ;ignore unused
@@ -464,6 +464,18 @@ Forward algorithm in ~a space.
 (define-forward :log)
 (define-forward :probability)
 
+(defmacro beta[] (space dim1 dim2 dim3)
+  "Beta matrix accessor. The matrix is assumed to be called exactly 'beta'"
+  `(if (or (> ,dim2 size_x) (> ,dim3 size_y))
+       ,(if (eq space :log) +LOGZERO+ +0-prob+)
+       (aref beta ,dim1 ,dim2 ,dim3)))
+
+(defmacro cbref1-beta (seq i)
+  "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
+   Note: we don't index by (1-) since the function is already called (in backward) with the index - 1 (for efficiency)"
+  `(if (= ,i (length ,seq))
+       +epsilon-cbook-index+
+       (svref ,seq ,i)))
 
 (defmacro define-backward (space)
   (semiring space
@@ -488,43 +500,31 @@ Backward algorithm in ~a space.
                 (beta (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float ,ZERO)))
            (declare (simple-vector x y) (fixnum size_x size_y))
 
-           (macrolet ((beta[] (dim1 dim2 dim3)
-                        "Beta matrix accessor. The matrix is assumed to be called exactly 'beta'"
-                        `(if (or (> ,dim2 size_x) (> ,dim3 size_y))
-                             ,,ZERO
-                             (aref beta ,dim1 ,dim2 ,dim3)))
-                      ([]1 (seq i)
-                        "1-indexed cbook-encoded input sequence. if i >= length(seq), return epsilon's index.
-                  Note: we don't index by (1-) since the function is already called here with the index - 1 (for efficiency)"
-                        `(if (= ,i (length ,seq))
-                             +epsilon-cbook-index+
-                             (svref ,seq ,i))))
+           ;;Initialization
+           ;; -------------------------------------------------------------------------
+           (loop for i below N do
+                (setf (aref beta i size_x size_y) ,ONE))
 
-             ;;Initialization
-             ;; -------------------------------------------------------------------------
-             (loop for i below N do
-                  (setf (aref beta i size_x size_y) ,ONE))
+           ;;Induction
+           ;; -------------------------------------------------------------------------
+           (loop for l from size_x downto 0 do
+                (loop for r from size_y downto 0 do
+                     (when (and (<= 1 (max l r)) (not (and (= l size_x) (= r size_y))))
+                       (loop for i below N do
+                            (setf (aref beta i l r)
+                                  (loop for j in (aref iA-from i)
+                                     with accum :of-type prob-float = ,ZERO
+                                     do
+                                       (setf accum
+                                             (,SUM accum
+                                                   (,MUL (aref A i j)
+                                                         (,SUM (,SUM
+                                                                (,MUL (beta[] ,space j (1+ l) (1+ r)) (aref B j (cbref1-beta x l)     (cbref1-beta y r)))
+                                                                (,MUL (beta[] ,space j (1+ l) r     ) (aref B j (cbref1-beta x l)     +epsilon-cbook-index+)))
+                                                               ( ,MUL (beta[] ,space j l      (1+ r)) (aref B j +epsilon-cbook-index+ (cbref1-beta y r)))))))
+                                     finally (return accum)))))))
 
-             ;;Induction
-             ;; -------------------------------------------------------------------------
-             (loop for l from size_x downto 0 do
-                  (loop for r from size_y downto 0 do
-                       (when (and (<= 1 (max l r)) (not (and (= l size_x) (= r size_y))))
-                         (loop for i below N do
-                              (setf (aref beta i l r)
-                                    (loop for j in (aref iA-from i)
-                                       with accum :of-type prob-float = ,ZERO
-                                       do
-                                         (setf accum
-                                               (,SUM accum
-                                                     (,MUL (aref A i j)
-                                                           (,SUM (,SUM
-                                                                  (,MUL (beta[] j (1+ l) (1+ r)) (aref B j ([]1 x l)             ([]1 y r)))
-                                                                  (,MUL (beta[] j (1+ l) r     ) (aref B j ([]1 x l)             +epsilon-cbook-index+)))
-                                                                 ( ,MUL (beta[] j l      (1+ r)) (aref B j +epsilon-cbook-index+ ([]1 y r)))))))
-                                       finally (return accum)))))))
-
-           (the (prob-array (* * *)) beta)))))))
+           (the (prob-array (* * *)) beta))))))
 
 (define-backward :log)
 (define-backward :probability)
