@@ -50,7 +50,7 @@
   (defconstant +LOGZERO+ +most-negative-prob-float+)
 
   (defmacro log+ (logx logy)
-    (declare (optimize (speed 3) (safety 0) (debug 0)));; (prob-float logx logy));; (inline log+))
+    ;;(declare (optimize (speed 3) (safety 0) (debug 0)));; (prob-float logx logy));; (inline log+))
     (let ((glogx (gensym))
           (glogy (gensym))
           (gnegDiff (gensym))
