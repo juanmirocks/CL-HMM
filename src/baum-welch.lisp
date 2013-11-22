@@ -342,7 +342,7 @@
        (rb (default-pseudocounts (array-dimensions (hmm-emis hmm))))
        (verbose nil))
 
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 0)) (fixnum max-times))
   ;;(declare (optimize (safety 3) (debug 3)))
   (when (and verbose obss-l) (warn "obss-l is NOT used"))
   (when rb
@@ -355,10 +355,10 @@
           (newA (make-typed-array (array-dimensions A) 'prob-float +0-prob+))
           (newB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
 
-      (loop for iteration from 1
+      (loop for iteration :of-type fixnum from 1
          for itr-time-start = (get-internal-real-time)
-         for last-loglikelihood = +most-negative-prob-float+ then cur-loglikelihood
-         for cur-loglikelihood = +0-prob+
+         for last-loglikelihood :of-type prob-float = +most-negative-prob-float+ then cur-loglikelihood
+         for cur-loglikelihood :of-type prob-float = +0-prob+
          with best-model = hmm
          with best-loglikehood = +very-negative-prob-float+
          for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
@@ -379,7 +379,7 @@
            (if rb (array-set newB rb) (array-reset newB +0-prob+))
 
            (loop for o in obss-c
-              for k = 0 then (1+ k)
+              for k fixnum = 0 then (1+ k)
               for x simple-vector = (first o)
               for y simple-vector = (second o)
               for size_x fixnum = (length x)
@@ -390,7 +390,7 @@
                 (if (zerop o_likelihood)
                     (warn "0 probability for input pair: ~d" k)
                     (progn
-                      (incf cur-loglikelihood (log o_likelihood))
+                      (incf cur-loglikelihood (the prob-float (log o_likelihood)))
                       (loop for i below N do
                            (loop for j below N do
                                 (loop for l to size_x do
