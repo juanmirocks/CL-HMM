@@ -36,8 +36,8 @@
        (dotimes (i (array-total-size array) out)
          (setf (row-major-aref out i) (funcall ,f (row-major-aref array i)))))))
 
-(array-typed-map-create log-array (simple-array prob-float) #'(lambda (x) (if (zerop x) +very-negative-prob-float+ (log x))))
-(array-typed-map-create log-vector (simple-array prob-float (*)) #'(lambda (x) (if (zerop x) +very-negative-prob-float+ (log x))))
+(array-typed-map-create log-array (simple-array prob-float) #'(lambda (x) (if (zerop x) +LOGZERO+ (log x))))
+(array-typed-map-create log-vector (simple-array prob-float (*)) #'(lambda (x) (if (zerop x) +LOGZERO+ (log x))))
 (array-typed-map-create exp-array (simple-array prob-float) #'(lambda (x) (exp x)))
 
 ;;Kept for historical reasons and because it's still faster
