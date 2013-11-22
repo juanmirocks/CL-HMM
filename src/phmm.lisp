@@ -53,14 +53,20 @@
     :type cbook-states :accessor hmm-state-groups)
    (PE ;initial state distribution, called PI in Rabiner //PE is PI in Phoenician
     :initarg :PE :type PE-vec :initform (error "Must set the initial probabilities") :accessor hmm-init)
+   (logPE ;PE in log space
+     :type PE-vec :accessor hmm-init-log)
    (A ;state transition probability distribution
     :initarg :A :type A-array :initform (error "Must set the transition probabilities") :accessor hmm-trans)
+   (logA ;A in log space
+     :type A-array :accessor hmm-trans-log)
    (iA-from ;list, transitions from states to states
     :type itrans :accessor hmm-itrans-from)
    (iA-to ;list, transitions to states from states
     :type itrans :accessor hmm-itrans-to)
    (B ;left&right pair observation probability distribution
-    :initarg :B :type B-2streams-array :initform (error "Must set the pair emission probabilities") :accessor hmm-emis)))
+    :initarg :B :type B-2streams-array :initform (error "Must set the pair emission probabilities") :accessor hmm-emis)
+   (logB ;B in log space
+     :type B-2streams-array :accessor hmm-emis-log)))
 
 (defmethod print-object ((object phmm) stream)
   (declare (stream stream))
@@ -94,7 +100,7 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmethod initialize-instance :after ((hmm phmm) &key)
-  (phmm-slots (S S-hash N L L-hash L-size R R-hash R-size A) hmm
+  (phmm-slots (S S-hash N L L-hash L-size R R-hash R-size) hmm
 
     ;;states hash, TODO define this in common place
     (do* ((i 0 i+1)
@@ -119,10 +125,18 @@
                          (setf (hmm-groups hmm) groups)
                          (setf (hmm-state-groups hmm) state-groups))
 
-    (setf (hmm-itrans-from hmm) (trans-array->itrans A))
-    (setf (hmm-itrans-to hmm) (trans-array->itrans A t))
+    (reset-instance hmm)
     ;;(hmm-state-properties-set hmm) TODO
     ))
+
+(defmethod reset-instance ((hmm phmm))
+  "Use when training, to reconfigure the parameters"
+  (phmm-slots (PE A B) hmm
+    (setf (hmm-init-log hmm) (log-array PE))
+    (setf (hmm-trans-log hmm) (log-array A))
+    (setf (hmm-emis-log hmm) (log-array B))
+    (setf (hmm-itrans-from hmm) (trans-array->itrans A))
+    (setf (hmm-itrans-to hmm) (trans-array->itrans A t))))
 
 (defun make-phmm (N L-list R-list model &key name (L-alphabet-type T) (R-alphabet-type T) (model-spec :complete))
   "Make a phmm. Two ways to specify the model parameters as follows:
