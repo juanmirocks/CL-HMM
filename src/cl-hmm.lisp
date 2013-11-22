@@ -46,6 +46,20 @@
   (defconstant +least-negative-prob-float+ (symbol-value (intern (format nil "LEAST-NEGATIVE-~a" *prob-float*))))
   (defconstant +least-positive-prob-float+ (symbol-value (intern (format nil "LEAST-POSITIVE-~a" *prob-float*))))
 
+  (defconstant +MINUS-LOGTOLERANCE+ -30d0)
+  (defconstant +LOGZERO+ +most-negative-prob-float+)
+
+  (defun log+ (logx logy)
+    (declare (optimize (speed 3) (safety 0) (debug 0)) (prob-float logx logy) (inline log+2))
+    (when (> logy logx)
+      (let ((temp logx))
+        (setq logx logy
+              logy temp)))
+    (let ((negDiff (the prob-float (- logy logx))))
+      (if (< negDiff +MINUS-LOGTOLERANCE+)
+          logx
+          (the prob-float (+ logx (log (+ 1d0 (exp negDiff))))))))
+
   ;;; Empty emission epsilon symbol, ε
   (defconstant +epsilon-cbook-index+ 0)
 
