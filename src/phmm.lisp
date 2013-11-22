@@ -456,17 +456,19 @@
            (when (> size_x 0) (setf (aref alpha j 1 0) (+ (aref PE j) (aref B j (svref x 0) +epsilon-cbook-index+))))
            (when (> size_y 0) (setf (aref alpha j 0 1) (+ (aref PE j) (aref B j +epsilon-cbook-index+ (svref y 0)))))
            (when (and (> size_x 0) (> size_y 0))
-             (setf (aref alpha j 1 1)
-                   (log+
-                    (log+
-                     (+ (aref PE j) (aref B j (svref x 0) (svref y 0)))
-                     (+ (loop for i in (aref iA-to j) with l-1 = +LOGZERO+ do (setf l-1 (log+ l-1 (+ (aref A i j) (aref alpha i 0 1))))
-                           finally (return l-1))
-                        (aref B j (svref x 0) +epsilon-cbook-index+)))
-                    (+ (loop for i in (aref iA-to j) with r-1 = +LOGZERO+ do (setf r-1 (log+ r-1 (+ (aref A i j) (aref alpha i 1 0))))
-                            finally (return r-1))
-                       (aref B j +epsilon-cbook-index+ (svref y 0)))))))
-
+             (loop for i in (aref iA-to j)
+                with diag = (aref PE j)
+                with l-1  = +LOGZERO+
+                with r-1  = +LOGZERO+
+                do
+                  (setf l-1 (log+ l-1 (+ (aref A i j) (aref alpha i 0 1))))
+                  (setf r-1 (log+ r-1 (+ (aref A i j) (aref alpha i 1 0))))
+                finally
+                  (setf (aref alpha j 1 1)
+                        (log+ (log+
+                               (+ diag (aref B j (svref x 0) (svref y 0)))
+                               (+ l-1  (aref B j (svref x 0) +epsilon-cbook-index+)))
+                              (+  r-1  (aref B j +epsilon-cbook-index+ (svref y 0))))))))
 
       ;; Induction
       ;; -------------------------------------------------------------------------
@@ -496,7 +498,7 @@
       ;; Termination
       ;; -------------------------------------------------------------------------
       (values
-       (the prob-float (loop for j below N for ret = (aref alpha 0 size_x size_y) then (log+ ret (aref alpha j size_x size_y)) finally (return ret)))
+       (the prob-float (loop for j below N with ret = +LOGZERO+ do (setf ret (log+ ret (aref alpha j size_x size_y))) finally (return ret)))
        (the (prob-array (* * *)) alpha)))))
 
 
