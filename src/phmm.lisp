@@ -480,9 +480,9 @@
                 (when (> size_y 0) (setf (aref alpha j 0 1) (,MUL (aref PE j) (aref B j +epsilon-cbook-index+ (svref y 0)))))
                 (when (and (> size_x 0) (> size_y 0))
                   (loop for i in (aref iA-to j)
-                     with diag = (aref PE j)
-                     with l-1  = ,ZERO
-                     with r-1  = ,ZERO
+                     with diag :of-type prob-float = (aref PE j)
+                     with l-1  :of-type prob-float = ,ZERO
+                     with r-1  :of-type prob-float = ,ZERO
                      do
                        (setf l-1 (,SUM l-1 (,MUL (aref A i j) (aref alpha i 0 1))))
                        (setf r-1 (,SUM r-1 (,MUL (aref A i j) (aref alpha i 1 0))))
