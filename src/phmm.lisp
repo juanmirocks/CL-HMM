@@ -499,11 +499,11 @@
                 (loop for r from 0 to size_y do
                      (when (<= 2 (max l r))
                        (loop for j below N do
-                                        ;in contrast with the semicode, traverse iA-to at the upper level and only once since this operation is costly
+                          ;;in contrast with the semicode, traverse iA-to at the upper level and only once since this operation is costly
                             (loop for i in (aref iA-to j)
-                               with diag = ,ZERO
-                               with l-1  = ,ZERO
-                               with r-1  = ,ZERO
+                               with diag :of-type prob-float = ,ZERO
+                               with l-1  :of-type prob-float = ,ZERO
+                               with r-1  :of-type prob-float = ,ZERO
                                do
                                  (setf diag (,SUM diag (,MUL (aref A i j) (,alpha[] alpha i (1- l) (1- r)))))
                                  (setf l-1  (,SUM l-1  (,MUL (aref A i j) (,alpha[] alpha i (1- l) r    ))))
@@ -519,9 +519,11 @@
            ;; Termination
            ;; -------------------------------------------------------------------------
            (values
-            (the prob-float (loop for j below N with ret = ,ZERO do (setf ret (,SUM ret (aref alpha j size_x size_y))) finally (return ret)))
+            (the prob-float (loop for j below N with ret :of-type prob-float = ,ZERO do (setf ret (,SUM ret (aref alpha j size_x size_y))) finally (return ret)))
             (the (prob-array (* * *)) alpha)))))))
 
+(define-forward :log)
+(define-forward :orig)
 
 (defmethod backward ((hmm phmm) obs-c)
   "
