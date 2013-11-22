@@ -385,84 +385,88 @@
        +LOGZERO+
        (aref ,matrix ,dim1 ,dim2 ,dim3)))
 
-(defmacro define-forward (v) ;v == version
+(defmacro semiring (space &body body)
   ;;We're essentially defining a semiring
-  (let ((ZERO    (if (eq v :log) +LOGZERO+ +0-prob+))
-        (SUM     (if (eq v :log) 'log+     '+))
-        (MUL     (if (eq v :log) '+        '*))
-        (alpha[] (if (eq v :log) 'arefalpha-log 'arefalpha)))
+  `(let ((ZERO    (if (eq ,space :log) +LOGZERO+      +0-prob+))
+         (SUM     (if (eq ,space :log) 'log+          '+))
+         (MUL     (if (eq ,space :log) '+             '*))
+         (alpha[] (if (eq ,space :log) 'arefalpha-log 'arefalpha)))
+     ,@body))
 
-    `(defmethod ,(if (eq v :log) 'forward-log 'forward) ((hmm phmm) obs-c)
-,(format nil "
+(defmacro define-forward (space)
+  (semiring
+   space
+   `(defmethod ,(if (eq space :log) 'forward-log 'forward) ((hmm phmm) obs-c)
+      ,(format nil "
 @param hmm: pair hidden markov model
 @param obs-c: cbook-encoded pair observation, list of 2 elements
 
 @return (1) ~aprobability of observation pair
 @return (2) alpha 3d matrix
-" (if (eq v :log) "log-" ""))
-       (declare (optimize (speed 3) (safety 0)))
-       (phmm-slots (N iA-to) hmm
-         (let* ((PE (the PE-vec           (slot-value hmm ,(if (eq v :log) ''logPE ''PE))))
-                (A  (the A-array          (slot-value hmm ,(if (eq v :log) ''logA  ''A))))
-                (B  (the B-2streams-array (slot-value hmm ,(if (eq v :log) ''logB  ''B))))
-                (x (first obs-c))
-                (y (second obs-c))
-                (size_x (length x))
-                (size_y (length y))
-                (alpha (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float ,ZERO)))
-           (declare (fixnum size_x size_y) (simple-vector x y))
+" (if (eq space :log) "log-" ""))
+      (declare (optimize (speed 3) (safety 0)))
+      (phmm-slots (N iA-to) hmm
+        (let* ((PE (the PE-vec           (slot-value hmm ,(if (eq space :log) ''logPE ''PE))))
+               (A  (the A-array          (slot-value hmm ,(if (eq space :log) ''logA  ''A))))
+               (B  (the B-2streams-array (slot-value hmm ,(if (eq space :log) ''logB  ''B))))
+               (x (first obs-c))
+               (y (second obs-c))
+               (size_x (length x))
+               (size_y (length y))
+               (alpha (the (prob-array (* * *)) (make-typed-array `(,N ,(1+ size_x) ,(1+ size_y)) 'prob-float ,ZERO))))
+          (declare (fixnum size_x size_y) (simple-vector x y))
 
-           ;; Initialization
-           ;; -------------------------------------------------------------------------
-           (loop for j below N do
-                (when (> size_x 0) (setf (aref alpha j 1 0) (,MUL (aref PE j) (aref B j (svref x 0) +epsilon-cbook-index+))))
-                (when (> size_y 0) (setf (aref alpha j 0 1) (,MUL (aref PE j) (aref B j +epsilon-cbook-index+ (svref y 0)))))
-                (when (and (> size_x 0) (> size_y 0))
-                  (loop for i in (aref iA-to j)
-                     with diag :of-type prob-float = (aref PE j)
-                     with l-1  :of-type prob-float = ,ZERO
-                     with r-1  :of-type prob-float = ,ZERO
-                     do
-                       (setf l-1 (,SUM l-1 (,MUL (aref A i j) (aref alpha i 0 1))))
-                       (setf r-1 (,SUM r-1 (,MUL (aref A i j) (aref alpha i 1 0))))
-                     finally
-                       (setf (aref alpha j 1 1)
-                             (,SUM (,SUM
-                                    (,MUL diag (aref B j (svref x 0) (svref y 0)))
-                                    (,MUL l-1  (aref B j (svref x 0) +epsilon-cbook-index+)))
-                                   (, MUL r-1  (aref B j +epsilon-cbook-index+ (svref y 0))))))))
+          ;; Initialization
+          ;; -------------------------------------------------------------------------
+          (loop for j below N do
+               (when (> size_x 0) (setf (aref alpha j 1 0) (,MUL (aref PE j) (aref B j (svref x 0) +epsilon-cbook-index+))))
+               (when (> size_y 0) (setf (aref alpha j 0 1) (,MUL (aref PE j) (aref B j +epsilon-cbook-index+ (svref y 0)))))
+               (when (and (> size_x 0) (> size_y 0))
+                 (loop for i in (aref iA-to j)
+                    with diag :of-type prob-float = (aref PE j)
+                    with l-1  :of-type prob-float = ,ZERO
+                    with r-1  :of-type prob-float = ,ZERO
+                    do
+                      (setf l-1 (,SUM l-1 (,MUL (aref A i j) (aref alpha i 0 1))))
+                      (setf r-1 (,SUM r-1 (,MUL (aref A i j) (aref alpha i 1 0))))
+                    finally
+                      (setf (aref alpha j 1 1)
+                            (,SUM (,SUM
+                                   (,MUL diag (aref B j (svref x 0) (svref y 0)))
+                                   (,MUL l-1  (aref B j (svref x 0) +epsilon-cbook-index+)))
+                                  (, MUL r-1  (aref B j +epsilon-cbook-index+ (svref y 0))))))))
 
-           ;; Induction
-           ;; -------------------------------------------------------------------------
-           (loop for l from 0 to size_x do
-                (loop for r from 0 to size_y do
-                     (when (<= 2 (max l r))
-                       (loop for j below N do
-                          ;;in contrast with the semicode, traverse iA-to at the upper level and only once since this operation is costly
-                            (loop for i in (aref iA-to j)
-                               with diag :of-type prob-float = ,ZERO
-                               with l-1  :of-type prob-float = ,ZERO
-                               with r-1  :of-type prob-float = ,ZERO
-                               do
-                                 (setf diag (,SUM diag (,MUL (aref A i j) (,alpha[] alpha i (1- l) (1- r)))))
-                                 (setf l-1  (,SUM l-1  (,MUL (aref A i j) (,alpha[] alpha i (1- l) r    ))))
-                                 (setf r-1  (,SUM r-1  (,MUL (aref A i j) (,alpha[] alpha i l      (1- r)))))
+          ;; Induction
+          ;; -------------------------------------------------------------------------
+          (loop for l from 0 to size_x do
+               (loop for r from 0 to size_y do
+                    (when (<= 2 (max l r))
+                      (loop for j below N do
+                         ;;in contrast with the semicode, traverse iA-to at the upper level and only once since this operation is costly
+                           (loop for i in (aref iA-to j)
+                              with diag :of-type prob-float = ,ZERO
+                              with l-1  :of-type prob-float = ,ZERO
+                              with r-1  :of-type prob-float = ,ZERO
+                              do
+                                (setf diag (,SUM diag (,MUL (aref A i j) (,alpha[] alpha i (1- l) (1- r)))))
+                                (setf l-1  (,SUM l-1  (,MUL (aref A i j) (,alpha[] alpha i (1- l) r    ))))
+                                (setf r-1  (,SUM r-1  (,MUL (aref A i j) (,alpha[] alpha i l      (1- r)))))
 
-                               finally
-                                 (setf (aref alpha j l r)
-                                       (,SUM (,SUM
-                                              (,MUL diag (aref B j (cbref1 x l)          (cbref1 y r)))
-                                              (,MUL l-1  (aref B j (cbref1 x l)          +epsilon-cbook-index+)))
-                                             (, MUL  r-1  (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
+                              finally
+                                (setf (aref alpha j l r)
+                                      (,SUM (,SUM
+                                             (,MUL diag (aref B j (cbref1 x l)          (cbref1 y r)))
+                                             (,MUL l-1  (aref B j (cbref1 x l)          +epsilon-cbook-index+)))
+                                            (, MUL  r-1  (aref B j +epsilon-cbook-index+ (cbref1 y r))))))))))
 
-           ;; Termination
-           ;; -------------------------------------------------------------------------
-           (values
-            (the prob-float (loop for j below N with ret :of-type prob-float = ,ZERO do (setf ret (,SUM ret (aref alpha j size_x size_y))) finally (return ret)))
-            (the (prob-array (* * *)) alpha)))))))
+          ;; Termination
+          ;; -------------------------------------------------------------------------
+          (values
+           (the prob-float (loop for j below N with ret :of-type prob-float = ,ZERO do (setf ret (,SUM ret (aref alpha j size_x size_y))) finally (return ret)))
+           (the (prob-array (* * *)) alpha)))))))
 
 (define-forward :log)
-(define-forward :orig)
+(define-forward :probability)
 
 (defmethod backward ((hmm phmm) obs-c)
   "
