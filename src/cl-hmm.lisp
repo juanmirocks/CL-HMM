@@ -69,6 +69,15 @@
                 ,glogx
                 (the prob-float (+ ,glogx (log (+ 1d0 (exp ,gnegDiff)))))))))
 
+  (defmacro log* (logx logy)
+    (let ((glogx (gensym))
+          (glogy (gensym)))
+      `(let ((,glogx ,logx)
+             (,glogy ,logy))
+         (if (or (= +LOGZERO+ ,glogx) (= +LOGZERO+ ,glogy))
+             +LOGZERO+
+             (+ ,glogx ,glogy)))))
+
   ;;; Empty emission epsilon symbol, ε
   (defconstant +epsilon-cbook-index+ (the fixnum 0))
 

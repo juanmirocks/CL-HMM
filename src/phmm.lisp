@@ -370,7 +370,8 @@
   ;;We're essentially defining a semiring
   `(let ((ZERO    (if (eq ,space :log) +LOGZERO+      +0-prob+))
          (SUM     (if (eq ,space :log) 'log+          '+))
-         (MUL     (if (eq ,space :log) '+             '*))
+         ;;TODO log* could be replaced perhaps for simple + and just check underflow-sensitive places
+         (MUL     (if (eq ,space :log) 'log*          '*))
          (ONE     (if (eq ,space :log) +0-prob+       +1-prob+)))
      ,@body))
 
