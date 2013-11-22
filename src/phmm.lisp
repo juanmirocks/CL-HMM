@@ -458,9 +458,9 @@
 @param hmm: pair hidden markov model
 @param obs-c: cbook-encoded pair observation, list of 2 elements
 
-@return (1) probability of observation pair given hmm model
-@return (2) generated alpha 3d matrix
-"
+@return (1) ~aprobability of observation pair
+@return (2) alpha 3d matrix
+" (if (eq v :log) "log-" ""))
        (declare (optimize (speed 3) (safety 0)))
        (phmm-slots (N iA-to) hmm
          (let* ((PE (the PE-vec           (slot-value hmm ,(if (eq v :log) ''logPE ''PE))))
