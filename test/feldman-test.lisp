@@ -55,7 +55,7 @@
             (incf wer (/ o_wer num-translations)))
      finally (return  (/ wer test-size))))
 
-(defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (states-power 5) (em-num-iterations 6) (max-times 300) (verbose-bws nil))
+(defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (states-power 5) (em-num-iterations 5) (max-times 100) (verbose-bws nil))
        (multiple-value-bind (in L R) (read-pair-observations-file (pwd "test/resources/sample_feldman.txt"))
          (loop
             for power from 0 to states-power
