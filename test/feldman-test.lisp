@@ -2,7 +2,7 @@
 
 (defun levenshtein (str1 str2)
   "Calculates the Levenshtein distance between str1 and str2, returns an editing distance (int)."
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 0)) ((simple-array *) str1 str2))
   (let ((n (length str1))
         (m (length str2)))
     ;; Check trivial cases
@@ -19,10 +19,11 @@
         (setf (svref col 0) (1+ i))
         (dotimes (j m)
           (setf (svref col (1+ j))
-                (min (1+ (svref col j))
-                     (1+ (svref prev-col (1+ j)))
-                     (+ (svref prev-col j)
-                        (if (eq (aref str1 i) (aref str2 j)) 0 1)))))
+                (the fixnum
+                  (min (1+ (the fixnum (svref col j)))
+                       (1+ (the fixnum (svref prev-col (1+ j))))
+                       (+ (the fixnum (svref prev-col j))
+                          (if (eq (aref str1 i) (aref str2 j)) 0 1))))))
         (rotatef col prev-col))
       (the fixnum (svref prev-col m)))))
 
@@ -35,8 +36,8 @@
 (assert (= (levenshtein "a" "") 1))
 
 (defun wer (reference recognized)
-  (declare (optimize (speed 3) (safety 0)) (inline wer))
-  (min 1.0 (coerce (/ (levenshtein reference recognized) (length reference)) 'float)))
+  (declare (optimize (speed 3) (safety 0)) (inline wer) ((simple-array *) reference recognized))
+  (min 1.0 (coerce (/ (the fixnum (levenshtein reference recognized)) (the fixnum (length reference))) 'float)))
 
 (defun wer-phmm (phmm test-data num-translations)
   (loop for obs in test-data
