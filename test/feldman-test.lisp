@@ -56,7 +56,7 @@
             (incf wer (/ o_wer num-translations)))
      finally (return  (/ wer test-size))))
 
-(defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (num-states-list '(1 2 4 8 16 32)) (em-num-iterations 5) (max-times 100) (verbose-bws nil))
+(defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (num-states-list '(1 2 4 8 16 32)) (em-num-iterations 5) (max-times 100) (verbose-bws t))
        (multiple-value-bind (in L R) (read-pair-observations-file (pwd "test/resources/sample_feldman.txt"))
          (loop for num-states in num-states-list do
               (format t "~3%### Model with num states: ~d~3%" num-states)

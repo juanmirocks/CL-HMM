@@ -474,7 +474,7 @@
                 (reset-instance hmm)
 
                 (when verbose
-                  (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start)))
+                  (format t "~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start)))
                 (when (and (< cur-loglikelihood last-loglikelihood) (or verbose (zerop noise)))
                   (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
                 (fresh-line)
