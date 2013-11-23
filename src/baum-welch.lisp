@@ -14,15 +14,6 @@
 ;; both.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;; Change log:
-;; 12-Jul-2008    Ashrentum
-;;    Last-Updated: Sat Jul 12 11:09:03 2008 (CEST) #60 (Ashrentum)
-;;    Fixed sbcl operation (gc) not compliant with ANSI Common Lisp.
-;;    Init Pseudocounts for all parameters no to lost them due to
-;;      insufficient training data
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :net.ashrentum.cl-hmm)
 
