@@ -4,7 +4,7 @@ Copyright (C) Juan Miguel Cejuela <juanmi@jmcejuela.com>
 CL-HMM: HMM Library for Common Lisp
 --------------------------------------------------------------------------------
 
-* Compatibility: ANSI Common Lisp. Tested on SBCL 1.1.11 and Allegro 8.0 Free Express Edition
+* Compatibility: ANSI Common Lisp. Tested on SBCL 1.1.11
 * Dependencies: [jmc.cl.utils system](https://github.com/jmcejuela/jmc.cl.utils)
 * Development Times:
   * 2008 July-September
@@ -21,18 +21,17 @@ Features:
 * First order chains.
 * Comparable efficiency to GHMM written in C (1x - 2x slower)
 * HMMs:
+  * Forward/Backward in probability space and scaled
+  * Viterbi in probability and log space
+  * Baum-Welch (probability and scaled) for multiple sequences (optionally labeled)
   * Tied emission parameters
   * Finite and infinite HMMs
-  * Forward/Backward scaled, Viterbi in log
-  * Baum-Welch (scaled) for multiple labeled sequences and normalized noise
 
 * PHMMs (Pair HMMs) -- **ongoing development**
-  * Forward & backward pure algorithms (non-scaled)
-  * Sequence translations: X --> Y
-  * (soon) Baum-Welch pure
-  * (soon) Viterbi
-  * (soon) Scaled versions of the algorithms
-  * (not soon; help anyone?) Tied emission parameters
+  * Forward & backward in probability and log space
+  * (soon) Viterbi in probability and log space
+  * (soon) Baum-Welch (probability and log) for multiple sequences
+  * Sequence translations: given input X --> generate output Y
 
 
 Comments:
