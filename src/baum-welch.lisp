@@ -402,10 +402,13 @@
                                                (when (< 0 (max l r))
                                                  ;; xi
                                                  (let ((xi_i_j_l_r
-                                                        (let* ((base (the prob-float (,DIV (,MUL (aref A i j) (aref beta j l r)) o_p)))
-                                                               (diag (the prob-float (,MUL base (,MUL (alpha[] ,space i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r))))))
-                                                               (l-1  (the prob-float (,MUL base (,MUL (alpha[] ,space i (1- l) r     ) (aref B j (cbref1 x l) 0          )))))
-                                                               (r-1  (the prob-float (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r)))))))
+                                                        (let* ((base (the prob-float (,MUL (aref A i j) (aref beta j l r))))
+                                                               (diag (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r))))
+                                                                                        o_p)))
+                                                               (l-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) r     ) (aref B j (cbref1 x l) 0          )))
+                                                                                        o_p)))
+                                                               (r-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r))))
+                                                                                        o_p))))
 
                                                           (setf (aref tempB j (cbref1 x l) (cbref1 y r))
                                                                 (,SUM (aref tempB j (cbref1 x l) (cbref1 y r)) diag))
