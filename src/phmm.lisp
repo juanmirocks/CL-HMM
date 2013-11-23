@@ -368,6 +368,7 @@
 
 (defmacro semiring (space &body body)
   `(let ((ZERO    (if (eq ,space :log) +LOGZERO+      +0-prob+))
+         ;;TODO define incf-like setter with SUM (it's both cleaner and faster for array access)
          (SUM     (if (eq ,space :log) 'log+          '+))
          ;;TODO log* could be replaced perhaps for simple + and just check underflow-sensitive places
          (MUL     (if (eq ,space :log) 'log*          '*))
