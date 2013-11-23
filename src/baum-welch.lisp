@@ -326,157 +326,176 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun default-pseudocounts (size)
-  (make-typed-array size 'prob-float +bw-default-min-pseudocount+))
+(defmacro default-pseudocounts (space size)
+  `(make-typed-array ,size 'prob-float (if (eq ,space :log) (log +bw-default-min-pseudocount+) +bw-default-min-pseudocount+)))
 
-(defmethod baum-welch
-    ((hmm phmm)
-     obss-c
-     &key
-       obss-l
-       (starting-noise +bw-noise-start+)
-       (max-times +bw-max-times+)
-       (threshold +bw-threshold+)
-       (ri (default-pseudocounts (array-dimensions (hmm-init hmm))))
-       (ra (default-pseudocounts (array-dimensions (hmm-trans hmm))))
-       (rb (default-pseudocounts (array-dimensions (hmm-emis hmm))))
-       (verbose nil))
+(defmacro define-baum-welch (space)
+  (semiring space
+    `(defmethod ,(if (eq space :log) 'baum-welch-log 'baum-welch)
+         ((hmm phmm)
+          obss-c
+          &key
+            obss-l
+            (starting-noise +bw-noise-start+)
+            (max-times +bw-max-times+)
+            (threshold +bw-threshold+)
+            (ri (default-pseudocounts ,space (array-dimensions (hmm-init hmm))))
+            (ra (default-pseudocounts ,space (array-dimensions (hmm-trans hmm))))
+            (rb (default-pseudocounts ,space (array-dimensions (hmm-emis hmm))))
+            (verbose nil))
 
-  (declare (optimize (speed 3) (safety 0)) (fixnum max-times))
-  ;;(declare (optimize (safety 3) (debug 3)))
-  (when (and verbose obss-l) (warn "obss-l is NOT used"))
-  (when rb
-    (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) +0-prob+))) ;make sure b(epsilon, epsilon) = 0
+       (declare (optimize (speed 3) (safety 0)) (fixnum max-times))
+       ;;(declare (optimize (safety 3) (debug 3)))
+       (when (and verbose obss-l) (warn "obss-l is NOT used"))
+       (when rb
+         (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) ,ZERO))) ;make sure b(epsilon, epsilon) = 0
 
-  (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
+       (setf hmm (hmm-copy hmm)) ;don't overwrite the given hmm
 
-  (phmm-slots (N PE A B L-size R-size) hmm
-    (let ((newPE (make-typed-array (array-dimensions PE) 'prob-float +0-prob+))
-          (newA (make-typed-array (array-dimensions A) 'prob-float +0-prob+))
-          (newB (make-typed-array (array-dimensions B) 'prob-float +0-prob+)))
+       (phmm-slots (N PE A B L-size R-size) hmm
+         (let ((newPE (make-typed-array (array-dimensions PE) 'prob-float ,ZERO))
+               (newA (make-typed-array (array-dimensions A) 'prob-float ,ZERO))
+               (newB (make-typed-array (array-dimensions B) 'prob-float ,ZERO)))
 
-      (loop for iteration :of-type fixnum from 1
-         for itr-time-start = (get-internal-real-time)
-         for last-loglikelihood :of-type prob-float = +most-negative-prob-float+ then cur-loglikelihood
-         for cur-loglikelihood :of-type prob-float = +0-prob+
-         with best-model = hmm
-         with best-loglikehood = +very-negative-prob-float+
-         for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
-         for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
+           (loop for iteration :of-type fixnum from 1
+              for itr-time-start = (get-internal-real-time)
+              for last-loglikelihood :of-type prob-float = +most-negative-prob-float+ then cur-loglikelihood
+              for cur-loglikelihood :of-type prob-float = +0-prob+
+              with best-model = hmm
+              with best-loglikehood = +very-negative-prob-float+
+              for noise-amplitude = (max 0 (- starting-noise (/ iteration (log (hmm-complexity hmm) +bw-noise-base+))))
+              for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
 
-         ;; These must be reset to 0 for every observation pair. Written here to avoid re-creating matrices
-         ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-         ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float +0-prob+)
-         with tempB = (make-typed-array (array-dimensions B) 'prob-float +0-prob+)
-         with gamma_notime = (make-typed-array (list N) 'prob-float +0-prob+)
-         with xi_notime = (make-typed-array (list N N) 'prob-float +0-prob+)
+              ;; These must be reset to 0 for every observation pair. Written here to avoid re-creating matrices
+              ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
+              ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
+              with tempB = (make-typed-array (array-dimensions B) 'prob-float ,ZERO)
+              with gamma_notime = (make-typed-array (list N) 'prob-float ,ZERO)
+              with xi_notime = (make-typed-array (list N N) 'prob-float ,ZERO)
 
-         do
-
-         ;; Init new parameters with pseudocounts if given or 0 otherwise
-           (if ri (array-set newPE ri) (array-reset newPE +0-prob+))
-           (if ra (array-set newA ra) (array-reset newA +0-prob+))
-           (if rb (array-set newB rb) (array-reset newB +0-prob+))
-
-           (loop for o in obss-c
-              for k fixnum = 0 then (1+ k)
-              for x simple-vector = (first o)
-              for y simple-vector = (second o)
-              for size_x fixnum = (length x)
-              for size_y fixnum = (length y)
-              for (o_likelihood alpha) :of-type (prob-float (prob-array (* * *))) = (multiple-value-list (forward hmm o))
-              for beta :of-type (prob-array (* * *)) = (backward hmm o)
               do
-                (if (zerop o_likelihood)
-                    (warn "0 probability for input pair: ~d" k)
-                    (progn
-                      (incf cur-loglikelihood (the prob-float (log o_likelihood)))
-                      (loop for i below N do
+
+              ;; Init new parameters with pseudocounts if given or 0 otherwise
+                (if ri (array-set newPE ri) (array-reset newPE ,ZERO))
+                (if ra (array-set newA ra) (array-reset newA ,ZERO))
+                (if rb (array-set newB rb) (array-reset newB ,ZERO))
+
+                (loop for o in obss-c
+                   for k fixnum = 0 then (1+ k)
+                   for x simple-vector = (first o)
+                   for y simple-vector = (second o)
+                   for size_x fixnum = (length x)
+                   for size_y fixnum = (length y)
+                   for (o_p alpha) :of-type (prob-float (prob-array (* * *))) =
+                     (multiple-value-list (,(if (eq space :log) 'forward-log 'forward) hmm o))
+                   for beta :of-type (prob-array (* * *)) =
+                     (,(if (eq space :log) 'backward-log 'backward) hmm o)
+                   do
+                     (if (= o_p ,ZERO)
+                         (warn "0 probability for input pair: ~d" k)
+                         (progn
+                           (incf cur-loglikelihood ,(if (eq space :log) 'o_p '(the prob-float (log o_p))))
+                           (loop for i below N do
+                                (loop for j below N do
+                                     (loop for l to size_x do
+                                          (loop for r to size_y do
+                                               (when (< 0 (max l r))
+                                                 ;; xi
+                                                 (let ((xi_i_j_l_r
+                                                        (let* ((base (the prob-float (,MUL (aref A i j) (aref beta j l r))))
+                                                               (diag (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r))))
+                                                                                        o_p)))
+                                                               (l-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) r     ) (aref B j (cbref1 x l) 0          )))
+                                                                                        o_p)))
+                                                               (r-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r))))
+                                                                                        o_p))))
+
+                                                          (setf (aref tempB j (cbref1 x l) (cbref1 y r))
+                                                                (,SUM (aref tempB j (cbref1 x l) (cbref1 y r)) diag))
+                                                          (setf (aref tempB j (cbref1 x l) 0           )
+                                                                (,SUM (aref tempB j (cbref1 x l) 0           ) l-1))
+                                                          (setf (aref tempB j 0            (cbref1 y r))
+                                                                (,SUM (aref tempB j 0            (cbref1 y r)) r-1))
+
+                                                          (the prob-float (,SUM (,SUM diag l-1) r-1)))))
+
+                                                   ;; calculate others
+                                                   (setf (aref gamma_notime i) (,SUM (aref gamma_notime i) xi_i_j_l_r))
+                                                   (setf (aref xi_notime i j)  (,SUM (aref xi_notime i j)  xi_i_j_l_r))))))))
+
+                           ;; newPE
                            (loop for j below N do
-                                (loop for l to size_x do
-                                     (loop for r to size_y do
-                                          (when (< 0 (max l r))
-                                            ;; xi
-                                            (let ((xi_i_j_l_r
-                                                   (let* ((base (the prob-float (* (aref A i j) (aref beta j l r))))
-                                                          (diag (the prob-float (/ (* base (alpha[] :orig i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r)))
-                                                                   o_likelihood)))
-                                                          (l-1  (the prob-float (/ (* base (alpha[] :orig i (1- l) r     ) (aref B j (cbref1 x l) 0          ))
-                                                                   o_likelihood)))
-                                                          (r-1  (the prob-float (/ (* base (alpha[] :orig i l      (1- r)) (aref B j 0            (cbref1 y r)))
-                                                                   o_likelihood))))
+                                (setf (aref newPE j)
+                                      (,SUM (aref newPE j)
+                                            (let* ((gammaj10 (,DIV (,MUL (aref alpha j 1 0) (aref beta j 1 0)) o_p))
+                                                   (gammaj01 (,DIV (,MUL (aref alpha j 0 1) (aref beta j 0 1)) o_p))
+                                                   (gammaj11 (,DIV (,MUL (aref alpha j 1 1) (aref beta j 1 1)) o_p))
+                                                   ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
+                                                   )
+                                              ;;(print (,SUM (,SUM gammaj10 gammaj01) gammaj11))
+                                              (,SUM (,SUM gammaj10 gammaj01) gammaj11)))))
 
-                                                     (incf (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
-                                                     (incf (aref tempB j (cbref1 x l) 0           ) l-1)
-                                                     (incf (aref tempB j 0            (cbref1 y r)) r-1)
+                           ;; newA
+                           (loop for i below N do
+                                (unless (= ,ZERO (aref gamma_notime i))
+                                  (loop for j below N do
+                                       (setf (aref newA i j) (,SUM (aref newA i j) (,DIV (aref xi_notime i j) (aref gamma_notime i)))))))
 
-                                                     (the prob-float (+ diag l-1 r-1)))))
 
-                                              ;; calculate others
-                                              ;;(incf (aref gamma i l r) xi_i_j_l_r)
-                                              (incf (aref gamma_notime i) xi_i_j_l_r)
-                                              (incf (aref xi_notime i j) xi_i_j_l_r)))))))
+                           ;;(print tempB)
+                           ;; newB
+                           (loop for i below N do
+                                (unless (= ,ZERO (aref gamma_notime i))
+                                  (loop for xl to L-size do
+                                       (loop for yr to R-size do
+                                            (setf (aref newB i xl yr)
+                                                  ,(if (eq space :log)
+                                                       `(,SUM (aref newB i xl yr) (,DIV (aref tempB i xl yr) (aref gamma_notime i)))
+                                                       `(let ((diff (- (aref tempB i xl yr) (aref gamma_notime i))))
+                                                          (if (= diff (aref tempB i xl yr))
+                                                              +most-positive-prob-float+
+                                                              (,SUM (aref newB i xl yr) (,DIV (aref tempB i xl yr) (aref gamma_notime i)))))))))))
 
-                      ;; newPE
-                      (loop for j below N do
-                           (incf (aref newPE j)
-                                 (let* ((gammaj10 (/ (* (aref alpha j 1 0) (aref beta j 1 0)) o_likelihood))
-                                        (gammaj01 (/ (* (aref alpha j 0 1) (aref beta j 0 1)) o_likelihood))
-                                        (gammaj11 (/ (* (aref alpha j 1 1) (aref beta j 1 1)) o_likelihood))
-                                        ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
-                                        )
-                                   (+ gammaj10 gammaj01 gammaj11))))
+                           ;; reset
+                           (array-reset tempB ,ZERO) (array-reset gamma_notime ,ZERO) (array-reset xi_notime ,ZERO)
+                           )))
 
-                      ;; newA
-                      (loop for i below N do
-                           (unless (zerop (aref gamma_notime i))
-                             (loop for j below N do
-                                  (incf (aref newA i j) (/ (aref xi_notime i j) (aref gamma_notime i))))))
+              ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
 
-                      ;; newB
-                      (loop for i below N do
-                           (unless (zerop (aref gamma_notime i))
-                             (loop for xl to L-size do
-                                  (loop for yr to R-size do
-                                       (let ((diff (- (aref tempB i xl yr) (aref gamma_notime i))))
-                                         (if (= diff (aref tempB i xl yr))
-                                             (setf (aref newB i xl yr) +most-positive-prob-float+)
-                                             (incf (aref newB i xl yr) (/ (aref tempB i xl yr) (aref gamma_notime i)))))))))
+              ;; Set model with new parameters
+                (setq newPE ,(if (eq space :log) '(exp-array newPE) 'newPE)
+                      newA  ,(if (eq space :log) '(exp-array newA ) 'newA)
+                      newB  ,(if (eq space :log) '(exp-array newB ) 'newB))
+                (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
+                (array-set PE newPE)
+                (array-set A newA)
+                (array-set B newB)
+              ;; & noisify
+                (!hmm-noisify hmm noise)
+                (reset-instance hmm)
 
-                      ;; reset
-                      (array-reset tempB +0-prob+) (array-reset gamma_notime +0-prob+) (array-reset xi_notime +0-prob+)
-                      )))
+                (when verbose
+                  (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start)))
+                (when (and (< cur-loglikelihood last-loglikelihood) (or verbose (zerop noise)))
+                  (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
+                (fresh-line)
 
-         ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl
+                (when (> cur-loglikelihood best-loglikehood)
+                  (setq best-model (hmm-copy hmm))
+                  (setq best-loglikehood cur-loglikelihood))
 
-         ;; Set model with new parameters
-           (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
-           (array-set PE newPE)
-           (array-set A newA)
-           (array-set B newB)
-         ;; & noisify
-           (!hmm-noisify hmm noise)
-           (reset-instance hmm)
+                (multiple-value-bind (correct details) (hmm-correctp hmm)
+                  (unless correct (error "(itr: ~d) The model is incorrect. Output of hmm-correct-p:~2%~a~%" iteration details)))
 
-           (when verbose
-             (format t "~%~a:~5T~a~28T noise: ~3$  (~3$ s)" iteration cur-loglikelihood noise (time-elapsed itr-time-start)))
-           (when (and (< cur-loglikelihood last-loglikelihood) (or verbose (zerop noise)))
-             (format t "   worse! (~a)" (- cur-loglikelihood last-loglikelihood)))
-           (fresh-line)
+              until (or (= iteration max-times)
+                        (and
+                         (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
+                         (> cur-loglikelihood last-loglikelihood))
+                        (zerop cur-loglikelihood)) ;perfect model to the training data
 
-           (when (> cur-loglikelihood best-loglikehood)
-             (setq best-model (hmm-copy hmm))
-             (setq best-loglikehood cur-loglikelihood))
+              finally
+                (print cur-loglikelihood)
+                (return (values best-model best-loglikehood iteration))))))))
 
-           (multiple-value-bind (correct details) (hmm-correctp hmm)
-             (unless correct (error "(itr: ~d) The model is incorrect. Output of hmm-correct-p:~2%~a~%" iteration details)))
-
-         until (or (= iteration max-times)
-                   (and
-                    (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
-                    (> cur-loglikelihood last-loglikelihood))
-                   (zerop cur-loglikelihood)) ;perfect model to the training data
-
-         finally
-           (print cur-loglikelihood)
-           (return (values best-model best-loglikehood iteration))))))
+(define-baum-welch :log)
+(define-baum-welch :probability)
