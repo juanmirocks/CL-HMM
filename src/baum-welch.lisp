@@ -441,7 +441,6 @@
                                   (loop for j below N do
                                        (setf (aref newA i j) (,SUM (aref newA i j) (,DIV (aref xi_notime i j) (aref gamma_notime i)))))))
 
-
                            ;;(print tempB)
                            ;; newB
                            (loop for i below N do
