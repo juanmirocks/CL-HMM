@@ -67,7 +67,7 @@
       (!hmm-noisify hmm init-model-noise)
       (setq time0 (get-internal-real-time))
       (multiple-value-setq (cur-model cur-loglikelihood bws-iter)
-        (apply (if (eql (type-of hmm) 'phmm) #'baum-welch #'baum-welch-scl) ;trick for now for phmm until -scl is implemented
+        (apply (if (eql (type-of hmm) 'phmm) #'baum-welch-log #'baum-welch-scl)
                cur-model obss-c :obss-l obss-l
                :starting-noise starting-noise :max-times max-times :threshold threshold
                :verbose verbose-bws

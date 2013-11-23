@@ -2,7 +2,7 @@
 
 (defun levenshtein (str1 str2)
   "Calculates the Levenshtein distance between str1 and str2, returns an editing distance (int)."
-  (declare (optimize (speed 3) (safety 0)))
+  (declare (optimize (speed 3) (safety 0)) ((simple-vector *) str1 str2))
   (let ((n (length str1))
         (m (length str2)))
     ;; Check trivial cases
@@ -19,24 +19,25 @@
         (setf (svref col 0) (1+ i))
         (dotimes (j m)
           (setf (svref col (1+ j))
-                (min (1+ (svref col j))
-                     (1+ (svref prev-col (1+ j)))
-                     (+ (svref prev-col j)
-                        (if (eq (aref str1 i) (aref str2 j)) 0 1)))))
+                (the fixnum
+                  (min (1+ (the fixnum (svref col j)))
+                       (1+ (the fixnum (svref prev-col (1+ j))))
+                       (+ (the fixnum (svref prev-col j))
+                          (if (= (the fixnum (aref str1 i)) (the fixnum (aref str2 j))) 0 1))))))
         (rotatef col prev-col))
       (the fixnum (svref prev-col m)))))
 
 ;; A few simple test-cases
-(assert (zerop (levenshtein "kitten" "kitten")))
-(assert (= (levenshtein "kitten" "") 6))
-(assert (= (levenshtein "kitten" "sitting") 3))
-(assert (= (levenshtein "" "") 0))
-(assert (= (levenshtein "" "a") 1))
-(assert (= (levenshtein "a" "") 1))
+(assert (zerop (levenshtein (vector 11 8 20 20 5 14) (vector 11 8 20 20 5 14))))
+(assert (= (levenshtein (vector 11 8 20 20 5 14) (vector)) 6))
+(assert (= (levenshtein (vector 11 8 20 20 5 14) (vector 19 8 20 20 8 14 6)) 3))
+(assert (= (levenshtein (vector) (vector)) 0))
+(assert (= (levenshtein (vector) (vector 1)) 1))
+(assert (= (levenshtein (vector 1) (vector)) 1))
 
 (defun wer (reference recognized)
-  (declare (optimize (speed 3) (safety 0)) (inline wer))
-  (min 1.0 (coerce (/ (levenshtein reference recognized) (length reference)) 'float)))
+  (declare (optimize (speed 3) (safety 0)) (inline wer) ((simple-array *) reference recognized))
+  (min 1.0 (coerce (/ (the fixnum (levenshtein reference recognized)) (the fixnum (length reference))) 'float)))
 
 (defun wer-phmm (phmm test-data num-translations)
   (loop for obs in test-data
@@ -55,12 +56,9 @@
             (incf wer (/ o_wer num-translations)))
      finally (return  (/ wer test-size))))
 
-(defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (states-power 5) (em-num-iterations 6) (max-times 300) (verbose-bws nil))
+(defun protocol-experiment (results-folder &key (training-size 10000) (num-translations 1000) (num-states-list '(1 2 4 8 16 32)) (em-num-iterations 5) (max-times 100) (verbose-bws t))
        (multiple-value-bind (in L R) (read-pair-observations-file (pwd "test/resources/sample_feldman.txt"))
-         (loop
-            for power from 0 to states-power
-            for num-states = (expt 2 power)
-            do
+         (loop for num-states in num-states-list do
               (format t "~3%### Model with num states: ~d~3%" num-states)
               (let* ((phmm (make-random-phmm num-states (length L) (length R) :L-list L :R-list R))
                      (training-data (subseq (mapcar #'(lambda (o) (cbook-encode phmm o)) in) 0 training-size))
