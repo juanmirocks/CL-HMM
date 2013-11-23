@@ -2,7 +2,7 @@
 
 (defun levenshtein (str1 str2)
   "Calculates the Levenshtein distance between str1 and str2, returns an editing distance (int)."
-  (declare (optimize (speed 3) (safety 0)) ((simple-array *) str1 str2))
+  (declare (optimize (speed 3) (safety 0)) ((simple-vector *) str1 str2))
   (let ((n (length str1))
         (m (length str2)))
     ;; Check trivial cases
@@ -23,17 +23,17 @@
                   (min (1+ (the fixnum (svref col j)))
                        (1+ (the fixnum (svref prev-col (1+ j))))
                        (+ (the fixnum (svref prev-col j))
-                          (if (eq (aref str1 i) (aref str2 j)) 0 1))))))
+                          (if (= (the fixnum (aref str1 i)) (the fixnum (aref str2 j))) 0 1))))))
         (rotatef col prev-col))
       (the fixnum (svref prev-col m)))))
 
 ;; A few simple test-cases
-(assert (zerop (levenshtein "kitten" "kitten")))
-(assert (= (levenshtein "kitten" "") 6))
-(assert (= (levenshtein "kitten" "sitting") 3))
-(assert (= (levenshtein "" "") 0))
-(assert (= (levenshtein "" "a") 1))
-(assert (= (levenshtein "a" "") 1))
+(assert (zerop (levenshtein (vector 11 8 20 20 5 14) (vector 11 8 20 20 5 14))))
+(assert (= (levenshtein (vector 11 8 20 20 5 14) (vector)) 6))
+(assert (= (levenshtein (vector 11 8 20 20 5 14) (vector 19 8 20 20 8 14 6)) 3))
+(assert (= (levenshtein (vector) (vector)) 0))
+(assert (= (levenshtein (vector) (vector 1)) 1))
+(assert (= (levenshtein (vector 1) (vector)) 1))
 
 (defun wer (reference recognized)
   (declare (optimize (speed 3) (safety 0)) (inline wer) ((simple-array *) reference recognized))
