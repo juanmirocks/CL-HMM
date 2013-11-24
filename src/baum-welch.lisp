@@ -18,7 +18,7 @@
 (in-package :net.ashrentum.cl-hmm)
 
 (declaim (optimize (speed 3) (safety 0)))
-;;(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))
+(declaim (sb-ext:unmuffle-conditions sb-ext:compiler-note))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
