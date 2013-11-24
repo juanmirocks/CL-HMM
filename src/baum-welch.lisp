@@ -437,12 +437,7 @@
                                   (loop for xl to L-size do
                                        (loop for yr to R-size do
                                             (setf (aref newB i xl yr)
-                                                  ,(if (eq space :log)
-                                                       `(,SUM (aref newB i xl yr) (,DIV (aref tempB i xl yr) (aref gamma_notime i)))
-                                                       `(let ((diff (- (aref tempB i xl yr) (aref gamma_notime i))))
-                                                          (if (= diff (aref tempB i xl yr))
-                                                              +most-positive-prob-float+
-                                                              (,SUM (aref newB i xl yr) (,DIV (aref tempB i xl yr) (aref gamma_notime i)))))))))))
+                                                  (,SUM (aref newB i xl yr) (,DIV (aref tempB i xl yr) (aref gamma_notime i))))))))
 
                            ;; reset
                            (array-reset gamma ,ZERO) (array-reset tempB ,ZERO) (array-reset gamma_notime ,ZERO) (array-reset xi_notime ,ZERO)
