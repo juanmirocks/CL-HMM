@@ -78,6 +78,10 @@
              +LOGZERO+
              (+ ,glogx ,glogy)))))
 
+  ;;TODO reuse CL incf's logic
+  (defmacro logincf (ref value)
+    `(setf ,ref (log+ ,ref ,value)))
+
   ;;; Empty emission epsilon symbol, ε
   (defconstant +epsilon-cbook-index+ (the fixnum 0))
 
