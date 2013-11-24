@@ -393,13 +393,11 @@
                                             (loop for j below N do
                                                ;; xi
                                                  (setf (aref xi i j l r)
-                                                       (let* ((base (the prob-float (,MUL (aref A i j) (aref beta j l r))))
-                                                              (match (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l-1 r-1) (aref B j x_l y_r)))
-                                                                                           o_p)))
-                                                              (inser (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l-1 r  ) (aref B j x_l 0          )))
-                                                                                           o_p)))
-                                                              (delet (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l   r-1) (aref B j 0            y_r)))
-                                                                                           o_p))))
+                                                       ;; caution, moving the divison of o_p to base may cause underflows in probability space
+                                                       (let* ((base (the prob-float (,DIV (,MUL (aref A i j) (aref beta j l r)) o_p)))
+                                                              (match (the prob-float (,MUL base (,MUL (alpha[] ,space i l-1 r-1) (aref B j x_l y_r)))))
+                                                              (inser (the prob-float (,MUL base (,MUL (alpha[] ,space i l-1 r  ) (aref B j x_l 0)))))
+                                                              (delet (the prob-float (,MUL base (,MUL (alpha[] ,space i l   r-1) (aref B j 0   y_r))))))
 
                                                          (,SUMF (aref tempB j x_l y_r) match)
                                                          (,SUMF (aref tempB j x_l 0)   inser)
