@@ -386,12 +386,13 @@
                          (warn "0 probability for input pair: ~d" k)
                          (progn
                            (incf cur-loglikelihood ,(if (eq space :log) 'o_p '(the prob-float (log o_p))))
+
+                           ;; xi
                            (loop for l to size_x for l+1 = (1+ l) for x_l+1 = (cbref1-beta x l) do
                                 (loop for r to size_y for r+1 = (1+ r) for y_r+1 = (cbref1-beta y r) for compute-gamma = (< (max l r) 2) do
                                      (when (and (< 0 (+ l r)) (not (and (= l size_x) (= r size_y))))
                                        (loop for i below N do
                                             (loop for j below N do
-                                               ;; xi
                                                  (setf (aref xi i j l r)
                                                        ;; caution, moving the divison of o_p to base may cause underflows in probability space
                                                        (let* ((base (the prob-float (,DIV (,MUL (aref A i j) (aref alpha i l r)) o_p)))
