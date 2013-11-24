@@ -415,14 +415,15 @@
                            (loop for j below N do
                                 (,SUMF (aref newPE j)
                                        (let ((trans
-                                               (loop for i below N
-                                                  with acc :of-type prob-float = ,ZERO do
-                                                    (,SUMF acc
-                                                           (,SUM
-                                                            (the prob-float (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 1 0)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 0 1))))
-                                                            (the prob-float (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 0 1)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 1 0)))))) finally (return acc))))
+                                              (the prob-float
+                                                (loop for i below N
+                                                   with acc :of-type prob-float = ,ZERO do
+                                                     (,SUMF acc
+                                                            (,SUM
+                                                             (the prob-float (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 1 0)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 0 1))))
+                                                             (the prob-float (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 0 1)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 1 0)))))) finally (return acc)))))
 
-                                         (,SUM (,SUM (aref gamma j 1 0) (exp (aref gamma j 0 1))) (,MINUS (aref gamma j 1 1) trans)))))
+                                             (,SUM (,SUM (aref gamma j 1 0) (exp (aref gamma j 0 1))) (,MINUS (aref gamma j 1 1) trans)))))
 
                            ;; newA
                            (loop for i below N do
