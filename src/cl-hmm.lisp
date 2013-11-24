@@ -5,7 +5,7 @@
 
 ;;(declaim (optimize (speed 0) (safety 3) (compilation-speed 0) (debug 3)))
 (declaim (optimize (speed 3) (safety 0)))
-;;#+sbcl (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
+#+sbcl (declaim (sb-ext:muffle-conditions sb-ext:compiler-note))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
