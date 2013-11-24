@@ -429,7 +429,6 @@
                                   (loop for j below N do
                                        (,SUMF (aref newA i j) (,DIV (aref xi_notime i j) (aref gamma_notime i))))))
 
-                           ;;(print tempB)
                            ;; newB
                            (loop for i below N do
                                 (unless (= ,ZERO (aref gamma_notime i))
