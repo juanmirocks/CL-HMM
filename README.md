@@ -14,36 +14,36 @@ CL-HMM: HMM Library for Common Lisp
 Features:
 --------------------------------------------------------------------------------
 
-* Discrete observation densities.
-* Alphabet symbols of any kind.
-* Exponential state duration densities.
-* Homogeneous HMMs.
-* First order chains.
+* Discrete observation densities
+* Alphabet symbols of any kind
+* Exponential state duration densities
+* Homogeneous HMMs
+* First order chains
 * Comparable efficiency to GHMM written in C (1x - 2x slower)
 * HMMs:
-  * Forward/Backward in probability space and scaled
+  * Forward & backward in probability space and scaled
   * Viterbi in probability and log space
-  * Baum-Welch (probability and scaled) for multiple sequences (optionally labeled)
+  * Baum-Welch training (probability and scaled) for multiple sequences (optionally labeled)
   * Tied emission parameters
   * Finite and infinite HMMs
 
-* PHMMs (Pair HMMs) -- **ongoing development**
+* PHMMs (Pair HMMs): **ongoing development**
   * Forward & backward in probability and log space
   * (soon) Viterbi in probability and log space
-  * (soon) Baum-Welch (probability and log) for multiple sequences
+  * (soon) Baum-Welch training (probability and log) for multiple sequences
   * Sequence translations: given input X --> generate output Y
 
 
 Comments:
 --------------------------------------------------------------------------------
 
-- Followed Rabiner's notation in code. Otherwise properly indicated.
+- Rabiner's notation is followed in code. Otherwise properly indicated.
 
 
 Installation:
 --------------------------------------------------------------------------------
 
-1. You need to install a Common Lisp implementation. For instance: [SBCL](http://www.sbcl.org/)
+1. You must have an installed Common Lisp implementation. For instance: [SBCL](http://www.sbcl.org/)
 2. Download latest version of [jmc.cl.utils system](https://github.com/jmcejuela/jmc.cl.utils)
 3. Download latest version of CL-HMM's code
 4. Make ASDF locate the downloaded packaged, for instance: `(setf asdf:*central-registry* (append '(#p"...local path..." :*central-registry*)))`
