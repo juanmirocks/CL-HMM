@@ -388,7 +388,7 @@
                            (incf cur-loglikelihood ,(if (eq space :log) 'o_p '(the prob-float (log o_p))))
                            (loop for l to size_x do
                                 (loop for r to size_y do
-                                     (when (< 0 (max l r))
+                                     (when (< 1 (+ l r))
                                        (loop for i below N do
                                             (loop for j below N do
                                                ;; xi
