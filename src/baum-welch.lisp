@@ -386,30 +386,30 @@
                          (warn "0 probability for input pair: ~d" k)
                          (progn
                            (incf cur-loglikelihood ,(if (eq space :log) 'o_p '(the prob-float (log o_p))))
-                           (loop for i below N do
-                                (loop for j below N do
-                                     (loop for l to size_x do
-                                          (loop for r to size_y do
-                                               (when (< 0 (max l r))
-                                                 ;; xi
-                                                 (let ((xi_i_j_l_r
-                                                        (let* ((base (the prob-float (,MUL (aref A i j) (aref beta j l r))))
-                                                               (diag (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r))))
-                                                                                        o_p)))
-                                                               (l-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) r     ) (aref B j (cbref1 x l) 0          )))
-                                                                                        o_p)))
-                                                               (r-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r))))
-                                                                                        o_p))))
+                           (loop for l to size_x do
+                                (loop for r to size_y do
+                                     (when (< 0 (max l r))
+                                       (loop for i below N do
+                                            (loop for j below N do
+                                               ;; xi
+                                                 (setf (aref xi i j l r)
+                                                       (let* ((base (the prob-float (,MUL (aref A i j) (aref beta j l r))))
+                                                              (diag (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r))))
+                                                                                          o_p)))
+                                                              (l-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) r     ) (aref B j (cbref1 x l) 0          )))
+                                                                                          o_p)))
+                                                              (r-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r))))
+                                                                                          o_p))))
 
-                                                          (,SUMF (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
-                                                          (,SUMF (aref tempB j (cbref1 x l) 0           ) l-1)
-                                                          (,SUMF (aref tempB j 0            (cbref1 y r)) r-1)
+                                                         (,SUMF (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
+                                                         (,SUMF (aref tempB j (cbref1 x l) 0           ) l-1)
+                                                         (,SUMF (aref tempB j 0            (cbref1 y r)) r-1)
 
-                                                          (the prob-float (,SUM (,SUM diag l-1) r-1)))))
+                                                         (the prob-float (,SUM (,SUM diag l-1) r-1))))
 
-                                                   ;; calculate others
-                                                   (setf (aref gamma_notime i) (,SUM (aref gamma_notime i) xi_i_j_l_r))
-                                                   (setf (aref xi_notime i j)  (,SUM (aref xi_notime i j)  xi_i_j_l_r))))))))
+                                               ;; calculate others
+                                                 (setf (aref gamma_notime i) (,SUM (aref gamma_notime i) (aref xi i j l r)))
+                                                 (setf (aref xi_notime i j)  (,SUM (aref xi_notime i j)  (aref xi i j l r))))))))
 
                            ;; newPE
                            (loop for j below N do
