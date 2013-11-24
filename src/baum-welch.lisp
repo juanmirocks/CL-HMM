@@ -450,8 +450,8 @@
 
               ;; Set model with new parameters
                 (setq newPE ,(if (eq space :log) '(exp-array newPE) 'newPE)
-                      newA  ,(if (eq space :log) '(exp-array newA ) 'newA)
-                      newB  ,(if (eq space :log) '(exp-array newB ) 'newB))
+                      newA  ,(if (eq space :log) '(exp-array newA)  'newA)
+                      newB  ,(if (eq space :log) '(exp-array newB)  'newB))
                 (!normalize-vector newPE) (!normalize-2dmatrix-by-row newA) (!normalize-3dmatrix-by-row newB)
                 (array-set PE newPE)
                 (array-set A newA)
