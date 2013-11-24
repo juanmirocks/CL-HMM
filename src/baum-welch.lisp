@@ -476,8 +476,7 @@
               until (or (= iteration max-times)
                         (and
                          (< (abs (- cur-loglikelihood last-loglikelihood)) threshold)
-                         (> cur-loglikelihood last-loglikelihood))
-                        (zerop cur-loglikelihood)) ;perfect model to the training data
+                         (> cur-loglikelihood last-loglikelihood)))
 
               finally
                 (print cur-loglikelihood)
