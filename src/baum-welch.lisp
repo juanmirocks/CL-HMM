@@ -401,12 +401,9 @@
                                                                (r-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r))))
                                                                                         o_p))))
 
-                                                          (setf (aref tempB j (cbref1 x l) (cbref1 y r))
-                                                                (,SUM (aref tempB j (cbref1 x l) (cbref1 y r)) diag))
-                                                          (setf (aref tempB j (cbref1 x l) 0           )
-                                                                (,SUM (aref tempB j (cbref1 x l) 0           ) l-1))
-                                                          (setf (aref tempB j 0            (cbref1 y r))
-                                                                (,SUM (aref tempB j 0            (cbref1 y r)) r-1))
+                                                          (,SUMF (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
+                                                          (,SUMF (aref tempB j (cbref1 x l) 0           ) l-1)
+                                                          (,SUMF (aref tempB j 0            (cbref1 y r)) r-1)
 
                                                           (the prob-float (,SUM (,SUM diag l-1) r-1)))))
 
@@ -430,7 +427,7 @@
                            (loop for i below N do
                                 (unless (= ,ZERO (aref gamma_notime i))
                                   (loop for j below N do
-                                       (setf (aref newA i j) (,SUM (aref newA i j) (,DIV (aref xi_notime i j) (aref gamma_notime i)))))))
+                                       (,SUMF (aref newA i j) (,DIV (aref xi_notime i j) (aref gamma_notime i))))))
 
                            ;;(print tempB)
                            ;; newB
