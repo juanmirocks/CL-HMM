@@ -394,18 +394,18 @@
                                                ;; xi
                                                  (setf (aref xi i j l r)
                                                        (let* ((base (the prob-float (,MUL (aref A i j) (aref beta j l r))))
-                                                              (diag (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r))))
+                                                              (match (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) (1- r)) (aref B j (cbref1 x l) (cbref1 y r))))
                                                                                           o_p)))
-                                                              (l-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) r     ) (aref B j (cbref1 x l) 0          )))
+                                                              (inser (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i (1- l) r     ) (aref B j (cbref1 x l) 0          )))
                                                                                           o_p)))
-                                                              (r-1  (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r))))
+                                                              (delet (the prob-float (,DIV (,MUL base (,MUL (alpha[] ,space i l      (1- r)) (aref B j 0            (cbref1 y r))))
                                                                                           o_p))))
 
-                                                         (,SUMF (aref tempB j (cbref1 x l) (cbref1 y r)) diag)
-                                                         (,SUMF (aref tempB j (cbref1 x l) 0           ) l-1)
-                                                         (,SUMF (aref tempB j 0            (cbref1 y r)) r-1)
+                                                         (,SUMF (aref tempB j (cbref1 x l) (cbref1 y r)) match)
+                                                         (,SUMF (aref tempB j (cbref1 x l) 0           ) inser)
+                                                         (,SUMF (aref tempB j 0            (cbref1 y r)) delet)
 
-                                                         (the prob-float (,SUM (,SUM diag l-1) r-1))))
+                                                         (the prob-float (,SUM (,SUM match inser) delet))))
 
                                                ;; calculate others
                                                  (setf (aref gamma_notime i) (,SUM (aref gamma_notime i) (aref xi i j l r)))
