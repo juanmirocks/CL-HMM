@@ -358,8 +358,6 @@
               for noise = (if (zerop noise-amplitude) 0 (random noise-amplitude))
 
               ;; These must be reset to 0 for every observation pair. Written here to avoid re-creating matrices
-              ;;for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
-              ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
               with tempB = (make-typed-array (array-dimensions B) 'prob-float ,ZERO)
               with gamma_notime = (make-typed-array (list N) 'prob-float ,ZERO)
               with xi_notime = (make-typed-array (list N N) 'prob-float ,ZERO)
@@ -377,6 +375,8 @@
                    for y simple-vector = (second o)
                    for size_x fixnum = (length x)
                    for size_y fixnum = (length y)
+                   for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
+                   ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
                    for (o_p alpha) :of-type (prob-float (prob-array (* * *))) =
                      (multiple-value-list (,(if (eq space :log) 'forward-log 'forward) hmm o))
                    for beta :of-type (prob-array (* * *)) =
