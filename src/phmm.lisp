@@ -370,6 +370,8 @@
   `(let ((ZERO    (if (eq ,space :log) +LOGZERO+      +0-prob+))
          ;;TODO define incf-like setter with SUM (it's both cleaner and faster for array access)
          (SUM     (if (eq ,space :log) 'log+          '+))
+         (MINUS   (if (eq ,space :log) 'log-          '-))
+         (SUMF    (if (eq ,space :log) 'logincf       'incf))
          ;;TODO log* could be replaced perhaps for simple + and just check underflow-sensitive places
          (MUL     (if (eq ,space :log) 'log*          '*))
          (ONE     (if (eq ,space :log) +0-prob+       +1-prob+))
@@ -513,7 +515,7 @@ Backward algorithm in ~a space.
            ;; -------------------------------------------------------------------------
            (loop for l from size_x downto 0 do
                 (loop for r from size_y downto 0 do
-                     (when (and (<= 1 (max l r)) (not (and (= l size_x) (= r size_y))))
+                     (when (not (and (= l size_x) (= r size_y)))
                        (loop for i below N do
                             (setf (aref beta i l r)
                                   (loop for j in (aref iA-from i)
