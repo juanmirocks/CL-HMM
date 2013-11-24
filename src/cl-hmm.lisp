@@ -49,8 +49,7 @@
   (defconstant +MINUS-LOGTOLERANCE+ -30d0)
   (defconstant +LOGZERO+ +most-negative-prob-float+)
 
-  (defmacro log+ (logx logy)
-    ;;(declare (optimize (speed 3) (safety 0) (debug 0)));; (prob-float logx logy));; (inline log+))
+  (defmacro log+ (logx logy &optional (opr '+))
     (let ((glogx (gensym))
           (glogy (gensym))
           (gnegDiff (gensym))
@@ -67,7 +66,10 @@
             (setf ,gnegDiff (- ,glogy ,glogx))
             (if (< ,gnegDiff +MINUS-LOGTOLERANCE+)
                 ,glogx
-                (the prob-float (+ ,glogx (log (+ 1d0 (exp ,gnegDiff)))))))))
+                (the prob-float (+ ,glogx (log (,opr 1d0 (exp ,gnegDiff)))))))))
+
+  (defmacro log- (logx logy)
+    `(log+ ,logx ,logy -))
 
   (defmacro log* (logx logy)
     (let ((glogx (gensym))

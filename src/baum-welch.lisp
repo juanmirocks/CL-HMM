@@ -335,8 +335,8 @@
             (rb (default-pseudocounts ,space (array-dimensions (hmm-emis hmm))))
             (verbose nil))
 
-       (declare (optimize (speed 3) (safety 0)) (fixnum max-times))
-       ;;(declare (optimize (safety 3) (debug 3)))
+       ;;(declare (optimize (speed 3) (safety 3)) (fixnum max-times))
+       (declare (optimize (safety 3) (debug 3)))
        (when (and verbose obss-l) (warn "obss-l is NOT used"))
        (when rb
          (loop for i below (hmm-no-states hmm) do (setf (aref rb i 0 0) ,ZERO))) ;make sure b(epsilon, epsilon) = 0
@@ -376,7 +376,7 @@
                    for size_x fixnum = (length x)
                    for size_y fixnum = (length y)
                    for xi = (make-typed-array (list N N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
-                   ;;for gamma = (make-typed-array (list N (1+ size_x) (1+ size_y)) 'prob-float ,ZERO)
+                   for gamma = (make-typed-array (list N 2 2) 'prob-float ,ZERO) ;only compute for inital times (1,0), (0,1), (1,1)
                    for (o_p alpha) :of-type (prob-float (prob-array (* * *))) =
                      (multiple-value-list (,(if (eq space :log) 'forward-log 'forward) hmm o))
                    for beta :of-type (prob-array (* * *)) =
@@ -386,40 +386,43 @@
                          (warn "0 probability for input pair: ~d" k)
                          (progn
                            (incf cur-loglikelihood ,(if (eq space :log) 'o_p '(the prob-float (log o_p))))
-                           (loop for l-1 = -1 then l for l to size_x for x_l = (cbref1 x l) do
-                                (loop for r-1 = -1 then r for r to size_y for y_r = (cbref1 y r) do
-                                     (when (< 1 (+ l r))
+                           (loop for l to size_x for l+1 = (1+ l) for x_l+1 = (cbref1-beta x l) do
+                                (loop for r to size_y for r+1 = (1+ r) for y_r+1 = (cbref1-beta y r) for compute-gamma = (< (max l r) 2) do
+                                     (when (and (< 0 (+ l r)) (not (and (= l size_x) (= r size_y))))
                                        (loop for i below N do
                                             (loop for j below N do
                                                ;; xi
                                                  (setf (aref xi i j l r)
                                                        ;; caution, moving the divison of o_p to base may cause underflows in probability space
-                                                       (let* ((base (the prob-float (,DIV (,MUL (aref A i j) (aref beta j l r)) o_p)))
-                                                              (match (the prob-float (,MUL base (,MUL (alpha[] ,space i l-1 r-1) (aref B j x_l y_r)))))
-                                                              (inser (the prob-float (,MUL base (,MUL (alpha[] ,space i l-1 r  ) (aref B j x_l 0)))))
-                                                              (delet (the prob-float (,MUL base (,MUL (alpha[] ,space i l   r-1) (aref B j 0   y_r))))))
+                                                       (let* ((base (the prob-float (,DIV (,MUL (aref A i j) (aref alpha i l r)) o_p)))
+                                                              (match (the prob-float (,MUL base (,MUL (beta[] ,space j l+1 r+1) (aref B j x_l+1 y_r+1)))))
+                                                              (inser (the prob-float (,MUL base (,MUL (beta[] ,space j l+1 r  ) (aref B j x_l+1 0)))))
+                                                              (delet (the prob-float (,MUL base (,MUL (beta[] ,space j l   r+1) (aref B j 0   y_r+1))))))
 
-                                                         (,SUMF (aref tempB j x_l y_r) match)
-                                                         (,SUMF (aref tempB j x_l 0)   inser)
-                                                         (,SUMF (aref tempB j 0   y_r) delet)
+                                                         (,SUMF (aref tempB j x_l+1 y_r+1) match)
+                                                         (,SUMF (aref tempB j x_l+1 0)     inser)
+                                                         (,SUMF (aref tempB j 0   y_r+1)   delet)
 
                                                          (the prob-float (,SUM (,SUM match inser) delet))))
 
                                                ;; calculate others
-                                                 (setf (aref gamma_notime i) (,SUM (aref gamma_notime i) (aref xi i j l r)))
-                                                 (setf (aref xi_notime i j)  (,SUM (aref xi_notime i j)  (aref xi i j l r))))))))
+                                                 (when compute-gamma
+                                                   (,SUMF (aref gamma i l r) (aref xi i j l r)))
+                                                 (,SUMF (aref gamma_notime i) (aref xi i j l r))
+                                                 (,SUMF (aref xi_notime i j)  (aref xi i j l r)))))))
 
                            ;; newPE
                            (loop for j below N do
-                                (setf (aref newPE j)
-                                      (,SUM (aref newPE j)
-                                            (let* ((gammaj10 (,DIV (,MUL (aref alpha j 1 0) (aref beta j 1 0)) o_p))
-                                                   (gammaj01 (,DIV (,MUL (aref alpha j 0 1) (aref beta j 0 1)) o_p))
-                                                   (gammaj11 (,DIV (,MUL (aref alpha j 1 1) (aref beta j 1 1)) o_p))
-                                                   ;;(trans (loop for i below N sum (aref xi i j 1 1))) ; TODO review
-                                                   )
-                                              ;;(print (,SUM (,SUM gammaj10 gammaj01) gammaj11))
-                                              (,SUM (,SUM gammaj10 gammaj01) gammaj11)))))
+                                (,SUMF (aref newPE j)
+                                       (let ((trans
+                                               (loop for i below N
+                                                  with acc = ,ZERO do
+                                                    (,SUMF acc
+                                                           (,SUM
+                                                            (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 1 0)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 0 1)))
+                                                            (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 0 1)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 1 0))))) finally (return acc))))
+
+                                         (,SUM (,SUM (aref gamma j 1 0) (exp (aref gamma j 0 1))) (,MINUS (aref gamma j 1 1) trans)))))
 
                            ;; newA
                            (loop for i below N do
@@ -441,7 +444,7 @@
                                                               (,SUM (aref newB i xl yr) (,DIV (aref tempB i xl yr) (aref gamma_notime i)))))))))))
 
                            ;; reset
-                           (array-reset tempB ,ZERO) (array-reset gamma_notime ,ZERO) (array-reset xi_notime ,ZERO)
+                           (array-reset gamma ,ZERO) (array-reset tempB ,ZERO) (array-reset gamma_notime ,ZERO) (array-reset xi_notime ,ZERO)
                            )))
 
               ;;#+sbcl (sb-ext:gc :gen 1 :full t) ;free memory on sbcl

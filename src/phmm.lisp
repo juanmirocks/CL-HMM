@@ -370,6 +370,7 @@
   `(let ((ZERO    (if (eq ,space :log) +LOGZERO+      +0-prob+))
          ;;TODO define incf-like setter with SUM (it's both cleaner and faster for array access)
          (SUM     (if (eq ,space :log) 'log+          '+))
+         (MINUS   (if (eq ,space :log) 'log-          '-))
          (SUMF    (if (eq ,space :log) 'logincf       'incf))
          ;;TODO log* could be replaced perhaps for simple + and just check underflow-sensitive places
          (MUL     (if (eq ,space :log) 'log*          '*))
