@@ -536,8 +536,23 @@ Backward algorithm in ~a space.
 (define-backward :probability)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Translations
+;; Run & Translations
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod hmm-run ((phmm phmm) &optional max-length)
+  (if (not max-length) (error "max-length must be given"))
+
+  (phmm-slots (PE A B) phmm
+    (let ((init_state (select-random (accum-array PE 1 prob-float)))
+          (accumA (accum-array A 2 prob-float))
+          (accumB (accum-array B 3 prob-float)))
+      (labels ((end-state-p (state) (or (= 1 (aref A state state)) (not (select-random accumA :indices-1 (list state)))))
+               (rec (state size_x x size_y y)
+                 (declare (fixnum size_x size_y) (list x y))
+                 (if (or (end-state-p state) (= max-length size_x) (= max-length size_y))
+                     1
+                     0)))
+        (rec init_state 0 nil 0 nil)))))
 
 (defmethod hmm-translate ((phmm phmm) X)
   "Translate X input sequence (left stream) -> Y output sequence (right stream)
