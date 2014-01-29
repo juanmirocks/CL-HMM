@@ -550,8 +550,20 @@ Backward algorithm in ~a space.
                (rec (state size_x x size_y y)
                  (declare (fixnum size_x size_y) (list x y))
                  (if (or (end-state-p state) (= max-length size_x) (= max-length size_y))
-                     1
-                     0)))
+                     (list
+                      (make-array size_x :fill-pointer nil :initial-contents (reverse x))
+                      (make-array size_y :fill-pointer nil :initial-contents (reverse y)))
+                     (let* ((next_state (select-random accumA :indices-1 (list state)))
+                            (xl 1)
+                            (xl_not_epsilon (/= xl +epsilon-cbook-index+))
+                            (yr (the fixnum (select-random accumB :indices-1 (list state xl))))
+                            (yr_not_epsilon (/= yr +epsilon-cbook-index+)))
+                       (cond
+                         ((and xl_not_epsilon yr_not_epsilon) (rec next_state (1+ size_x) (cons xl x) (1+ size_y) (cons yr y)))
+                         (xl_not_epsilon (rec next_state (1+ size_x) (cons xl x) size_y y))
+                         (yr_not_epsilon (rec next_state size_x x (1+ size_y) (cons yr y)))
+                         (t (error "Impossible case, epsilon|epsilon")))))))
+
         (rec init_state 0 nil 0 nil)))))
 
 (defmethod hmm-translate ((phmm phmm) X)
