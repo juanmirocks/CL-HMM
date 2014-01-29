@@ -68,3 +68,17 @@
                   (hmm-save best (format nil "~a/model_~d_~d_~f.lisp" results-folder num-states training-size loglikelihood) :complete)
                   (with-open-file (stream (format nil "~a/wer_~d_~d_~f.txt" results-folder num-states training-size loglikelihood) :direction :output :if-exists :supersede)
                     (format stream "~f~%" (wer-phmm best test-data num-translations))))))))
+
+(defun feldman-string (in-vector)
+  (format nil "~{~a~^_~}" (sequence->list in-vector)))
+
+(defun feldman-pair (pair)
+  (declare (optimize (speed 3) (safety 0)))
+  (let* ((x (first pair))
+         (y (second pair)))
+    (format nil "~a ~a" (feldman-string x) (feldman-string y))))
+
+(defun feldman-gen-pairs (phmm outfile num-pair pair-max-length)
+  (with-open-file (stream outfile :direction :output :if-exists :supersede)
+    (loop repeat num-pair do
+         (format stream "~a~%" (feldman-pair (cbook-decode phmm (hmm-run phmm pair-max-length)))))))
