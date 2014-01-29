@@ -82,3 +82,5 @@
   (with-open-file (stream outfile :direction :output :if-exists :supersede)
     (loop repeat num-pair do
          (format stream "~a~%" (feldman-pair (cbook-decode phmm (hmm-run phmm pair-max-length)))))))
+
+;; Maximum string length in feldman sample date = 159
