@@ -112,7 +112,7 @@ stopped."
   (with-open-file (stream path)
     (loop for line = (read-line stream nil)
        while line
-       for (x_ y_ p) = (split-sequence #\Space line)
+       for (x_ y_) = (split-sequence #\Space line)
        for x = (mapcar #'parse-integer (split-sequence #\_ x_))
        for y = (mapcar #'parse-integer (split-sequence #\_ y_))
        with left-alphabet = (make-hash-table :test 'equalp)
