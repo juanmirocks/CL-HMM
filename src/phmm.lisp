@@ -155,6 +155,7 @@
   model form 2: (model-spec = :relevant)
     NOT IMPLEMENTED"
 
+  (when (or (find 0 L-list) (find 0 R-list)) (error "The alphabets cannot contain the special 0 symbol reserved for epsilon"))
   (let* ((S (make-array N :element-type 'state :initial-element (list (make-typed-array 8 'bit 0))))
          (states)
          (S-hash)
@@ -207,7 +208,7 @@
                    :PE PE :A A :B B)))
 
 (defun make-random-phmm
-    (N L-size R-size &key (eccentricity 2) (states (range N)) (L-list (range L-size)) (R-list (range R-size)) name (L-alphabet-type T) (R-alphabet-type T))
+    (N L-size R-size &key (eccentricity 2) (states (range N)) (L-list (range (1+ L-size) :min 1)) (R-list (range (1+ R-size) :min 1)) name (L-alphabet-type T) (R-alphabet-type T))
   "Make a phmm with no biased info
   ...
   eccentricity: real, eccentricity for randomly-generated probabilities. The bigger the more dispair. If 0, the probs. are uniform
@@ -222,7 +223,7 @@
              :name name :L-alphabet-type L-alphabet-type :R-alphabet-type R-alphabet-type :model-spec :complete))
 
 (defun make-uniform-phmm
-    (N L-size R-size &key (states (range N)) (L-list (range L-size)) (R-list (range R-size)) name (L-alphabet-type T) (R-alphabet-type T))
+    (N L-size R-size &key (states (range N)) (L-list (range (1+ L-size) :min 1)) (R-list (range (1+ R-size) :min 1)) name (L-alphabet-type T) (R-alphabet-type T))
   "Same as make-random-hmm-simple but with an uniform distribution for all probabilities, eccentricity 0"
   (make-random-phmm N L-size R-size :eccentricity 0 :states states :L-list L-list :R-list R-list :name name :L-alphabet-type L-alphabet-type :R-alphabet-type R-alphabet-type))
 
