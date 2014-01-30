@@ -424,7 +424,10 @@
                                                              (the prob-float (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 1 0)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 0 1))))
                                                              (the prob-float (,MUL (,DIV (,MUL (aref A i j) (aref alpha i 0 1)) o_p) (,MUL (beta[] ,space j 1 1) (aref B j 1 0)))))) finally (return acc)))))
 
-                                             (,SUM (,SUM (aref gamma j 1 0) (exp (aref gamma j 0 1))) (,MINUS (aref gamma j 1 1) trans)))))
+                                         (let ((tmp-debug (,SUM (,SUM (aref gamma j 1 0) (aref gamma j 0 1)) (,MINUS (aref gamma j 1 1) trans))))
+                                           ;; (when (< (,MINUS (aref gamma j 1 1) trans) 0)
+                                           ;;   (format t "ERROR? ~a ~a ~a ~a ~a ~a~%" (,MINUS (aref gamma j 1 1) trans) tmp (aref gamma j 1 0) (aref gamma j 0 1) (aref gamma j 1 1) trans))
+                                           tmp-debug))))
 
                            ;; newA
                            (loop for i below N do
