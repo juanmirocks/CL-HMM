@@ -555,7 +555,7 @@ Backward algorithm in ~a space.
       (labels ((end-state-p (state) (or (= 1 (aref A state state)) (not (select-random accumA :indices-1 (list state)))))
                (rec (state size_x x size_y y)
                  (declare (fixnum size_x size_y) (list x y))
-                 (if (or (end-state-p state) (= length size_x) (= length size_y))
+                 (if (or (end-state-p state) (and (or (= length size_x) (= length size_y)) (not (zerop size_x)) (not (zerop size_y))))
                      (list
                       (make-array size_x :fill-pointer nil :initial-contents (reverse x))
                       (make-array size_y :fill-pointer nil :initial-contents (reverse y)))
