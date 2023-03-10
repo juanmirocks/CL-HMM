@@ -1,4 +1,4 @@
-Copyright (C) Juan Miguel Cejuela <juanmi@jmcejuela.com>
+Copyright (C) Dr. Juan Miguel Cejuela
 
 --------------------------------------------------------------------------------
 CL-HMM: HMM Library for Common Lisp
@@ -7,8 +7,8 @@ CL-HMM: HMM Library for Common Lisp
 * Compatibility: ANSI Common Lisp. Tested on SBCL 1.1.11
 * Dependencies: [jmc.cl.utils system](https://github.com/jmcejuela/jmc.cl.utils)
 * Development Times:
-  * 2008 July-September
-  * 2013-
+  * 2008-07 to 2008-09
+  * 2013-09 to 2013-11
 
 
 Features:
